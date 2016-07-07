@@ -1,7 +1,7 @@
 #pragma once
 #include "ItemBase.h"
 #include "Components/ActorComponent.h"
-
+#include "MainInventoryWidget.h"
 #include "InventoryComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -19,21 +19,6 @@ public:
 	// Called every frameini
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-	TMap<ItemCategory,TArray<UItemBase*>> items;
-	TMap<UItemBase*, UUserWidget*> UI;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widgets")
-		TSubclassOf<class UUserWidget> inv;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widgets")
-		TSubclassOf<class UUserWidget> invItem;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Widgets")
-		TSubclassOf<class UUserWidget> contextMenu;
-
-	//Null is emoty spot
-	UPROPERTY(EditAnywhere, Category = Inventory)
-		int8 width = 10; //should stay 10
-	UPROPERTY(EditAnywhere, Category = Inventory)
-		int8 height = 10 ;
 
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		int8 maxWeight;
@@ -41,37 +26,46 @@ public:
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		int8 currentWeight;
 	
-		bool addItem(UItemBase* Item);
 	
+	TMap<ItemCategory, TArray<UItemBase*>> items;
 
+	UItemBase* lookForFirstItem(FString &name);
+
+	TArray<UItemBase*> lookForItems(FString &name);
+
+	UMainInventoryWidget* mainInventory;
+
+	TArray<UItemCategoryWidget*> categories;
+
+	UItemBase* selectedItem;
+
+	ItemCategory currentCategory = ItemCategory::ITEM;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TSubclassOf<class UItemCategoryWidget> categoryTemplate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TSubclassOf<class UMainInventoryWidget> mainInventoryTemplate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TSubclassOf<class UItemWidget> itemTemplate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TSubclassOf<class AItemBaseActor> itemBaseTemplate;
+
+	bool addItem(UItemBase* Item);
+	bool removeItem(UItemBase* Item, uint8 ammount = -1);
+	UItemBase* splitItem(UItemBase* Item, float ratio);
+	bool isEnoughSpace(UItemBase* Item);
+
+	void print();
+	void loadUI();
+	void refresh();
+	void setVisiblity(bool Vis);
 	
-		bool removeItem(UItemBase* Item, uint8 ammount = -1);
-		UItemBase* splitItem(UItemBase* Item,float ratio);
-	
-
-	
-		bool isEnoughSpace(UItemBase* Item);
-	
-		void print();
-		void loadUI();
-		void refresh() {};
-		void setVisiblity(bool Vis) {};
-
-		UItemBase* lookForFirstItem(FString &name);
-		TArray<UItemBase*> lookForItems(FString &name);
-
-		UUserWidget* mainInventory;
-		UUserWidget* categorySlot;
-		TArray<UUserWidget*> categories;
-		UItemBase* selectedItem;
-
-		UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-			TSubclassOf<UUserWidget> categoryTemplate;
-
-		UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-			TSubclassOf<UUserWidget> mainInventoryTemplate;
-
-		UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = UI)
-			TSubclassOf<UUserWidget> itemTemplate;
+	void onCategoryClicked(UDataItemButton* sender);
+	void onItemButtonClicked(UDataItemButton* sender);
+	void onItemButtonHovered(UDataItemButton* sender);
+	void onItemButtonLeftHovered(UDataItemButton* sender);
 };
 

@@ -2,7 +2,11 @@
 
 #include "StalkerGhosts.h"
 #include "InventoryComponent.h"
-
+#include "Runtime/UMG/Public/UMG.h"
+#include "Runtime/UMG/Public/UMGStyle.h"
+#include "Runtime/UMG/Public/Slate/SObjectWidget.h"
+#include "Runtime/UMG/Public/IUMGModule.h"
+#include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 
 UInventoryComponent::UInventoryComponent()
 {
@@ -44,7 +48,7 @@ bool UInventoryComponent::addItem(UItemBase* Item)
 }
 
 
-bool UInventoryComponent::removeItem(UItemBase* Item, uint8 ammount = -1)
+bool UInventoryComponent::removeItem(UItemBase* Item, uint8 ammount)
 {
 	if (!Item) return false;
 	if (ammount > 0)
@@ -70,7 +74,7 @@ bool UInventoryComponent::removeItem(UItemBase* Item, uint8 ammount = -1)
 UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 {
 	if (!Item) return NULL;
-	if(Item->ammount < 2) return;
+	if(Item->ammount < 2) return Item;
 	UItemBase* newItem = NewObject<UItemBase>(Item);
 	int newAmmount = floor(Item->ammount * ratio);
 	newItem->ammount = newAmmount;
@@ -83,6 +87,7 @@ UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 bool UInventoryComponent::isEnoughSpace(UItemBase* Item)
 {
 	if (!Item) return true;
+	return true;
 }
 
 void UInventoryComponent::print()
@@ -106,18 +111,78 @@ void UInventoryComponent::loadUI()
 	{
 		if (!mainInventory)
 		{
-			mainInventory = CreateWidget<UUserWidget>(GetWorld(), mainInventoryTemplate);
-			if (!mainInventory) return;
+			mainInventory = CreateWidget<UMainInventoryWidget>(GetWorld(), mainInventoryTemplate);
+			
+			if (!mainInventory)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Mw"));
+				return;
+			}
+			UE_LOG(LogTemp, Warning, TEXT("Ms"));
 			mainInventory->AddToViewport();
 		}
+		UE_LOG(LogTemp, Warning, TEXT("Md"));
 	}
+	UE_LOG(LogTemp, Warning, TEXT("that"));
 	categories.Empty();
 	if (categoryTemplate)
 	{
 		for (uint8 i = 0; i < uint8(ItemCategory::NUM); i++)
 		{
-			UUserWidget* x = CreateWidget<UUserWidget>(GetWorld(), categoryTemplate);
+			UItemCategoryWidget* x = CreateWidget<UItemCategoryWidget>(GetWorld(), categoryTemplate);
+	
+			
+
 			categories.Add(x);
+			mainInventory->CategoryBox->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize());
+			
+			x->CategoryButton->UserNumber = i;
+			x->CategoryButton->CategoryIdentifier = true;
+			x->CategoryButton->click.BindUObject(this, &UInventoryComponent::onCategoryClicked);
 		}
 	}
+}
+
+void UInventoryComponent::refresh()
+{
+	mainInventory->ItemBox->ClearChildren();
+	auto& s = items[currentCategory];
+	for (int i = 0; i < s.Num();i++)
+	{
+		if (!s[i]->widget)
+		{
+			s[i]->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+		}
+		s[i]->widget->ItemButton->CategoryIdentifier = false;
+		s[i]->widget->ItemButton->UserPointer = s[i];
+		s[i]->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
+		s[i]->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
+		s[i]->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+	} 
+}
+
+
+void UInventoryComponent::setVisiblity(bool Vis)
+{
+	if(Vis) mainInventory->RemoveFromViewport();
+	if (!Vis) mainInventory->AddToViewport();
+}
+
+void UInventoryComponent::onCategoryClicked(UDataItemButton* sender)
+{
+	UE_LOG(LogTemp, Warning, TEXT("cat"));
+}
+void UInventoryComponent::onItemButtonClicked(UDataItemButton* sender)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ICLICK"));
+}
+
+void UInventoryComponent::onItemButtonHovered(UDataItemButton* sender)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Ihover"));
+}
+
+void UInventoryComponent::onItemButtonLeftHovered(UDataItemButton* sender)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Iunh"));
 }

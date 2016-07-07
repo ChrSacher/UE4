@@ -15,7 +15,11 @@ class AStalkerGhostsCharacter : public ACharacter
 	GENERATED_BODY()
 	
 	/** Pawn mesh: 1st person view (arms; seen only by self) */
-	UPROPERTY(EditDefaultsOnly, Category=Mesh)
+	
+public:
+	AStalkerGhostsCharacter();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	class USkeletalMeshComponent* Mesh1P;
 
 	/** Location on gun mesh where projectiles should spawn. */
@@ -25,8 +29,6 @@ class AStalkerGhostsCharacter : public ACharacter
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FirstPersonCameraComponent;
-public:
-	AStalkerGhostsCharacter();
 
 	virtual void BeginPlay();
 
@@ -100,26 +102,41 @@ protected:
 	/** Fires a projectile. */
 	void OnFire();
 	void OffFire();
+
 	void Fire();
 
-	void changeWeapon(UWeaponComponent* newWeapon);
+	
 	/** Reload*/
 	void OnReload();
 	void offReload();
+
+	void changeWeapon(UWeaponComponent* newWeapon);
 	bool checkMag(TArray<UItemBase*> Items);
+	//sprinting
 	void OnSprint();
 	void OffSprint();
 
+	//crouching
 	void OnCrouch();
 	void OffCrouch();
-	
+
+	//inventory
+	void OnInventory();
+	void OffInventory();
+
+	//prone
 	void OnProne();
 	void OffProne();
-	void Jump() override;
 
+	//jumping
+	void Jump() override;
 	void StopJumping() override;
 
 	void changeStance(Movement newStance);
+
+
+	//interact
+	void onInteract();
 	UFUNCTION()
 		void Sprint();
 

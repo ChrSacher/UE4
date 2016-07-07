@@ -15,8 +15,10 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 {
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	RootComponent = GetCapsuleComponent();
 	currentWeapon = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
 	currentInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
+
 	SetActorHiddenInGame(false);
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -59,8 +61,8 @@ void AStalkerGhostsCharacter::BeginPlay()
 	
 	characterAnim = Cast<UStalkerCharacterAnim>(Mesh1P->GetAnimInstance());
 	changeStance(Movement::JOGGING);
-	currentInventory = NewObject<UInventoryComponent>();
-	
+	//currentInventory = NewObject<UInventoryComponent>();
+	currentInventory->loadUI();
 	currentInventory->addItem(currentWeapon->currentMagazine);
 	FirstPersonCameraComponent->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
 	
@@ -92,8 +94,13 @@ void AStalkerGhostsCharacter::SetupPlayerInputComponent(class UInputComponent* I
 	InputComponent->BindAction("Walk", IE_Pressed, this, &AStalkerGhostsCharacter::OnWalk);
 	InputComponent->BindAction("Walk", IE_Released, this, &AStalkerGhostsCharacter::OffWalk);
 
+	InputComponent->BindAction("Interact", IE_Pressed, this, &AStalkerGhostsCharacter::onInteract);
+
 	InputComponent->BindAction("Fire", IE_Pressed, this, &AStalkerGhostsCharacter::OnFire);
 	InputComponent->BindAction("Fire", IE_Released, this, &AStalkerGhostsCharacter::OffFire);
+
+	InputComponent->BindAction("Inventory", IE_Pressed, this, &AStalkerGhostsCharacter::OnInventory);
+	InputComponent->BindAction("Inventory", IE_Released, this, &AStalkerGhostsCharacter::OffInventory);
 
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AStalkerGhostsCharacter::OnReload);
 
@@ -171,17 +178,14 @@ void AStalkerGhostsCharacter::changeWeapon(UWeaponComponent* newWeapon)
 		return;
 	}
 	newWeapon->mesh->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
-	 FP_MuzzleLocation->AttachToComponent(newWeapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
-	//newWeapon->mesh->SetOnlyOwnerSee(false);			// only the owning player will see this mesh
-	//newWeapon->mesh->bCastDynamicShadow = true;
-//	newWeapon->mesh->CastShadow = true;
+	FP_MuzzleLocation->AttachToComponent(newWeapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
+	newWeapon->mesh->SetRelativeLocation(newWeapon->mesh->GetSocketLocation("GripPoint"));
 	newWeapon->mesh->SetVisibility(true);
 }
 
 void AStalkerGhostsCharacter::MoveForward(float Value)
 {
 	characterAnim->speed = GetVelocity().Size() / sprintSpeed * 100;
-	
 	if (Value != 0.0f)
 	{
 		if (Value < -0.1f && stance == Movement::SPRINTING) OffSprint();
@@ -221,22 +225,22 @@ void AStalkerGhostsCharacter::OnReload()
 	
 	if (!checkMag(currentInventory->lookForItems(currentWeapon->currentMagazine->name)))
 	{
-		for (int i = 0; i < currentWeapon->acceptedMagazines.Num(); i++)
+		for (int i = 0; i < currentWeapon->acceptedBullets.Num(); i++)
 		{
 
-			if (checkMag(currentInventory->lookForItems(currentWeapon->acceptedMagazines[i]))) break;
+			if (checkMag(currentInventory->lookForItems(currentWeapon->acceptedBullets[i]))) break;
 			
 
 		}
 		return; //couldn 't find mag
 	}
-
+	//found mag and reload is possible
 	if (currentWeapon->ReloadAnimation != NULL)
 	{
 		// Get the animation object for the arms mesh
 		if (characterAnim != NULL)
 		{
-			characterAnim->Montage_Play(currentWeapon->ReloadAnimation, 1.f);
+			characterAnim->Montage_Play(currentWeapon->ReloadAnimation, currentWeapon->reloadTime);
 		}
 	}
 
@@ -250,29 +254,25 @@ void AStalkerGhostsCharacter::offReload()
 bool AStalkerGhostsCharacter::checkMag(TArray<UItemBase*> Items)
 {
 	if (Items.Num() == 0) return false;
-	TArray<UMagazineComponent*> mags;
 	for (int i = 0; i < Items.Num(); i++)
 	{
-		
-		UMagazineComponent* w = Cast<UMagazineComponent>(Items[i]);
-		if (w != NULL)
+		if (currentWeapon->currentMagazine->currentAmmoCount <= currentWeapon->currentMagazine->ammoCapacity)
 		{
-			mags.Push(w);
+			if (Items[i]->ammount >= (currentWeapon->currentMagazine->ammoCapacity - currentWeapon->currentMagazine->currentAmmoCount))
+			{
+				currentWeapon->currentMagazine->currentAmmoCount = currentWeapon->currentMagazine->ammoCapacity;
+				Items[i]->ammount =- currentWeapon->currentMagazine->ammoCapacity - currentWeapon->currentMagazine->currentAmmoCount;
+			}
+			else
+			{
+				currentWeapon->currentMagazine->currentAmmoCount += Items[i]->ammount;
+				Items[i]->ammount = 0;
+			}
 			
 		}
-	}
-	
-	mags.Sort(UMagazineComponent::compareCap);
-
-	
-	if (mags.Num() == 0) return false;
-	if (mags[0]->currentAmmoCount > 0)
-	{
 		
-		currentWeapon->currentMagazine = mags[0];
-		return true;
 	}
-	return false;
+	return true;
 	
 }
 void AStalkerGhostsCharacter::Jump()
@@ -419,4 +419,35 @@ void AStalkerGhostsCharacter::OffProne()
 	
 	//characterAnim->prone = false;
 	//if (stance == Movement::PRONING)changeStance(Movement::JOGGING);
+}
+
+void AStalkerGhostsCharacter::OnInventory()
+{
+	if (!currentInventory->mainInventory)
+	{
+		currentInventory->loadUI();
+	}
+	if (! (currentInventory->mainInventory->GetVisibility() == ESlateVisibility::Visible))
+	{
+		currentInventory->mainInventory->SetVisibility(ESlateVisibility::Visible);
+	}
+	else currentInventory->mainInventory->SetVisibility(ESlateVisibility::Hidden);
+	
+}
+void AStalkerGhostsCharacter::OffInventory()
+{
+
+}
+
+void AStalkerGhostsCharacter::onInteract()
+{
+	FVector Loc = GetActorLocation();
+	FRotator Rot = GetActorRotation();
+	FVector End = Loc + Rot.Vector() * 600; //make variable
+	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
+	FHitResult result(ForceInit);
+	params.bTraceComplex = true;
+	params.bTraceAsyncScene = true;
+	params.bReturnPhysicalMaterial = true;
+	bool traced = GetWorld()->LineTraceSingle(result, Loc, End, );
 }

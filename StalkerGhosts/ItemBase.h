@@ -2,8 +2,8 @@
 
 #pragma once
 #include "Components/ActorComponent.h"
+#include "MainInventoryWidget.h"
 #include "ItemBase.generated.h"
-
 
 UENUM(BlueprintType)
 enum class ItemCategory : uint8
@@ -55,6 +55,13 @@ public:
 	UPROPERTY(EditAnywhere, Category = Item)
 		ItemCategory type = ItemCategory::ITEM;
 
+	
+
+	UPROPERTY(EditAnywhere, Category = Item)
+		UItemWidget* widget;
+
 	bool equals(UItemBase* other);
+
+	virtual void BeginPlay() override;
 };
 

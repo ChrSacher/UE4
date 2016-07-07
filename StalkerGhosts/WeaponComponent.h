@@ -49,16 +49,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		USoundBase*  emptySound;
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		USkeletalMeshComponent* mesh;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
-		TArray<FString> acceptedMagazines;
+		TArray<FString> acceptedBullets;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		TSubclassOf<UParticleSystem> flash;
 
-	UPROPERTY(EditAnywhere, Category = GMagazine)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GMagazine)
 		UMagazineComponent* currentMagazine;
 	/** AnimMontage to play each time we fire */
 	
@@ -68,6 +68,7 @@ public:
 		class UAnimMontage* ReloadAnimation;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* IdlingAnimation;
+
 	void playSound(FVector place)
 	{
 		if (weaponSound != NULL)

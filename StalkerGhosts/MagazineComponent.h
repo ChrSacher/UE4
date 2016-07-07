@@ -29,7 +29,7 @@ public:
 	{
 		return first.ammoCapacity < second.ammoCapacity;
 	}
-	UPROPERTY(EditAnywhere, Category = Projectile)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 		TSubclassOf<class ABullet> bullet;
 
 	bool fireBullet(FVector SpawnLocation, FRotator SpawnRotation);

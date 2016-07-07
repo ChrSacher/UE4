@@ -11,9 +11,10 @@ UWeaponComponent::UWeaponComponent()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	acceptedMagazines.Push("Default");
+	acceptedBullets.Push("Default");
 	currentMagazine = CreateDefaultSubobject<UMagazineComponent>(TEXT("Magazine"));
 	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
+
 	// ...
 }
 

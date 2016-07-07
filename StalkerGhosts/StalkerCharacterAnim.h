@@ -33,6 +33,12 @@ public:
 		float speed;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+		float playerYaw;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+		float playerPitch;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		bool jumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
