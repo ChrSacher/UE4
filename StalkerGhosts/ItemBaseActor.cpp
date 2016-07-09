@@ -2,7 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "ItemBaseActor.h"
-
+#include "StalkerGhostsCharacter.h"
 
 // Sets default values
 AItemBaseActor::AItemBaseActor()
@@ -27,3 +27,21 @@ void AItemBaseActor::Tick( float DeltaTime )
 
 }
 
+void  AItemBaseActor::interact(AActor* interactor)
+{
+	auto x = Cast<AStalkerGhostsCharacter>(interactor);
+	if(x) x->currentInventory->addItem(base);
+	Destroy();
+
+}
+
+void  AItemBaseActor::spawn(UItemBase* Base)
+{
+	if (!base)
+	{
+		this->Destroy();
+		return;
+	}
+	base = Base;
+	if(base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
+}

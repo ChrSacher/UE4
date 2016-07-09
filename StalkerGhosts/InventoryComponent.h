@@ -27,7 +27,7 @@ public:
 		int8 currentWeight;
 	
 	
-	TMap<ItemCategory, TArray<UItemBase*>> items;
+	TMap<ItemCategory, TMap<UItemBase*,UItemBase*>> items;
 
 	UItemBase* lookForFirstItem(FString &name);
 
@@ -53,9 +53,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class AItemBaseActor> itemBaseTemplate;
 
-	bool addItem(UItemBase* Item);
-	bool removeItem(UItemBase* Item, uint8 ammount = -1);
+	bool addItemCreate(UItemBase* Item);
+	bool addItem(UItemBase* Item, bool forceNew = false);
+
+	bool removeItem(UItemBase* Item, int8 ammount = -1);
 	UItemBase* splitItem(UItemBase* Item, float ratio);
+	void dropItem(UItemBase* Item);
 	bool isEnoughSpace(UItemBase* Item);
 
 	void print();

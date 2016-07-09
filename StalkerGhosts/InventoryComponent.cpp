@@ -2,6 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "InventoryComponent.h"
+#include "ItemBaseActor.h"
 #include "Runtime/UMG/Public/UMG.h"
 #include "Runtime/UMG/Public/UMGStyle.h"
 #include "Runtime/UMG/Public/Slate/SObjectWidget.h"
@@ -15,7 +16,7 @@ UInventoryComponent::UInventoryComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = false;
 	for (uint8 i = 0; i < uint8(ItemCategory::NUM);i++)
-		items.Add(static_cast<ItemCategory>(i),TArray<UItemBase*>());
+		items.Add(static_cast<ItemCategory>(i),TMap<UItemBase*, UItemBase*>());
 	
 }
 
@@ -37,39 +38,90 @@ void UInventoryComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 	// ...
 }
 
-
-bool UInventoryComponent::addItem(UItemBase* Item)
+bool UInventoryComponent::addItemCreate(UItemBase* Item)
 {
-	if (!Item) return true;
 	items[Item->type].Add(Item);
 	currentWeight += Item->weight * Item->ammount;
+	if (Item->widget) Item->widget->RemoveFromParent();
+	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+	Item->widget = x;
+	//mainInventory->ItemBox->AddChild(x)->SetSize(FSlateChildSize());
+	x->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
+	x->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
+	x->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+	return true;
+}
+bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
+{
+	if (!Item) return true;
+
+	if (forceNew)
+	{
+		addItemCreate(Item);
+	}
+	else
+	{
+		if (items.Find(Item->type))
+		{
+			for (auto& x : items[Item->type])
+			{
+				if (x.Key->name == Item->name)
+				{
+					uint8 ammountPossibleToAdd = x.Key->maxAmmount - x.Key->ammount;
+					if (ammountPossibleToAdd  < Item->ammount )
+					{
+						x.Key->ammount += ammountPossibleToAdd;
+						Item->ammount -= ammountPossibleToAdd;
+					}
+					else
+					{
+						x.Key->ammount += Item->ammount;
+						Item->ammount = 0;
+					}
+				}
+			}
+			if (Item->ammount > 0)
+			{
+				addItemCreate(Item);
+			}
+		}
+	}
 	//generate UI stuff here
 	return true;
 }
 
 
-bool UInventoryComponent::removeItem(UItemBase* Item, uint8 ammount)
+bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
 {
 	if (!Item) return false;
 	if (ammount > 0)
 	{
-		uint8 place = items[Item->type].Find(Item);
-		if (place != INDEX_NONE)
+		UItemBase* place = items[Item->type][Item];
+		if (place)
 		{
-			items[Item->type][place]->ammount -= ammount;
-			if (items[Item->type][place]->ammount > 0) return true;
+
+			if (ammount > place->ammount) ammount = place->ammount;
+			currentWeight -= place->weight * ammount;
+			place->ammount -= ammount;
+			if (place->ammount > 0) return false;
+			//fallthrough to past if nothing is left of the thing
 		}
 		else
 		{
 			return false;
 		}
 	}
-	items[Item->type].Remove(Item);
-	currentWeight -= Item->weight * Item->ammount;
+	dropItem(Item);
 	return true;
 
 }
 
+void UInventoryComponent::dropItem(UItemBase* Item)
+{
+	items[Item->type].Remove(Item);
+	if(Item->ammount > 0) GetWorld()->SpawnActor<AItemBaseActor>(itemBaseTemplate, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation())->spawn(Item);
+	Item->widget->RemoveFromParent();
+}
 
 UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 {
@@ -79,6 +131,7 @@ UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 	int newAmmount = floor(Item->ammount * ratio);
 	newItem->ammount = newAmmount;
 	Item->ammount -= newAmmount;
+	addItem(newItem);
 	return newItem;
 }
 
@@ -130,12 +183,8 @@ void UInventoryComponent::loadUI()
 		for (uint8 i = 0; i < uint8(ItemCategory::NUM); i++)
 		{
 			UItemCategoryWidget* x = CreateWidget<UItemCategoryWidget>(GetWorld(), categoryTemplate);
-	
-			
-
 			categories.Add(x);
 			mainInventory->CategoryBox->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize());
-			
 			x->CategoryButton->UserNumber = i;
 			x->CategoryButton->CategoryIdentifier = true;
 			x->CategoryButton->click.BindUObject(this, &UInventoryComponent::onCategoryClicked);
@@ -146,18 +195,43 @@ void UInventoryComponent::loadUI()
 void UInventoryComponent::refresh()
 {
 	mainInventory->ItemBox->ClearChildren();
-	auto& s = items[currentCategory];
-	for (int i = 0; i < s.Num();i++)
+	if (currentCategory == ItemCategory::ALL)
 	{
-		if (!s[i]->widget)
+		for (auto& s : items)
 		{
-			s[i]->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+			for (auto& w : s.Value)
+			{
+				if (!w.Key->widget)
+				{
+					w.Key->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+				}
+				mainInventory->ItemBox->AddChild(w.Key->widget);
+				w.Key->widget->ItemButton->CategoryIdentifier = false;
+				w.Key->widget->ItemButton->UserPointer = w.Key;
+				w.Key->widget->ItemButton->click.Unbind();
+				w.Key->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
+				w.Key->widget->ItemButton->hover.Unbind();
+				w.Key->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
+				w.Key->widget->ItemButton->unhover.Unbind();
+				w.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+			}
 		}
-		s[i]->widget->ItemButton->CategoryIdentifier = false;
-		s[i]->widget->ItemButton->UserPointer = s[i];
-		s[i]->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
-		s[i]->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
-		s[i]->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+	}
+	for (auto& s : items[currentCategory])
+	{
+		if (!s.Key->widget)
+		{
+			s.Key->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+		}
+		mainInventory->ItemBox->AddChild(s.Key->widget);
+		s.Key->widget->ItemButton->CategoryIdentifier = false;
+		s.Key->widget->ItemButton->UserPointer = s.Key;
+		s.Key->widget->ItemButton->click.Unbind();
+		s.Key->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
+		s.Key->widget->ItemButton->hover.Unbind();
+		s.Key->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
+		s.Key->widget->ItemButton->unhover.Unbind();
+		s.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
 	} 
 }
 
@@ -171,15 +245,24 @@ void UInventoryComponent::setVisiblity(bool Vis)
 void UInventoryComponent::onCategoryClicked(UDataItemButton* sender)
 {
 	UE_LOG(LogTemp, Warning, TEXT("cat"));
+	mainInventory->ItemBox->ClearChildren();
+	currentCategory = ItemCategory(sender->UserNumber);
+	auto it = items.Find(currentCategory);
+	if (it)
+	{
+		refresh();
+	}
+	
 }
 void UInventoryComponent::onItemButtonClicked(UDataItemButton* sender)
 {
-	UE_LOG(LogTemp, Warning, TEXT("ICLICK"));
+	selectedItem = Cast<UItemBase>(sender->UserPointer);
 }
 
 void UInventoryComponent::onItemButtonHovered(UDataItemButton* sender)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Ihover"));
+	//details menu
 }
 
 void UInventoryComponent::onItemButtonLeftHovered(UDataItemButton* sender)

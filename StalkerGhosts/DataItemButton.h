@@ -16,7 +16,7 @@ class STALKERGHOSTS_API UDataItemButton : public UButton
 	DECLARE_DELEGATE_OneParam(UDataItemButtonDelegate, UDataItemButton*)
 	//can be made better but works for now
 public:
-	void* UserPointer;
+	UObject* UserPointer;
 	UDataItemButtonDelegate click;
 	UDataItemButtonDelegate hover;
 	UDataItemButtonDelegate unhover;

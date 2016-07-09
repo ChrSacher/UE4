@@ -3,7 +3,8 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
-#include "StalkerGhostsCharacter.h"
+#include "InteractInterface.h"
+#include "ItemBase.h"
 #include "ItemBaseActor.generated.h"
 UCLASS()
 class STALKERGHOSTS_API AItemBaseActor : public AActor , public IInteractInterface
@@ -20,7 +21,14 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
+	virtual void interact(AActor* interactor) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UItemBase* base;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UStaticMeshComponent* mesh;
 	
+	void spawn(UItemBase* Base);
+
 };

@@ -8,16 +8,16 @@
 UENUM(BlueprintType)
 enum class ItemCategory : uint8
 {
-	WEAPON = 0,
-	ARMOR = 1,
-	BOOTS = 2,
-	GLOVES = 3,
-	ITEM = 4,
-	MEDICAL = 5,
-	FOOD = 6,
-	NUM = 7
+	ALL = 0,
+	WEAPON = 1,
+	ARMOR = 2,
+	BOOTS = 3,
+	GLOVES =4,
+	ITEM = 5,
+	MEDICAL = 6,
+	FOOD = 7,
+	NUM = 8
 };
-
 UCLASS()
 class UItemBase : public UActorComponent
 {
@@ -33,7 +33,7 @@ public:
 		float weight = 1;
 
 	UPROPERTY(EditAnywhere, Category = Item)
-		float ammount = 1;
+		uint8 ammount = 1;
 
 	UPROPERTY(EditAnywhere, Category = Item)
 		float maxAmmount = 1;

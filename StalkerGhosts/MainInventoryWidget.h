@@ -4,7 +4,6 @@
 
 #include "StalkerGhosts.h"
 #include "ItemWidget.h"
-#include "ItemBaseActor.h"
 #include "MainInventoryWidget.generated.h"
 /**
  * 

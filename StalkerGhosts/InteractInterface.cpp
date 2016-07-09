@@ -2,7 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "InteractInterface.h"
-
+#include "StalkerGhostsCharacter.h"
 //////////////////////////////////////////////////////////////////////////
 // ToStringInterface
 
@@ -17,4 +17,13 @@ UInteractInterface::UInteractInterface(const class FObjectInitializer& ObjectIni
 FString IInteractInterface::ToString()
 {
 	return "IToStringInterface::ToString()";
+}
+
+void IInteractInterface::interact(AActor* interactor)
+{
+	
+}
+void IInteractInterface::use(AActor* interactor)
+{
+
 }

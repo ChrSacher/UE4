@@ -28,7 +28,7 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	//FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
 	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
-	
+	currentAttributes = CreateDefaultSubobject<UCharacterAttributes>(TEXT("Attributes"));
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh1P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh1P"));
 	Mesh1P->SetupAttachment(GetCapsuleComponent());
@@ -445,9 +445,19 @@ void AStalkerGhostsCharacter::onInteract()
 	FRotator Rot = GetActorRotation();
 	FVector End = Loc + Rot.Vector() * 600; //make variable
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
+	FCollisionResponseParams params2 = FCollisionResponseParams();
 	FHitResult result(ForceInit);
 	params.bTraceComplex = true;
 	params.bTraceAsyncScene = true;
 	params.bReturnPhysicalMaterial = true;
-	bool traced = GetWorld()->LineTraceSingle(result, Loc, End, );
+	bool traced = GetWorld()->LineTraceSingleByChannel(result, Loc, End, ECollisionChannel::ECC_Visibility, params,params2);
+	if (traced)
+	{
+		//deal with traced
+		IInteractInterface* actor = Cast<IInteractInterface>(result.GetActor());
+		if (actor)
+		{
+			actor->interact(this);
+		}
+	}
 }

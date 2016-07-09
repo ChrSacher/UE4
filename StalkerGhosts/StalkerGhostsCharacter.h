@@ -4,8 +4,9 @@
 #include "GameFramework/Character.h"
 #include "InventoryComponent.h"
 #include "StalkerCharacterAnim.h"
+#include "InteractInterface.h"
+#include "CharacterAttributes.h"
 #include "StalkerGhostsCharacter.generated.h"
-
 
 class UInputComponent;
 UCLASS(config=Game)
@@ -86,8 +87,12 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
 		UStalkerCharacterAnim* characterAnim;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UInventoryComponent* currentInventory;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		UCharacterAttributes* currentAttributes;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 	FTimerHandle staminaHandle;
