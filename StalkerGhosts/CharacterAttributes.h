@@ -21,6 +21,32 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 endurance = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 agility = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 intelligence = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 charisma = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 strength = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 health = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 stamina = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 luck = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		uint8 perception = 5;
 		
 	
 };

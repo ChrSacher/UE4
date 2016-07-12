@@ -46,9 +46,7 @@ bool UInventoryComponent::addItemCreate(UItemBase* Item)
 	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
 	Item->widget = x;
 	//mainInventory->ItemBox->AddChild(x)->SetSize(FSlateChildSize());
-	x->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
-	x->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
-	x->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+
 	return true;
 }
 bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
@@ -86,7 +84,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 			}
 		}
 	}
-	//generate UI stuff here
+	refresh();
 	return true;
 }
 
@@ -216,7 +214,9 @@ void UInventoryComponent::refresh()
 				w.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
 			}
 		}
+		return;
 	}
+	
 	for (auto& s : items[currentCategory])
 	{
 		if (!s.Key->widget)

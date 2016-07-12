@@ -14,7 +14,8 @@ UWeaponComponent::UWeaponComponent()
 	acceptedBullets.Push("Default");
 	currentMagazine = CreateDefaultSubobject<UMagazineComponent>(TEXT("Magazine"));
 	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-
+	light = CreateDefaultSubobject<USpotLightComponent>(TEXT("Light"));
+	light->SetupAttachment(mesh);
 	// ...
 }
 
@@ -23,7 +24,7 @@ UWeaponComponent::UWeaponComponent()
 void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
+	light->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
 	// ...
 	
 }

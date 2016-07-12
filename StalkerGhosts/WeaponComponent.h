@@ -59,6 +59,8 @@ public:
 		TSubclassOf<UParticleSystem> flash;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GMagazine)
+		USpotLightComponent* light;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GMagazine)
 		UMagazineComponent* currentMagazine;
 	/** AnimMontage to play each time we fire */
 	

@@ -6,11 +6,12 @@
 #include "StalkerCharacterAnim.h"
 #include "InteractInterface.h"
 #include "CharacterAttributes.h"
+#include "DamageComponent.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
 UCLASS(config=Game)
-class AStalkerGhostsCharacter : public ACharacter
+class AStalkerGhostsCharacter : public ACharacter , public IDamageInterface
 {
 
 	GENERATED_BODY()
@@ -20,22 +21,13 @@ class AStalkerGhostsCharacter : public ACharacter
 public:
 	AStalkerGhostsCharacter();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
-	class USkeletalMeshComponent* Mesh1P;
-
-	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-	class USceneComponent* FP_MuzzleLocation;
-
-	/** First person camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	class UCameraComponent* FirstPersonCameraComponent;
+	
 
 	virtual void BeginPlay();
 
 	/** Base turn rate, in deg/sec. Other scaling may affect final turn rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseTurnRate;
+		float BaseTurnRate;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		float sprintSpeed = 800;
@@ -66,13 +58,16 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		bool isSprinting = false;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		Movement stance;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		Movement prevStance;
+
 	/** Base look up/down rate, in deg/sec. Other scaling may affect final rate. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
-	float BaseLookUpRate;
+		float BaseLookUpRate;
 
 	/** Gun muzzle's offset from the characters location */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
@@ -83,7 +78,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		UWeaponComponent* currentWeapon;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* Mesh1P;
+
+	/** Location on gun mesh where projectiles should spawn. */
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+		class USceneComponent* FP_MuzzleLocation;
+
+	/** First person camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class UCameraComponent* FirstPersonCameraComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
 		UStalkerCharacterAnim* characterAnim;
@@ -92,16 +96,24 @@ public:
 		UInventoryComponent* currentInventory;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		UDamageComponent* damageComponent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UCharacterAttributes* currentAttributes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-	FTimerHandle staminaHandle;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-	FTimerHandle fireHandle;
+		FTimerHandle staminaHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-	FTimerHandle speedHandle;
+		FTimerHandle fireHandle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		FTimerHandle speedHandle;
+
+	virtual void doDamage(DamageBodyPart BodyPart, ABullet* Cause) override;
+
 protected:
 	
 	/** Fires a projectile. */

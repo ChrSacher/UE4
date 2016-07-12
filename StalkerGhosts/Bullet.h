@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+#include "DamageEnum.h"
 #include "Bullet.generated.h"
 
 UCLASS(config = Game)
@@ -28,7 +29,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		float velocity = 7000.0f; //in cm/s
-
+	UPROPERTY(EditAnywhere, Category = Magazine)
+		EDamageType type;
 
 	
 								 /** Sphere collision component */

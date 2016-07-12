@@ -14,11 +14,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogFPChar, Warning, All);
 AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 {
 	// Set size for collision capsule
-	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
+	GetCapsuleComponent()->InitCapsuleSize(70.f, 96.0f);
 	RootComponent = GetCapsuleComponent();
 	currentWeapon = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
 	currentInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
-
+	damageComponent = CreateDefaultSubobject<UDamageComponent>(TEXT("Damage"));
 	SetActorHiddenInGame(false);
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -64,8 +64,8 @@ void AStalkerGhostsCharacter::BeginPlay()
 	//currentInventory = NewObject<UInventoryComponent>();
 	currentInventory->loadUI();
 	currentInventory->addItem(currentWeapon->currentMagazine);
+	currentInventory->refresh();
 	FirstPersonCameraComponent->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
-	
 	
 	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = jogSpeed;
 	changeWeapon(currentWeapon);
@@ -179,7 +179,7 @@ void AStalkerGhostsCharacter::changeWeapon(UWeaponComponent* newWeapon)
 	}
 	newWeapon->mesh->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
 	FP_MuzzleLocation->AttachToComponent(newWeapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
-	newWeapon->mesh->SetRelativeLocation(newWeapon->mesh->GetSocketLocation("GripPoint"));
+	//newWeapon->mesh->SetRelativeLocation(newWeapon->mesh->GetSocketLocation("GripPoint"));
 	newWeapon->mesh->SetVisibility(true);
 }
 
@@ -460,4 +460,9 @@ void AStalkerGhostsCharacter::onInteract()
 			actor->interact(this);
 		}
 	}
+}
+
+void AStalkerGhostsCharacter::doDamage(DamageBodyPart BodyPart, ABullet* Cause)
+{
+
 }
