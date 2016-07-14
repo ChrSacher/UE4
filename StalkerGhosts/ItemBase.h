@@ -16,7 +16,8 @@ enum class ItemCategory : uint8
 	ITEM = 5,
 	MEDICAL = 6,
 	FOOD = 7,
-	NUM = 8
+	GRENADES = 8,
+	NUM = 9
 };
 UCLASS()
 class UItemBase : public UActorComponent
@@ -33,10 +34,10 @@ public:
 		float weight = 1;
 
 	UPROPERTY(EditAnywhere, Category = Item)
-		uint8 ammount = 1;
+		uint16 ammount = 1;
 
 	UPROPERTY(EditAnywhere, Category = Item)
-		float maxAmmount = 1;
+		uint16 maxAmmount = 1;
 
 	UPROPERTY(EditAnywhere, Category = Item)
 		FString name = "Default";
@@ -48,20 +49,15 @@ public:
 		float worth = 50;
 
 	UPROPERTY(EditAnywhere, Category = Item)
-		int8 xSize = 5;
-
-	UPROPERTY(EditAnywhere, Category = Item)
-		int8 ySize = 5;
-	UPROPERTY(EditAnywhere, Category = Item)
 		ItemCategory type = ItemCategory::ITEM;
 
-	
+	UPROPERTY(EditAnywhere, Category = Item)
+		FString dataTabelIdentifier;
 
 	UPROPERTY(EditAnywhere, Category = Item)
 		UItemWidget* widget;
 
 	bool equals(UItemBase* other);
 
-	virtual void BeginPlay() override;
 };
 

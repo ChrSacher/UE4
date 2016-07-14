@@ -18,10 +18,3 @@ bool UItemBase::equals(UItemBase* other)
 	return name == other->name;
 }
 
-void UItemBase::BeginPlay()
-{
-	Super::BeginPlay();
-
-	
-
-}

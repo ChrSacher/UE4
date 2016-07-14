@@ -22,31 +22,55 @@ public:
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 endurance = 5;
+		int32 endurance = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 agility = 5;
+		int32 agility = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 intelligence = 5;
+		int32 intelligence = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 charisma = 5;
+		int32 charisma = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 strength = 5;
+		int32 strength = 5;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 health = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 stamina = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 luck = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		uint8 perception = 5;
-		
 	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		int32 luck = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		int32 perception = 5;
+		
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float sprintSpeed = 800;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float jogSpeed = 400;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float walkSpeed = 200;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float currentSpeed = 200;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float stamina = 100;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		bool isStaminaRegenerable = true;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float maxStamina = 100;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float sprintCost = 0.1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		int32 health = 100;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+		float staminaRegen = 0.5f;
 };

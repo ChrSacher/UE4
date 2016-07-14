@@ -3,7 +3,7 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
-#include "DamageInterface.h"
+#include "DamageEnum.h"
 #include "DamageComponent.generated.h"
 
 
@@ -22,22 +22,29 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		UPhysicsAsset* physicsAsset;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		TArray<FString> boneNames;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		TArray<DamageBodyPart> damageTypes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<float> damageModifiers;
 
 		TMap<FString,DamageBodyPart> boneBodyPartMap;
 
+	
+		TMap<DamageBodyPart, float> damageModifierMap;
+
+	
 	void setup();
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		void triggerDamage(DamageBodyPart BodyPart, ABullet* bullet);
-
+		float damageAmmount(DamageBodyPart BodyPart, ABullet* bullet);
+		float damageAmmount(DamageBodyPart BodyPart, float damage);
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		void checkIfDamage(FString bonename, ABullet* causer);
+	DamageBodyPart getDamagedBodyPart(FString bonename);
 };

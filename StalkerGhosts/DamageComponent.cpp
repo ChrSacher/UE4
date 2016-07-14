@@ -2,6 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "StalkerGhostsCharacter.h"
+#include "DamageInterface.h"
 #include "DamageComponent.h"
 
 
@@ -42,24 +43,33 @@ void UDamageComponent::setup()
 	{
 		boneBodyPartMap.Add(boneNames[i], damageTypes[i]);
 	}
+	for (uint8 i = 0; i < uint8 (DamageBodyPart::NUM); i++)
+	{
+		damageModifierMap.Add(DamageBodyPart(i), damageModifiers[i]);
+	}
 }
 
-void  UDamageComponent::triggerDamage(DamageBodyPart BodyPart,ABullet* bullet)
+float  UDamageComponent::damageAmmount(DamageBodyPart BodyPart,ABullet* bullet)
 {
-	AStalkerGhostsCharacter* owner = Cast<AStalkerGhostsCharacter>(GetOwner());
-	if(owner && bullet) owner->doDamage(BodyPart,bullet);
-	if (owner) owner->doDamage(BodyPart, NULL);
+	return damageAmmount(BodyPart, bullet->damage);
+	
 }
-
-void UDamageComponent::checkIfDamage(FString bonename, ABullet* causer)
+float UDamageComponent::damageAmmount(DamageBodyPart BodyPart, float damage)
+{
+	auto* mod = damageModifierMap.Find(BodyPart);
+	if (mod) return damage * *mod;
+	return damage;
+}
+DamageBodyPart  UDamageComponent::getDamagedBodyPart(FString bonename)
 {
 	auto* bone = boneBodyPartMap.Find(bonename);
+
 	if (bone)
 	{
-		triggerDamage(*bone, causer);
+		return *bone;
 	}
 	else
 	{
-		triggerDamage(DamageBodyPart::NON, causer);
+		return DamageBodyPart::NON;
 	}
 }

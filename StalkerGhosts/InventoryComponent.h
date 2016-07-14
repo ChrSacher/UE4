@@ -21,10 +21,10 @@ public:
 
 
 	UPROPERTY(EditAnywhere, Category = Inventory)
-		int8 maxWeight;
+		uint16 maxWeight = 60;
 
 	UPROPERTY(EditAnywhere, Category = Inventory)
-		int8 currentWeight;
+		uint16 currentWeight;
 	
 	
 	TMap<ItemCategory, TMap<UItemBase*,UItemBase*>> items;

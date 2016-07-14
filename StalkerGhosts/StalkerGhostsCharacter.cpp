@@ -19,6 +19,7 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	currentWeapon = CreateDefaultSubobject<UWeaponComponent>(TEXT("Weapon"));
 	currentInventory = CreateDefaultSubobject<UInventoryComponent>(TEXT("Inventory"));
 	damageComponent = CreateDefaultSubobject<UDamageComponent>(TEXT("Damage"));
+	currentGrenade = CreateDefaultSubobject<UGrenadeComponent>(TEXT("Grenade"));
 	SetActorHiddenInGame(false);
 	// set our turn rates for input
 	BaseTurnRate = 45.f;
@@ -63,11 +64,11 @@ void AStalkerGhostsCharacter::BeginPlay()
 	changeStance(Movement::JOGGING);
 	//currentInventory = NewObject<UInventoryComponent>();
 	currentInventory->loadUI();
-	currentInventory->addItem(currentWeapon->currentMagazine);
+	currentInventory->mainInventory->SetVisibility(ESlateVisibility::Hidden);
 	currentInventory->refresh();
 	FirstPersonCameraComponent->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
 	
-	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = jogSpeed;
+	GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->jogSpeed;
 	changeWeapon(currentWeapon);
 }
 
@@ -101,6 +102,8 @@ void AStalkerGhostsCharacter::SetupPlayerInputComponent(class UInputComponent* I
 
 	InputComponent->BindAction("Inventory", IE_Pressed, this, &AStalkerGhostsCharacter::OnInventory);
 	InputComponent->BindAction("Inventory", IE_Released, this, &AStalkerGhostsCharacter::OffInventory);
+
+	InputComponent->BindAction("Grenade", IE_Pressed, this, &AStalkerGhostsCharacter::onGrenade);
 
 	InputComponent->BindAction("Reload", IE_Pressed, this, &AStalkerGhostsCharacter::OnReload);
 
@@ -177,15 +180,16 @@ void AStalkerGhostsCharacter::changeWeapon(UWeaponComponent* newWeapon)
 		UE_LOG(LogTemp, Warning, TEXT("WEAPONMESH = NULL"));
 		return;
 	}
-	newWeapon->mesh->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
+	newWeapon->mesh->SetRelativeLocation(- newWeapon->mesh->GetSocketLocation("GripPoint"));
+	newWeapon->mesh->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::KeepRelative, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
 	FP_MuzzleLocation->AttachToComponent(newWeapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
-	//newWeapon->mesh->SetRelativeLocation(newWeapon->mesh->GetSocketLocation("GripPoint"));
+	
 	newWeapon->mesh->SetVisibility(true);
 }
 
 void AStalkerGhostsCharacter::MoveForward(float Value)
 {
-	characterAnim->speed = GetVelocity().Size() / sprintSpeed * 100;
+	characterAnim->speed = GetVelocity().Size() / currentAttributes->sprintSpeed * 100;
 	if (Value != 0.0f)
 	{
 		if (Value < -0.1f && stance == Movement::SPRINTING) OffSprint();
@@ -223,7 +227,7 @@ void AStalkerGhostsCharacter::OnReload()
 	//look through inventory to see if there is ammo
 	if (!currentInventory) return;
 	
-	if (!checkMag(currentInventory->lookForItems(currentWeapon->currentMagazine->name)))
+	if (!checkMag(currentInventory->lookForItems(currentWeapon->currentLoadedBullet)))
 	{
 		for (int i = 0; i < currentWeapon->acceptedBullets.Num(); i++)
 		{
@@ -256,16 +260,16 @@ bool AStalkerGhostsCharacter::checkMag(TArray<UItemBase*> Items)
 	if (Items.Num() == 0) return false;
 	for (int i = 0; i < Items.Num(); i++)
 	{
-		if (currentWeapon->currentMagazine->currentAmmoCount <= currentWeapon->currentMagazine->ammoCapacity)
+		if (currentWeapon->currentAmmoCount <= currentWeapon->ammoCapacity)
 		{
-			if (Items[i]->ammount >= (currentWeapon->currentMagazine->ammoCapacity - currentWeapon->currentMagazine->currentAmmoCount))
+			if (Items[i]->ammount >= (currentWeapon->ammoCapacity - currentWeapon->currentAmmoCount))
 			{
-				currentWeapon->currentMagazine->currentAmmoCount = currentWeapon->currentMagazine->ammoCapacity;
-				Items[i]->ammount =- currentWeapon->currentMagazine->ammoCapacity - currentWeapon->currentMagazine->currentAmmoCount;
+				currentWeapon->currentAmmoCount = currentWeapon->ammoCapacity;
+				Items[i]->ammount =- currentWeapon->ammoCapacity - currentWeapon->currentAmmoCount;
 			}
 			else
 			{
-				currentWeapon->currentMagazine->currentAmmoCount += Items[i]->ammount;
+				currentWeapon->currentAmmoCount += Items[i]->ammount;
 				Items[i]->ammount = 0;
 			}
 			
@@ -287,7 +291,7 @@ void AStalkerGhostsCharacter::StopJumping()
 	bPressedJump = false;
 	JumpKeyHoldTime = 0.0f;
 	characterAnim->jumping = false;
-	changeWeapon(currentWeapon);
+	
 }
 void AStalkerGhostsCharacter::Sprint()
 {
@@ -296,32 +300,32 @@ void AStalkerGhostsCharacter::Sprint()
 	{
 		case Movement::SPRINTING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = sprintSpeed;
-			stamina -= sprintCost;
-			if (stamina <= 0)
+			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->sprintSpeed;
+			currentAttributes->stamina -= currentAttributes->sprintCost;
+			if (currentAttributes->stamina <= 0)
 			{
-				stamina = 0;
+				currentAttributes->stamina = 0;
 				changeStance(Movement::JOGGING);
 				
 			}
 		}break;
 		case Movement::WALKING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = walkSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->walkSpeed;
 		}break;
 		case Movement::JOGGING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = jogSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->jogSpeed;
 			GetWorld()->GetTimerManager().ClearTimer(speedHandle);
 				return;
 		}break;
 		case Movement::CROUCHING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = (jogSpeed - walkSpeed) / 4 + walkSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = (currentAttributes->jogSpeed - currentAttributes->walkSpeed) / 4 + currentAttributes->walkSpeed;
 		}break;
 		case Movement::PRONING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = walkSpeed;
+			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->walkSpeed;
 		}break;
 	}
 	
@@ -357,13 +361,13 @@ void AStalkerGhostsCharacter::regainStamina()
 {
 	if (stance == Movement::SPRINTING ) return;
 	
-	if (stamina >= maxStamina)
+	if (currentAttributes->stamina >= currentAttributes->maxStamina)
 	{
-		stamina = maxStamina;
+		currentAttributes->stamina = currentAttributes->maxStamina;
 		GetWorld()->GetTimerManager().ClearTimer(staminaHandle);
 		return;
 	}
-	stamina += staminaRegen;
+	currentAttributes->stamina += currentAttributes->staminaRegen;
 	
 	
 	
@@ -462,7 +466,40 @@ void AStalkerGhostsCharacter::onInteract()
 	}
 }
 
-void AStalkerGhostsCharacter::doDamage(DamageBodyPart BodyPart, ABullet* Cause)
+void AStalkerGhostsCharacter::doDamage(float suggestedDamage,DamageBodyPart BodyPart,EDamageType type,FVector veloc,FVector location)
+{
+	currentAttributes->health -= suggestedDamage;
+	// armor calc here and stuff
+	UE_LOG(LogTemp, Warning, TEXT("%f"), suggestedDamage);
+	if (currentAttributes->health <= 0)
+	{
+		Mesh1P->SetSimulatePhysics(true);
+		Mesh1P->WakeRigidBody();
+		RootComponent = Mesh1P;
+		GetCapsuleComponent()->SetCollisionProfileName(TEXT("OverlapAll"));
+		Mesh1P->AddImpulseAtLocation(veloc, location);
+	}
+}
+
+void AStalkerGhostsCharacter::startDamage(FString bonename, ABullet* causer)
+{
+	DamageBodyPart BodyPart = damageComponent->getDamagedBodyPart(bonename);
+	doDamage(damageComponent->damageAmmount(BodyPart, causer), BodyPart,causer->type,causer->GetVelocity(),causer->GetActorLocation());
+}
+
+void AStalkerGhostsCharacter::takeGrenadeDamage(AGrenade* Causer)
 {
 
 }
+void AStalkerGhostsCharacter::startShrapnelDamage(FString bonename, AGrenade* causer)
+{
+	DamageBodyPart BodyPart = damageComponent->getDamagedBodyPart(bonename);
+	doDamage(damageComponent->damageAmmount(BodyPart, causer->shrapnelDamage), BodyPart,EDamageType::SHRAPNEL,causer->GetVelocity(), causer->GetActorLocation());
+}
+
+void AStalkerGhostsCharacter::onGrenade()
+{
+	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation(), GetActorRotation());
+}
+
+

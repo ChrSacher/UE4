@@ -1,9 +1,9 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include "MagazineComponent.h"
 #include <map>
-
+#include "ItemBase.h"
+#include "Bullet.h"
 #include "Components/ActorComponent.h"
 #include "WeaponComponent.generated.h"
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -49,6 +49,16 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		USoundBase*  emptySound;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+		TSubclassOf<class ABullet> bullet;
+
+	UPROPERTY(EditAnywhere, Category = Magazine)
+		int32 ammoCapacity = 30;
+
+	UPROPERTY(EditAnywhere, Category = Magazine)
+		int32 currentAmmoCount = 30;
+	UPROPERTY(EditAnywhere, Category = Magazine)
+		FString currentLoadedBullet;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		USkeletalMeshComponent* mesh;
 
@@ -60,66 +70,24 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GMagazine)
 		USpotLightComponent* light;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GMagazine)
-		UMagazineComponent* currentMagazine;
 	/** AnimMontage to play each time we fire */
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* FireAnimation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* ReloadAnimation;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* IdlingAnimation;
 
-	void playSound(FVector place)
-	{
-		if (weaponSound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, weaponSound, place);
-		}
-	}
 
-	void playEmptySound(FVector place)
-	{
-		if (emptySound != NULL)
-		{
-			UGameplayStatics::PlaySoundAtLocation(this, emptySound,place);
-		}
-	}
+	void playSound(FVector place);
 
-	void reload(UMagazineComponent* CurrentMagazine)
-	{
-		currentMagazine = CurrentMagazine;
-		isReloading = true;
-		GetWorld()->GetTimerManager().SetTimer(reloadHandle, this, &UWeaponComponent::endReload, reloadTime, false);
-	}
-	void endReload()
-	{
-		isReloading = false;
-	}
-	bool Fire(FVector SpawnLocation, FRotator SpawnRotation)
-	{
-		if (!currentMagazine || isReloading)
-		{
-			//needs to be in 2 times because first one is a check if variable is NULL
-			playEmptySound(SpawnLocation);
-			return false;
-		}
+	void playEmptySound(FVector place);
 
-		if (currentMagazine->fireBullet(SpawnLocation, SpawnRotation) )
-		{
-			playSound(SpawnLocation);
-			
-			// try and play a firing animation if specified
-			return true;
-			
-		}
-		else //if thjere is no bullets in the mag play the 
-		{
-			playEmptySound(SpawnLocation);
-			return false;
-
-		}
-	}
+	void reload(float bulletammount);
+	void endReload();
+	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
 
 };

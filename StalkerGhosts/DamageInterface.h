@@ -1,10 +1,10 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#pragma once
 #include "GameFramework/Actor.h"
 #include "Bullet.h"
-#include "DamageEnum.h"
+#include "Grenade.h"
+#include "DamageComponent.h"
 #include "DamageInterface.generated.h"
 
 
@@ -20,6 +20,9 @@ class IDamageInterface
 {
 	GENERATED_IINTERFACE_BODY()
 public:
-	virtual void doDamage(DamageBodyPart BodyPart,ABullet* Cause) {};
-	
-};
+	virtual void doDamage(float damage,DamageBodyPart BodyPart, EDamageType type, FVector veloc = FVector(), FVector location = FVector()) {};
+	virtual void startDamage(FString bonename, ABullet* causer) {}
+
+	virtual void takeGrenadeDamage(AGrenade* Causer) {}
+	virtual void startShrapnelDamage(FString bonename, AGrenade* causer) {};
+}; 

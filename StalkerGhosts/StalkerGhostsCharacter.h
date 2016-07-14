@@ -6,7 +6,9 @@
 #include "StalkerCharacterAnim.h"
 #include "InteractInterface.h"
 #include "CharacterAttributes.h"
-#include "DamageComponent.h"
+#include "DamageInterface.h"
+#include "DataTables.h"
+#include "GrenadeComponent.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
@@ -29,32 +31,7 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 		float BaseTurnRate;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float sprintSpeed = 800;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float jogSpeed = 400;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float walkSpeed = 200;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float currentSpeed = 200;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float stamina = 100;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		bool isStaminaRegenerable = true;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float maxStamina = 100;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float sprintCost = 0.1f;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float staminaRegen = 0.5f;
+	
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		bool isSprinting = false;
@@ -78,6 +55,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		UWeaponComponent* currentWeapon;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		UGrenadeComponent* currentGrenade;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* Mesh1P;
 
@@ -95,13 +75,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UInventoryComponent* currentInventory;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-		UDamageComponent* damageComponent;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UCharacterAttributes* currentAttributes;
 
-
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		UDamageComponent* damageComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle staminaHandle;
@@ -112,7 +91,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle speedHandle;
 
-	virtual void doDamage(DamageBodyPart BodyPart, ABullet* Cause) override;
+	virtual void doDamage(float suggestedDamage, DamageBodyPart BodyPart, EDamageType type, FVector veloc, FVector location) override;
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void startDamage(FString bonename, ABullet* causer) override;
+	virtual void takeGrenadeDamage(AGrenade* Causer);
+	virtual void startShrapnelDamage(FString bonename, AGrenade* causer) ;
+
 
 protected:
 	
@@ -178,7 +162,7 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
-	
+	void onGrenade();
 protected:
 	// APawn interface
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
