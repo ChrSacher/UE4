@@ -9,7 +9,7 @@
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class STALKERGHOSTS_API UGrenadeComponent : public UItemBase
+class STALKERGHOSTS_API UGrenadeComponent : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -25,15 +25,13 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
 		TArray <FString> allowedGrenadesStrings;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
-		TArray <AGrenade*> allowedGrenades;
 	
 	TMap<FString, AGrenade*> allowedGrenadesMap;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
 		FString selectedGrenade;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
-		TSubclassOf<class AGrenade> bullet;
+		UDataTable* grenadeTable;
 
 	bool throwGrenade(FVector SpawnLocation, FRotator SpawnRotation);
 };

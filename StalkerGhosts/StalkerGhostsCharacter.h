@@ -9,6 +9,7 @@
 #include "DamageInterface.h"
 #include "DataTables.h"
 #include "GrenadeComponent.h"
+#include "WeaponComponent.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
@@ -111,7 +112,7 @@ protected:
 	void OnReload();
 	void offReload();
 
-	void changeWeapon(UWeaponComponent* newWeapon);
+	void changeWeapon(FString& ID);
 	bool checkMag(TArray<UItemBase*> Items);
 	//sprinting
 	void OnSprint();

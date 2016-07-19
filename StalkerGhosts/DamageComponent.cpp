@@ -53,6 +53,7 @@ float  UDamageComponent::damageAmmount(DamageBodyPart BodyPart,ABullet* bullet)
 {
 	return damageAmmount(BodyPart, bullet->damage);
 	
+
 }
 float UDamageComponent::damageAmmount(DamageBodyPart BodyPart, float damage)
 {
@@ -71,5 +72,18 @@ DamageBodyPart  UDamageComponent::getDamagedBodyPart(FString bonename)
 	else
 	{
 		return DamageBodyPart::NON;
+	}
+}
+
+float UDamageComponent::calculateGrenadeDamage(AGrenade* grenade)
+{
+	if (FVector::Dist(GetOwner()->GetActorLocation(),grenade->GetActorLocation()) > grenade->range / 2)
+	{
+		
+		return (0.25 + 0.75 * FVector::Dist(GetOwner()->GetActorLocation(), grenade->GetActorLocation()) / grenade->range) * grenade->damage;
+	}
+	else
+	{
+		return grenade->damage;
 	}
 }

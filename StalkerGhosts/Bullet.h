@@ -6,6 +6,9 @@
 #include "DamageEnum.h"
 #include "Bullet.generated.h"
 
+
+struct FBulletLookUpTable;
+
 UCLASS(config = Game)
 class STALKERGHOSTS_API ABullet : public AActor
 {
@@ -22,16 +25,16 @@ public:
 	virtual void Tick( float DeltaSeconds ) override;
 
 	UPROPERTY(EditAnywhere, Category = Bullet)
-		FString name = "DefaultBullet";
-
-	UPROPERTY(EditAnywhere, Category = Magazine)
 		float damage = 10.0f; 
 
-	UPROPERTY(EditAnywhere, Category = Magazine)
+	UPROPERTY(EditAnywhere, Category = Bullet)
 		float velocity = 7000.0f; //in cm/s
-	UPROPERTY(EditAnywhere, Category = Magazine)
+	UPROPERTY(EditAnywhere, Category = Bullet)
 		EDamageType type;
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		UStaticMeshComponent* mesh;
 
+	void loadFromDataTable(FBulletLookUpTable* row);
 	
 								 /** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)

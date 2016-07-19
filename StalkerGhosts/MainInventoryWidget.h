@@ -3,7 +3,7 @@
 #pragma once
 
 #include "StalkerGhosts.h"
-#include "ItemWidget.h"
+#include "ItemCategoryWidget.h"
 #include "MainInventoryWidget.generated.h"
 /**
  * 

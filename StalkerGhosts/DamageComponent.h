@@ -4,6 +4,8 @@
 
 #include "Components/ActorComponent.h"
 #include "DamageEnum.h"
+#include "Grenade.h"
+#include "Bullet.h"
 #include "DamageComponent.generated.h"
 
 
@@ -46,5 +48,8 @@ public:
 		float damageAmmount(DamageBodyPart BodyPart, float damage);
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	DamageBodyPart getDamagedBodyPart(FString bonename);
+		float calculateGrenadeDamage(AGrenade* grenade);
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		DamageBodyPart getDamagedBodyPart(FString bonename);
 };

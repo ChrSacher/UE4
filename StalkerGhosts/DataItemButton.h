@@ -5,7 +5,7 @@
 #include "Components/Button.h"
 #include "DataItemButton.generated.h"
 
-
+class UItemBase;
 /**
  * 
  */
@@ -16,11 +16,14 @@ class STALKERGHOSTS_API UDataItemButton : public UButton
 	DECLARE_DELEGATE_OneParam(UDataItemButtonDelegate, UDataItemButton*)
 	//can be made better but works for now
 public:
-	UObject* UserPointer;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = User)
+		UItemBase* UserPointer;
+
 	UDataItemButtonDelegate click;
 	UDataItemButtonDelegate hover;
 	UDataItemButtonDelegate unhover;
-	uint8 UserNumber;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = User)
+		uint8 UserNumber;
 	//this is litteraly going against Design decision but it works
 	bool CategoryIdentifier;
 	UFUNCTION(BlueprintCallable, Category = "Event")

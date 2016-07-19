@@ -2,6 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "InventoryComponent.h"
+#include "DataTables.h"
 #include "ItemBaseActor.h"
 #include "Runtime/UMG/Public/UMG.h"
 #include "Runtime/UMG/Public/UMGStyle.h"
@@ -87,7 +88,20 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 	refresh();
 	return true;
 }
-
+UItemBase* UInventoryComponent::addItem(FString& ID, bool forceNew)
+{
+	UItemBase* base = NewObject<UItemBase>();
+	static const FString ContextString(TEXT("GENERAL"));
+	FItemLookUpTable* row = itemTable->FindRow<FItemLookUpTable>(FName(*ID), ContextString);
+	if (!row)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ItemRowNotFound"));
+		return NULL;
+	}
+	base->loadFromTable(row);
+	if (addItem(base, forceNew)) return base;
+	return NULL;
+}
 
 bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
 {
@@ -148,12 +162,26 @@ void UInventoryComponent::print()
 
 UItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 {
+	for (auto& x : items)
+	{
+		for (auto& y : x.Value)
+		{
+			if (y.Value->dataTabelIdentifier == name) return y.Value;
+		}
+	}
 	return NULL;
 }
 TArray<UItemBase*> UInventoryComponent::lookForItems(FString &name)
 {
-	
-	return TArray<UItemBase*>();
+	TArray<UItemBase*> vec;
+	for (auto& x : items)
+	{
+		for (auto& y : x.Value)
+		{
+			if (y.Value->dataTabelIdentifier == name) vec.Add(y.Value);
+		}
+	}
+	return vec;
 }
 
 void UInventoryComponent::loadUI()
@@ -166,18 +194,19 @@ void UInventoryComponent::loadUI()
 			
 			if (!mainInventory)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Mw"));
+				
 				return;
 			}
-			UE_LOG(LogTemp, Warning, TEXT("Ms"));
+			
 			mainInventory->AddToViewport();
 		}
-		UE_LOG(LogTemp, Warning, TEXT("Md"));
+		
 	}
-	UE_LOG(LogTemp, Warning, TEXT("that"));
+	
 	categories.Empty();
 	if (categoryTemplate)
 	{
+		static const FString ContextString(TEXT("GENERAL"));
 		for (uint8 i = 0; i < uint8(ItemCategory::NUM); i++)
 		{
 			UItemCategoryWidget* x = CreateWidget<UItemCategoryWidget>(GetWorld(), categoryTemplate);
@@ -186,6 +215,16 @@ void UInventoryComponent::loadUI()
 			x->CategoryButton->UserNumber = i;
 			x->CategoryButton->CategoryIdentifier = true;
 			x->CategoryButton->click.BindUObject(this, &UInventoryComponent::onCategoryClicked);
+			FCategoryLookUpTable* row = categoryTable->FindRow<FCategoryLookUpTable>(FName(* FString::FromInt(i)), ContextString);
+			if (!row)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("CategoryRowNotFound"));
+			}
+			else
+			{
+				x->CategoryPicture = row->CategoryPicture;
+			}
+			
 		}
 	}
 }
@@ -224,6 +263,7 @@ void UInventoryComponent::refresh()
 			s.Key->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
 		}
 		mainInventory->ItemBox->AddChild(s.Key->widget);
+		//mainInventory->ItemBox->
 		s.Key->widget->ItemButton->CategoryIdentifier = false;
 		s.Key->widget->ItemButton->UserPointer = s.Key;
 		s.Key->widget->ItemButton->click.Unbind();

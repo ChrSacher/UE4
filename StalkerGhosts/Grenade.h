@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "Grenade.generated.h"
 
+struct FGrenadeLookUpTable;
 UCLASS()
 class STALKERGHOSTS_API AGrenade : public AActor
 {
@@ -20,28 +21,36 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		float fuzeTime = 5.0f;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
-		uint16 sharpnelAmmount = 10;
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		uint32 sharpnelAmmount = 10;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		float explosionForce = 10000;//will form a vector from grenade to actor normalize and multiply
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		float damage = 10;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		float shrapnelDamage = 10;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
-		float range = 25;
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		float range = 150;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		float shrapnelVelocitry = 1000;
 
-	UPROPERTY(EditAnywhere, Category = Grenade)
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		UParticleSystem* flash;
-	UPROPERTY(EditAnywhere, Category = Grenade)
-		TSubclassOf<class ABullet> bullet;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		UStaticMeshComponent* mesh;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		USoundBase* sound;
+	void loadGrenadeFromDataTable(FGrenadeLookUpTable* row); //currently done because of Circle inc
 
 	FTimerHandle explosionTimer;
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
@@ -49,19 +58,22 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 		class USphereComponent* explosionSphere;
+
 		/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		class UProjectileMovementComponent* ProjectileMovement;
-		UFUNCTION()
-			void activate();
 
-		UFUNCTION()
-			void explode();
+	UFUNCTION()
+		void activate();
+
+	UFUNCTION()
+		void explode();
+
 	/** called when projectile hits something */
 		UFUNCTION()
 			void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 		UFUNCTION()
-			void OnOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+			void explosionTrace();
 		
 		/** Returns CollisionComp subobject **/
 		FORCEINLINE class USphereComponent* GetCollisionComp() const { return CollisionComp; }

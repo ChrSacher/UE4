@@ -18,3 +18,17 @@ bool UItemBase::equals(UItemBase* other)
 	return name == other->name;
 }
 
+void UItemBase::loadFromTable(FItemLookUpTable* table)
+{
+
+		picture = table->picture;
+		weight = table->weight;
+		ammount = table->ammount;
+		maxAmmount = table->maxAmmount;
+		name = table->name;
+		groundMesh = table->groundMesh;
+		worth = table->worth;
+		type= table->type ;
+		dataTabelIdentifier = table->dataTabelIdentifier;
+		itemIdentifier = table->itemIdentifier;
+}

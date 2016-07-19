@@ -5,10 +5,12 @@
 #include "ItemBase.h"
 #include "Bullet.h"
 #include "Components/ActorComponent.h"
+#include "DataTables.h"
+#include "Weapon.h"
 #include "WeaponComponent.generated.h"
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 
-class STALKERGHOSTS_API UWeaponComponent : public UItemBase
+class STALKERGHOSTS_API UWeaponComponent : public UActorComponent
 {
 	
 	GENERATED_BODY()
@@ -28,65 +30,45 @@ public:
 	//std::map<std::string, UMagazineComponent> compatibleMagazines;
 
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		float muzzleVelocityCoeff = 1.0f; 
-
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		float reloadTime = 5.0f;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle reloadHandle;
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool isReloading = false;
+	
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		float fireRate = 600.0f;
-
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		USoundBase*  weaponSound;
-
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		USoundBase*  emptySound;
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+		FString loadedWeapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-		TSubclassOf<class ABullet> bullet;
+		UDataTable* bulletDataTable;
 
-	UPROPERTY(EditAnywhere, Category = Magazine)
-		int32 ammoCapacity = 30;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+		UDataTable* weaponDataTable;
+
+	
 
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		int32 currentAmmoCount = 30;
+
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		FString currentLoadedBullet;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
-		USkeletalMeshComponent* mesh;
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		TArray<FString> acceptedBullets;
-
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		TSubclassOf<UParticleSystem> flash;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GMagazine)
-		USpotLightComponent* light;
-	/** AnimMontage to play each time we fire */
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* FireAnimation;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		bool isReloading = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* ReloadAnimation;
+	
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* IdlingAnimation;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		AWeapon* weapon;
 
-
+		void loadWeapon(FString &ID);
 	void playSound(FVector place);
 
 	void playEmptySound(FVector place);
-
-	void reload(float bulletammount);
+	void startReload();
+	bool reload(int32 &bulletammount);
 	void endReload();
 	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
 

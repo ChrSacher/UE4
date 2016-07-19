@@ -1,6 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "StalkerGhosts.h"
+#include "Weapon.h"
 #include "WeaponComponent.h"
 
 
@@ -11,10 +12,7 @@ UWeaponComponent::UWeaponComponent()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	acceptedBullets.Push("Default");
-	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
-	light = CreateDefaultSubobject<USpotLightComponent>(TEXT("Light"));
-	light->SetupAttachment(mesh);
+
 	// ...
 }
 
@@ -23,7 +21,6 @@ UWeaponComponent::UWeaponComponent()
 void UWeaponComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	light->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
 	// ...
 	
 }
@@ -39,25 +36,46 @@ void UWeaponComponent::TickComponent( float DeltaTime, ELevelTick TickType, FAct
 
 void UWeaponComponent::playSound(FVector place)
 {
-	if (weaponSound != NULL)
+	if (weapon->weaponSound != NULL)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, weaponSound, place);
+		UGameplayStatics::PlaySoundAtLocation(this, weapon->weaponSound, place);
 	}
 }
 
 void UWeaponComponent::playEmptySound(FVector place)
 {
-	if (emptySound != NULL)
+	if (weapon->emptySound != NULL)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, emptySound, place);
+		UGameplayStatics::PlaySoundAtLocation(this, weapon->emptySound, place);
 	}
 }
-
-void UWeaponComponent::reload(float bulletammount)
+void UWeaponComponent::startReload()
 {
-	currentAmmoCount = bulletammount;
 	isReloading = true;
-	GetWorld()->GetTimerManager().SetTimer(reloadHandle, this, &UWeaponComponent::endReload, reloadTime, false);
+	GetWorld()->GetTimerManager().SetTimer(reloadHandle, this, &UWeaponComponent::endReload, weapon->reloadTime, false);
+}
+bool UWeaponComponent::reload(int32 &bulletammount)
+{
+	if (currentAmmoCount >= weapon->ammoCapacity)
+	{
+		currentAmmoCount = weapon->ammoCapacity;
+		return true;
+	}
+	if (bulletammount >= (weapon->ammoCapacity - currentAmmoCount))
+	{
+		int32 toAdd = weapon->ammoCapacity - currentAmmoCount;
+		bulletammount -= toAdd;
+
+		return true;
+	}
+	else
+	{
+		currentAmmoCount += bulletammount;
+		bulletammount = 0;
+		return false;
+	}
+	return false;
+	
 }
 void UWeaponComponent::endReload()
 {
@@ -77,9 +95,16 @@ bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 	if (!empty)
 	{
 		playSound(SpawnLocation);
-		GetWorld()->SpawnActor<ABullet>(bullet, SpawnLocation, SpawnRotation);
-		currentAmmoCount -= 1;
-		return true;
+		static const FString ContextString(TEXT("GENERAL"));
+		FBulletLookUpTable* row = bulletDataTable->FindRow<FBulletLookUpTable>(FName(*currentLoadedBullet), ContextString);
+		if (!row) UE_LOG(LogTemp, Warning, TEXT("BulletRowNotFound"));
+		if (row->bullet)
+		{
+			GetWorld()->SpawnActor<ABullet>(row->bullet, SpawnLocation, SpawnRotation)->loadFromDataTable(row);
+			currentAmmoCount -= 1;
+			return true;
+		}
+		return false;
 
 	}
 	else //if thjere is no bullets in the mag play the 
@@ -88,4 +113,20 @@ bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 		return false;
 
 	}
+}
+
+void UWeaponComponent::loadWeapon(FString &ID)
+{
+	loadedWeapon = ID;
+	static const FString ContextString(TEXT("GENERAL"));
+	FWeaponLookUpTable* row = weaponDataTable->FindRow<FWeaponLookUpTable>(FName(*ID), ContextString);
+	if (!row)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("WeaponRowNotFound"));
+		return;
+	}
+	if (weapon) weapon->Destroy();
+	weapon = GetWorld()->SpawnActor<AWeapon>(row->weapon, FVector(), FRotator());
+	weapon->loadWeapon(row);
+	weapon->weaponID = ID;
 }

@@ -2,23 +2,12 @@
 
 #pragma once
 #include "Components/ActorComponent.h"
-#include "MainInventoryWidget.h"
+#include "ItemWidget.h"
+#include "ItemEnums.h"
+#include "DataTables.h"
 #include "ItemBase.generated.h"
 
-UENUM(BlueprintType)
-enum class ItemCategory : uint8
-{
-	ALL = 0,
-	WEAPON = 1,
-	ARMOR = 2,
-	BOOTS = 3,
-	GLOVES =4,
-	ITEM = 5,
-	MEDICAL = 6,
-	FOOD = 7,
-	GRENADES = 8,
-	NUM = 9
-};
+
 UCLASS()
 class UItemBase : public UActorComponent
 {
@@ -27,37 +16,42 @@ public:
 	UItemBase();
 	~UItemBase();
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UTexture2D* picture;
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		float weight = 1;
 
-	UPROPERTY(EditAnywhere, Category = Item)
-		uint16 ammount = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		int32 ammount = 1;
 
-	UPROPERTY(EditAnywhere, Category = Item)
-		uint16 maxAmmount = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		int32 maxAmmount = 1;
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		FString name = "Default";
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UStaticMesh* groundMesh;
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		float worth = 50;
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		ItemCategory type = ItemCategory::ITEM;
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		FString dataTabelIdentifier;
 
-	UPROPERTY(EditAnywhere, Category = Item)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		FString itemIdentifier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UItemWidget* widget;
 
-	bool equals(UItemBase* other);
+	
 
+	bool equals(UItemBase* other);
+	void loadFromTable(FItemLookUpTable* table);
 };
 

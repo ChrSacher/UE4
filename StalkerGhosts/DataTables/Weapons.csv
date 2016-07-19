@@ -1,8 +1,8 @@
-Mesh,Name,MuzzleVelocity,ReloadTime, FireRate,WeaponSound,EmptySound,Bullet Class,AmmoCapacity,Flash,Spotlight,FireAnimation,ReloadAnimation,IdlingAnimation
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
-,,,,,,,,,,,,,
+,mesh,name,velocity,muzzleVelocityCoeff,reloadTime,fireRate,weaponSound,emptySound, bullet, ammoCapacity,flash,spotLight,FireAnimation,ReloadAnimation,IdlingAnimation
+AK47,,,,,,,,,,,,,,,
+Ak47_1,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,
+,,,,,,,,,,,,,,,

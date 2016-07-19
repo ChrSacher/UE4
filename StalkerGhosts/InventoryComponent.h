@@ -2,6 +2,8 @@
 #include "ItemBase.h"
 #include "Components/ActorComponent.h"
 #include "MainInventoryWidget.h"
+#include "ItemCategoryWidget.h"
+#include "DataTables.h"
 #include "InventoryComponent.generated.h"
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -40,7 +42,8 @@ public:
 	UItemBase* selectedItem;
 
 	ItemCategory currentCategory = ItemCategory::ITEM;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UDataTable* categoryTable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class UItemCategoryWidget> categoryTemplate;
 
@@ -53,9 +56,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class AItemBaseActor> itemBaseTemplate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UDataTable* itemTable;
+
 	bool addItemCreate(UItemBase* Item);
 	bool addItem(UItemBase* Item, bool forceNew = false);
-
+	UItemBase* addItem(FString& ID, bool forceNew = false);
 	bool removeItem(UItemBase* Item, int8 ammount = -1);
 	UItemBase* splitItem(UItemBase* Item, float ratio);
 	void dropItem(UItemBase* Item);

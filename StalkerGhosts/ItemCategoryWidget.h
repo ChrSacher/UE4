@@ -9,8 +9,10 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "DataItemButton.h"
+#include "ItemEnums.h"
 #include "ItemCategoryWidget.generated.h"
 
+//enum ItemCategory;
 /**
  * 
  */
@@ -26,5 +28,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UDataItemButton* CategoryButton;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+	ItemCategory cat;
 };

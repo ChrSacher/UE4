@@ -2,7 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "GrenadeComponent.h"
-
+#include "DataTables.h"
 
 // Sets default values for this component's properties
 UGrenadeComponent::UGrenadeComponent()
@@ -36,6 +36,24 @@ void UGrenadeComponent::TickComponent( float DeltaTime, ELevelTick TickType, FAc
 
 bool UGrenadeComponent::throwGrenade(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	GetWorld()->SpawnActor<AGrenade>(bullet, SpawnLocation, SpawnRotation);
+	
+	
+	static const FString ContextString(TEXT("GENERAL"));
+
+	FGrenadeLookUpTable* row = grenadeTable->FindRow<FGrenadeLookUpTable>(FName(*selectedGrenade), ContextString);
+	if (!row)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GrenadeRowNotFound"));
+		return false;
+	}
+	if (!row->grenade)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("GrenadeNotFound"));
+		return false;
+	}
+	AGrenade* gren = GetWorld()->SpawnActor<AGrenade>(row->grenade, SpawnLocation, SpawnRotation);
+	if (!gren) return false;
+	gren->loadGrenadeFromDataTable(row);
+	gren->activate();
 	return true;
 }
