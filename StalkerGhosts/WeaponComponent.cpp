@@ -56,21 +56,22 @@ void UWeaponComponent::startReload()
 }
 bool UWeaponComponent::reload(int32 &bulletammount)
 {
-	if (currentAmmoCount >= weapon->ammoCapacity)
+	if (weapon->currentAmmoCount >= weapon->ammoCapacity)
 	{
-		currentAmmoCount = weapon->ammoCapacity;
+		weapon->currentAmmoCount = weapon->ammoCapacity;
 		return true;
 	}
-	if (bulletammount >= (weapon->ammoCapacity - currentAmmoCount))
+	if (bulletammount >= (weapon->ammoCapacity - weapon->currentAmmoCount))
 	{
-		int32 toAdd = weapon->ammoCapacity - currentAmmoCount;
+		int32 toAdd = weapon->ammoCapacity - weapon->currentAmmoCount;
+		weapon->currentAmmoCount += toAdd;
 		bulletammount -= toAdd;
 
 		return true;
 	}
 	else
 	{
-		currentAmmoCount += bulletammount;
+		weapon->currentAmmoCount += bulletammount;
 		bulletammount = 0;
 		return false;
 	}
@@ -89,19 +90,23 @@ bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 		playEmptySound(SpawnLocation);
 		return false;
 	}
-	bool empty = currentAmmoCount <= 0;
+	bool empty = weapon->currentAmmoCount <= 0;
 
 
 	if (!empty)
 	{
 		playSound(SpawnLocation);
 		static const FString ContextString(TEXT("GENERAL"));
-		FBulletLookUpTable* row = bulletDataTable->FindRow<FBulletLookUpTable>(FName(*currentLoadedBullet), ContextString);
-		if (!row) UE_LOG(LogTemp, Warning, TEXT("BulletRowNotFound"));
+		FBulletLookUpTable* row = bulletDataTable->FindRow<FBulletLookUpTable>(FName(*weapon->currentLoadedBullet), ContextString);
+		if (!row)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("BulletRowNotFound"));
+			return false;
+		}
 		if (row->bullet)
 		{
 			GetWorld()->SpawnActor<ABullet>(row->bullet, SpawnLocation, SpawnRotation)->loadFromDataTable(row);
-			currentAmmoCount -= 1;
+			weapon->currentAmmoCount -= 1;
 			return true;
 		}
 		return false;
@@ -117,7 +122,7 @@ bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 
 void UWeaponComponent::loadWeapon(FString &ID)
 {
-	loadedWeapon = ID;
+	
 	static const FString ContextString(TEXT("GENERAL"));
 	FWeaponLookUpTable* row = weaponDataTable->FindRow<FWeaponLookUpTable>(FName(*ID), ContextString);
 	if (!row)
@@ -128,5 +133,13 @@ void UWeaponComponent::loadWeapon(FString &ID)
 	if (weapon) weapon->Destroy();
 	weapon = GetWorld()->SpawnActor<AWeapon>(row->weapon, FVector(), FRotator());
 	weapon->loadWeapon(row);
+	loadedWeapon = ID;
 	weapon->weaponID = ID;
+	
+}
+
+void UWeaponComponent::loadWeapon(AWeapon* ID)
+{
+	weapon = ID;
+	loadedWeapon = ID->weaponID;
 }

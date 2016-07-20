@@ -1,20 +1,20 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
-#include "Components/ActorComponent.h"
+#include "GameFramework/Actor.h"
 #include "ItemWidget.h"
 #include "ItemEnums.h"
-#include "DataTables.h"
+//#include "DataTables.h"
 #include "ItemBase.generated.h"
 
-
+struct FItemLookUpTable;
 UCLASS()
-class UItemBase : public UActorComponent
+class AItemBase : public AActor
 {
 	GENERATED_BODY()
 public:
-	UItemBase();
-	~UItemBase();
+	AItemBase();
+	~AItemBase();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UTexture2D* picture;
@@ -51,7 +51,7 @@ public:
 
 	
 
-	bool equals(UItemBase* other);
+	bool equals(AItemBase* other);
 	void loadFromTable(FItemLookUpTable* table);
 };
 

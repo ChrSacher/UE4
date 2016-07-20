@@ -10,6 +10,7 @@
 #include "DataTables.h"
 #include "GrenadeComponent.h"
 #include "WeaponComponent.h"
+#include "MainHudWidget.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
@@ -76,7 +77,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UInventoryComponent* currentInventory;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		UMainHudWidget* HudWidget;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UCharacterAttributes* currentAttributes;
 
@@ -113,7 +116,8 @@ protected:
 	void offReload();
 
 	void changeWeapon(FString& ID);
-	bool checkMag(TArray<UItemBase*> Items);
+	void changeWeapon(AWeapon* newwep);
+	bool checkMag(TArray<AItemBase*> Items);
 	//sprinting
 	void OnSprint();
 	void OffSprint();

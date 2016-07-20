@@ -2,12 +2,13 @@
 
 #pragma once
 #include "DamageEnum.h"
+#include "ItemBase.h"
 #include "GameFramework/Actor.h"
 #include "Grenade.generated.h"
 
 struct FGrenadeLookUpTable;
 UCLASS()
-class STALKERGHOSTS_API AGrenade : public AActor
+class STALKERGHOSTS_API AGrenade : public AItemBase
 {
 	GENERATED_BODY()
 	

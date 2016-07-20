@@ -26,6 +26,9 @@ public:
 		UTexture2D* CategoryPicture;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		FString categoryText;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UDataItemButton* CategoryButton;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)

@@ -29,17 +29,17 @@ public:
 		uint16 currentWeight;
 	
 	
-	TMap<ItemCategory, TMap<UItemBase*,UItemBase*>> items;
+	TMap<ItemCategory, TMap<AItemBase*,AItemBase*>> items;
 
-	UItemBase* lookForFirstItem(FString &name);
+	AItemBase* lookForFirstItem(FString &name);
 
-	TArray<UItemBase*> lookForItems(FString &name);
+	TArray<AItemBase*> lookForItems(FString &name);
 
 	UMainInventoryWidget* mainInventory;
 
 	TArray<UItemCategoryWidget*> categories;
 
-	UItemBase* selectedItem;
+	AItemBase* selectedItem;
 
 	ItemCategory currentCategory = ItemCategory::ITEM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
@@ -59,13 +59,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UDataTable* itemTable;
 
-	bool addItemCreate(UItemBase* Item);
-	bool addItem(UItemBase* Item, bool forceNew = false);
-	UItemBase* addItem(FString& ID, bool forceNew = false);
-	bool removeItem(UItemBase* Item, int8 ammount = -1);
-	UItemBase* splitItem(UItemBase* Item, float ratio);
-	void dropItem(UItemBase* Item);
-	bool isEnoughSpace(UItemBase* Item);
+	bool addItemCreate(AItemBase* Item);
+	bool addItem(AItemBase* Item, bool forceNew = false);
+	AItemBase* addItem(FString& ID, bool forceNew = false);
+	bool removeItem(AItemBase* Item, int8 ammount = -1);
+	AItemBase* splitItem(AItemBase* Item, float ratio);
+	void dropItem(AItemBase* Item);
+	bool isEnoughSpace(AItemBase* Item);
 
 	void print();
 	void loadUI();

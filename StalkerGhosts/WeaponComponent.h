@@ -48,12 +48,7 @@ public:
 
 	
 
-	UPROPERTY(EditAnywhere, Category = Magazine)
-		int32 currentAmmoCount = 30;
-
-	UPROPERTY(EditAnywhere, Category = Magazine)
-		FString currentLoadedBullet;
-
+	
 	
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		bool isReloading = false;
@@ -64,6 +59,7 @@ public:
 		AWeapon* weapon;
 
 		void loadWeapon(FString &ID);
+		void loadWeapon(AWeapon* ID);
 	void playSound(FVector place);
 
 	void playEmptySound(FVector place);

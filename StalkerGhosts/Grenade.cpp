@@ -84,13 +84,12 @@ void AGrenade::explode()
 		FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
 		FCollisionResponseParams params2 = FCollisionResponseParams();
 		FHitResult result(ForceInit);
-		const FName TraceTag("MyTraceTag");
-		GetWorld()->DebugDrawTraceTag = TraceTag;
-		params.TraceTag = TraceTag;
+		//const FName TraceTag("MyTraceTag");
+		//GetWorld()->DebugDrawTraceTag = TraceTag;
+		//params.TraceTag = TraceTag;
 		params.bTraceComplex = true;
 		params.bTraceAsyncScene = true;
 		params.bReturnPhysicalMaterial = true;
-		UE_LOG(LogTemp, Warning, TEXT("OverlapGrenade"));
 		for (uint32 i = 0; i < sharpnelAmmount; i++)
 		{
 			
@@ -153,13 +152,13 @@ void AGrenade::explosionTrace()
 				if (x && (ignore.Find(HitOut[i].GetActor()) == INDEX_NONE))
 				{
 					const FVector& Start = GetActorLocation();
-					const FVector& End = HitOut[i].GetActor()->GetActorLocation();
+					const FVector& End = GetActorLocation() + (HitOut[i].GetActor()->GetActorLocation()- GetActorLocation()  )*10;
 					FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
 					FCollisionResponseParams params2 = FCollisionResponseParams();
 					FHitResult result(ForceInit);
-					const FName TraceTag("MyTraceTag");
-					GetWorld()->DebugDrawTraceTag = TraceTag;
-					params.TraceTag = TraceTag;
+					//const FName TraceTag("MyTraceTag");
+					//GetWorld()->DebugDrawTraceTag = TraceTag;
+					//params.TraceTag = TraceTag;
 					params.bTraceComplex = true;
 					params.bTraceAsyncScene = true;
 					params.bReturnPhysicalMaterial = true;

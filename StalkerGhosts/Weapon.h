@@ -31,6 +31,11 @@ public:
 		int32 ammoCapacity = 30;
 
 	
+	UPROPERTY(EditAnywhere, Category = Magazine)
+		int32 currentAmmoCount = 0;
+
+	UPROPERTY(EditAnywhere, Category = Magazine)
+		FString currentLoadedBullet;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		float muzzleVelocityCoeff = 1.0f;

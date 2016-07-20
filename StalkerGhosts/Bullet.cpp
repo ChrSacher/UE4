@@ -57,7 +57,7 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	{
 		if(OtherComp->IsSimulatingPhysics())	OtherComp->AddImpulseAtLocation(GetVelocity(), GetActorLocation());
 		IDamageInterface* act = Cast<IDamageInterface>(OtherActor);
-		if (act && Hit.BoneName.ToString() != "None")
+		if (act)
 		{
 			
 			UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.BoneName.ToString());
@@ -74,7 +74,7 @@ void  ABullet::loadFromDataTable(FBulletLookUpTable* row)
 	//FBulletLookUpTable* row = table->FindRow<FBulletLookUpTable>(FName(*ID), ContextString);
 	//if (!row) UE_LOG(LogTemp, Warning, TEXT("BulletRowNotFound"));
 	damage = row->damage;
-	type = row->type;
+	damageType = row->damageType;
 	mesh->SetStaticMesh(row->mesh);
 	velocity = row->velocity;
 }

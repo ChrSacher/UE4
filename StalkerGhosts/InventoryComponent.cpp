@@ -17,7 +17,7 @@ UInventoryComponent::UInventoryComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = false;
 	for (uint8 i = 0; i < uint8(ItemCategory::NUM);i++)
-		items.Add(static_cast<ItemCategory>(i),TMap<UItemBase*, UItemBase*>());
+		items.Add(static_cast<ItemCategory>(i),TMap<AItemBase*, AItemBase*>());
 	
 }
 
@@ -39,9 +39,9 @@ void UInventoryComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 	// ...
 }
 
-bool UInventoryComponent::addItemCreate(UItemBase* Item)
+bool UInventoryComponent::addItemCreate(AItemBase* Item)
 {
-	items[Item->type].Add(Item);
+	items[Item->type].Add(Item,Item);
 	currentWeight += Item->weight * Item->ammount;
 	if (Item->widget) Item->widget->RemoveFromParent();
 	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
@@ -50,7 +50,7 @@ bool UInventoryComponent::addItemCreate(UItemBase* Item)
 
 	return true;
 }
-bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
+bool UInventoryComponent::addItem(AItemBase* Item,bool forceNew)
 {
 	if (!Item) return true;
 
@@ -88,9 +88,9 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 	refresh();
 	return true;
 }
-UItemBase* UInventoryComponent::addItem(FString& ID, bool forceNew)
+AItemBase* UInventoryComponent::addItem(FString& ID, bool forceNew)
 {
-	UItemBase* base = NewObject<UItemBase>();
+	AItemBase* base = NewObject<AItemBase>();
 	static const FString ContextString(TEXT("GENERAL"));
 	FItemLookUpTable* row = itemTable->FindRow<FItemLookUpTable>(FName(*ID), ContextString);
 	if (!row)
@@ -103,12 +103,12 @@ UItemBase* UInventoryComponent::addItem(FString& ID, bool forceNew)
 	return NULL;
 }
 
-bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
+bool UInventoryComponent::removeItem(AItemBase* Item, int8 ammount)
 {
 	if (!Item) return false;
 	if (ammount > 0)
 	{
-		UItemBase* place = items[Item->type][Item];
+		AItemBase* place = items[Item->type][Item];
 		if (place)
 		{
 
@@ -128,18 +128,18 @@ bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
 
 }
 
-void UInventoryComponent::dropItem(UItemBase* Item)
+void UInventoryComponent::dropItem(AItemBase* Item)
 {
 	items[Item->type].Remove(Item);
 	if(Item->ammount > 0) GetWorld()->SpawnActor<AItemBaseActor>(itemBaseTemplate, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation())->spawn(Item);
 	Item->widget->RemoveFromParent();
 }
 
-UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
+AItemBase* UInventoryComponent::splitItem(AItemBase* Item,float ratio)
 {
 	if (!Item) return NULL;
 	if(Item->ammount < 2) return Item;
-	UItemBase* newItem = NewObject<UItemBase>(Item);
+	AItemBase* newItem = NewObject<AItemBase>(Item);
 	int newAmmount = floor(Item->ammount * ratio);
 	newItem->ammount = newAmmount;
 	Item->ammount -= newAmmount;
@@ -149,7 +149,7 @@ UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 
 
 
-bool UInventoryComponent::isEnoughSpace(UItemBase* Item)
+bool UInventoryComponent::isEnoughSpace(AItemBase* Item)
 {
 	if (!Item) return true;
 	return true;
@@ -160,7 +160,7 @@ void UInventoryComponent::print()
 	
 }
 
-UItemBase* UInventoryComponent::lookForFirstItem(FString &name)
+AItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 {
 	for (auto& x : items)
 	{
@@ -171,14 +171,14 @@ UItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 	}
 	return NULL;
 }
-TArray<UItemBase*> UInventoryComponent::lookForItems(FString &name)
+TArray<AItemBase*> UInventoryComponent::lookForItems(FString &name)
 {
-	TArray<UItemBase*> vec;
+	TArray<AItemBase*> vec;
 	for (auto& x : items)
 	{
 		for (auto& y : x.Value)
 		{
-			if (y.Value->dataTabelIdentifier == name) vec.Add(y.Value);
+			if (y.Key->dataTabelIdentifier == name) vec.Add(y.Value);
 		}
 	}
 	return vec;
@@ -211,7 +211,7 @@ void UInventoryComponent::loadUI()
 		{
 			UItemCategoryWidget* x = CreateWidget<UItemCategoryWidget>(GetWorld(), categoryTemplate);
 			categories.Add(x);
-			mainInventory->CategoryBox->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize());
+			mainInventory->CategoryBox->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 			x->CategoryButton->UserNumber = i;
 			x->CategoryButton->CategoryIdentifier = true;
 			x->CategoryButton->click.BindUObject(this, &UInventoryComponent::onCategoryClicked);
@@ -223,6 +223,7 @@ void UInventoryComponent::loadUI()
 			else
 			{
 				x->CategoryPicture = row->CategoryPicture;
+				x->categoryText = row->categoryText;
 			}
 			
 		}
@@ -262,16 +263,19 @@ void UInventoryComponent::refresh()
 		{
 			s.Key->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
 		}
-		mainInventory->ItemBox->AddChild(s.Key->widget);
-		//mainInventory->ItemBox->
-		s.Key->widget->ItemButton->CategoryIdentifier = false;
-		s.Key->widget->ItemButton->UserPointer = s.Key;
-		s.Key->widget->ItemButton->click.Unbind();
-		s.Key->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
-		s.Key->widget->ItemButton->hover.Unbind();
-		s.Key->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
-		s.Key->widget->ItemButton->unhover.Unbind();
-		s.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+		if (s.Key->widget)
+		{
+			mainInventory->ItemBox->AddChild(s.Key->widget);
+			//mainInventory->ItemBox->
+			s.Key->widget->ItemButton->CategoryIdentifier = false;
+			s.Key->widget->ItemButton->UserPointer = s.Key;
+			s.Key->widget->ItemButton->click.Unbind();
+			s.Key->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
+			s.Key->widget->ItemButton->hover.Unbind();
+			s.Key->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
+			s.Key->widget->ItemButton->unhover.Unbind();
+			s.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+		}
 	} 
 }
 
@@ -296,7 +300,7 @@ void UInventoryComponent::onCategoryClicked(UDataItemButton* sender)
 }
 void UInventoryComponent::onItemButtonClicked(UDataItemButton* sender)
 {
-	selectedItem = Cast<UItemBase>(sender->UserPointer);
+	selectedItem = Cast<AItemBase>(sender->UserPointer);
 }
 
 void UInventoryComponent::onItemButtonHovered(UDataItemButton* sender)

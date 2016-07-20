@@ -4,13 +4,14 @@
 
 #include "GameFramework/Actor.h"
 #include "DamageEnum.h"
+#include "ItemBase.h"
 #include "Bullet.generated.h"
 
 
 struct FBulletLookUpTable;
 
 UCLASS(config = Game)
-class STALKERGHOSTS_API ABullet : public AActor
+class STALKERGHOSTS_API ABullet : public AItemBase
 {
 	GENERATED_BODY()
 	
@@ -30,7 +31,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		float velocity = 7000.0f; //in cm/s
 	UPROPERTY(EditAnywhere, Category = Bullet)
-		EDamageType type;
+		EDamageType damageType;
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		UStaticMeshComponent* mesh;
 

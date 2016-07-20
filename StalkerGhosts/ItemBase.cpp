@@ -1,24 +1,25 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "StalkerGhosts.h"
+#include "DataTables.h"
 #include "ItemBase.h"
 
-UItemBase::UItemBase()
+AItemBase::AItemBase()
 {
 	
 }
 
-UItemBase::~UItemBase()
+AItemBase::~AItemBase()
 {
 
 }
 
-bool UItemBase::equals(UItemBase* other)
+bool AItemBase::equals(AItemBase* other)
 {
 	return name == other->name;
 }
 
-void UItemBase::loadFromTable(FItemLookUpTable* table)
+void AItemBase::loadFromTable(FItemLookUpTable* table)
 {
 
 		picture = table->picture;

@@ -71,6 +71,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		int32 health = 100;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		int32 maxHealth = 100;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		float staminaRegen = 0.5f;
 };
