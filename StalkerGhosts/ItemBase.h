@@ -4,17 +4,19 @@
 #include "GameFramework/Actor.h"
 #include "ItemWidget.h"
 #include "ItemEnums.h"
+
 //#include "DataTables.h"
 #include "ItemBase.generated.h"
-
+class AStalkerGhostsCharacter;
 struct FItemLookUpTable;
-UCLASS()
-class AItemBase : public AActor
+class UBuff;
+UCLASS(Blueprintable, BlueprintType)
+class UItemBase : public UObject
 {
 	GENERATED_BODY()
 public:
-	AItemBase();
-	~AItemBase();
+	UItemBase();
+	~UItemBase();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UTexture2D* picture;
@@ -49,9 +51,66 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UItemWidget* widget;
 
-	
 
-	bool equals(AItemBase* other);
+
+	bool equals(UItemBase* other);
 	void loadFromTable(FItemLookUpTable* table);
+
+	virtual void use(AStalkerGhostsCharacter* user) {};
+	virtual void equip(AStalkerGhostsCharacter* user) {};
+	virtual void unEquip(AStalkerGhostsCharacter* user) {};
 };
 
+UCLASS(Blueprintable, BlueprintType)
+class UArtifact : public UItemBase
+{
+	GENERATED_BODY()
+public:
+	UArtifact() { type = ItemCategory::ARTIFACT; }
+	~UArtifact() {}
+
+	TArray<UBuff*> attachedBuffs;
+};
+UCLASS(Blueprintable, BlueprintType)
+class UNightVisionItem : public UItemBase
+{
+	GENERATED_BODY()
+public:
+	UNightVisionItem () { type = ItemCategory::NIGHTVISION; }
+	~UNightVisionItem () {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+	UPostProcessComponent* nightvision;
+};
+class ABullet;
+UCLASS(Blueprintable, BlueprintType)
+class UBulletItem : public UItemBase
+{
+	GENERATED_BODY()
+public:
+	UBulletItem() { type = ItemCategory::AMMUNITION; }
+	~UBulletItem() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+	TSubclassOf<ABullet> bullet;
+};
+class AWeapon;
+UCLASS(Blueprintable, BlueprintType)
+class UWeaponItem : public UItemBase
+{
+	GENERATED_BODY()
+public:
+	UWeaponItem() { type = ItemCategory::AMMUNITION; }
+	~UWeaponItem() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+	TSubclassOf<AWeapon> wep;
+};
+class AGrenade;
+UCLASS(Blueprintable, BlueprintType)
+class UGrenadeItem : public UItemBase
+{
+	GENERATED_BODY()
+public:
+	UGrenadeItem() { type = ItemCategory::AMMUNITION; }
+	~UGrenadeItem() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+	TSubclassOf<AGrenade> gren;
+};

@@ -41,6 +41,7 @@ AGrenade::AGrenade()
 void AGrenade::BeginPlay()
 {
 	Super::BeginPlay();
+	
 }
 
 // Called every frame
@@ -179,16 +180,3 @@ void AGrenade::explosionTrace()
 
 }
 
-void AGrenade::loadGrenadeFromDataTable(FGrenadeLookUpTable* row)
-{
-	
-	fuzeTime = row->fuzeTime;
-	sharpnelAmmount = row->sharpnelAmmount;
-	damage = row->damage;
-	shrapnelDamage = row->shrapnelDamage;
-	range = row->range;
-	shrapnelVelocitry = row->shrapnelVelocitry;
-	flash = row->flash;
-	sound = row->sound;
-	mesh->SetStaticMesh(row->mesh);
-}

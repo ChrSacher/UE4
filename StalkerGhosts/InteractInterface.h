@@ -18,3 +18,4 @@ class IInteractInterface
 		virtual void interact(AActor* interactor);
 		virtual void use(AActor* interactor);
 };
+

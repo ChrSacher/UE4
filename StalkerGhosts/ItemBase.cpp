@@ -4,22 +4,22 @@
 #include "DataTables.h"
 #include "ItemBase.h"
 
-AItemBase::AItemBase()
+UItemBase::UItemBase()
 {
 	
 }
 
-AItemBase::~AItemBase()
+UItemBase::~UItemBase()
 {
 
 }
 
-bool AItemBase::equals(AItemBase* other)
+bool UItemBase::equals(UItemBase* other)
 {
 	return name == other->name;
 }
 
-void AItemBase::loadFromTable(FItemLookUpTable* table)
+void UItemBase::loadFromTable(FItemLookUpTable* table)
 {
 
 		picture = table->picture;

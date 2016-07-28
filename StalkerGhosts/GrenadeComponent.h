@@ -28,10 +28,16 @@ public:
 	
 	TMap<FString, AGrenade*> allowedGrenadesMap;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
-		FString selectedGrenade;
-
+		TSubclassOf<AGrenade> selectedGrenade;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
-		UDataTable* grenadeTable;
+		float grenadeReloadTime = 5;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
+		float grenadeThrowVelocity = 1000;
+	UPROPERTY(VisibleAnyWhere, BlueprintReadOnly, Category = Grenade)
+		bool ableToThrow = true; //keep at true
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		FTimerHandle speedHandle;
 
 	bool throwGrenade(FVector SpawnLocation, FRotator SpawnRotation);
+	void endThrow();
 };

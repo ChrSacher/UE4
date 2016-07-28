@@ -11,7 +11,7 @@
 struct FBulletLookUpTable;
 
 UCLASS(config = Game)
-class STALKERGHOSTS_API ABullet : public AItemBase
+class STALKERGHOSTS_API ABullet :public AActor
 {
 	GENERATED_BODY()
 	
@@ -35,7 +35,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		UStaticMeshComponent* mesh;
 
-	void loadFromDataTable(FBulletLookUpTable* row);
+	
 	
 								 /** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)

@@ -3,12 +3,52 @@
 #pragma once
 
 #include "Components/ActorComponent.h"
+#include "Buff.h"
 #include "CharacterAttributes.generated.h"
 
+class UCharacterAttributes;
+
+UCLASS()
+class UBaseAttribute : public UObject
+{
+	GENERATED_BODY()
+public:
+	UBaseAttribute();
+	~UBaseAttribute();
+
+	
+protected:
+	friend class UCharacterAttributes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+		float baseValue = 5;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+		float finalValue = 5;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+		TArray<UBuff*> currentBuffs;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+	UCharacterAttributes* parent;
+public:
+	float getRaw();
+	void setRaw(float x);
+	void addRaw(float x);
+	void calculate();
+	float getFinal();
+
+	void addBuff(UBuff* buff);
+	void removeBuff(UBuff* buff);
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
+	AttributeType type;
+
+};
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UCharacterAttributes : public UActorComponent
 {
+	friend class UBaseAttribut;
 	GENERATED_BODY()
 
 public:	
@@ -20,60 +60,22 @@ public:
 	
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
+protected:
+	UPROPERTY()
+		TMap<AttributeType, UBaseAttribute*> attributes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 endurance = 5;
+	UPROPERTY()
+		UBaseAttribute* nullAttrib;
+public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 agility = 5;
+	UBaseAttribute* getAttrib(AttributeType w);
+	void addBuff(UBuff* buff);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 intelligence = 5;
+	void removeBuff(UBuff* buff);
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 charisma = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 strength = 5;
-
-	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 luck = 5;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 perception = 5;
-		
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float sprintSpeed = 800;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float jogSpeed = 400;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float walkSpeed = 200;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float currentSpeed = 200;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float stamina = 100;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Gameplay)
 		bool isStaminaRegenerable = true;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float maxStamina = 100;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float sprintCost = 0.1f;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 health = 100;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 maxHealth = 100;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
-		float staminaRegen = 0.5f;
+		float currentSpeed = 100;
 };

@@ -54,29 +54,11 @@ void UWeaponComponent::startReload()
 	isReloading = true;
 	GetWorld()->GetTimerManager().SetTimer(reloadHandle, this, &UWeaponComponent::endReload, weapon->reloadTime, false);
 }
-bool UWeaponComponent::reload(int32 &bulletammount)
+bool UWeaponComponent::reload(UBulletItem* bullet)
 {
-	if (weapon->currentAmmoCount >= weapon->ammoCapacity)
-	{
-		weapon->currentAmmoCount = weapon->ammoCapacity;
-		return true;
-	}
-	if (bulletammount >= (weapon->ammoCapacity - weapon->currentAmmoCount))
-	{
-		int32 toAdd = weapon->ammoCapacity - weapon->currentAmmoCount;
-		weapon->currentAmmoCount += toAdd;
-		bulletammount -= toAdd;
-
-		return true;
-	}
-	else
-	{
-		weapon->currentAmmoCount += bulletammount;
-		bulletammount = 0;
-		return false;
-	}
-	return false;
 	
+		weapon->currentlyLoadedBullet = bullet;
+		return bullet != NULL;
 }
 void UWeaponComponent::endReload()
 {
@@ -84,32 +66,22 @@ void UWeaponComponent::endReload()
 }
 bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	if (isReloading)
+	if (isReloading || !weapon->currentlyLoadedBullet)
 	{
 		//needs to be in 2 times because first one is a check if variable is NULL
 		playEmptySound(SpawnLocation);
 		return false;
 	}
-	bool empty = weapon->currentAmmoCount <= 0;
+	bool empty = weapon->currentlyLoadedBullet->ammount <= 0;
 
 
 	if (!empty)
 	{
 		playSound(SpawnLocation);
-		static const FString ContextString(TEXT("GENERAL"));
-		FBulletLookUpTable* row = bulletDataTable->FindRow<FBulletLookUpTable>(FName(*weapon->currentLoadedBullet), ContextString);
-		if (!row)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("BulletRowNotFound"));
-			return false;
-		}
-		if (row->bullet)
-		{
-			GetWorld()->SpawnActor<ABullet>(row->bullet, SpawnLocation, SpawnRotation)->loadFromDataTable(row);
-			weapon->currentAmmoCount -= 1;
-			return true;
-		}
-		return false;
+		GetWorld()->SpawnActor<ABullet>(weapon->currentlyLoadedBullet->bullet, SpawnLocation, SpawnRotation);
+		weapon->currentlyLoadedBullet->ammount -= 1;
+		return true;
+
 
 	}
 	else //if thjere is no bullets in the mag play the 
@@ -120,26 +92,24 @@ bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 	}
 }
 
-void UWeaponComponent::loadWeapon(FString &ID)
+void UWeaponComponent::loadWeapon(UWeaponItem* wep)
 {
 	
-	static const FString ContextString(TEXT("GENERAL"));
-	FWeaponLookUpTable* row = weaponDataTable->FindRow<FWeaponLookUpTable>(FName(*ID), ContextString);
-	if (!row)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("WeaponRowNotFound"));
-		return;
-	}
 	if (weapon) weapon->Destroy();
-	weapon = GetWorld()->SpawnActor<AWeapon>(row->weapon, FVector(), FRotator());
-	weapon->loadWeapon(row);
-	loadedWeapon = ID;
-	weapon->weaponID = ID;
+	weapon = GetWorld()->SpawnActor<AWeapon>(wep->wep, FVector(), FRotator());
+	if (!weapon) return;
+	loadedWeapon = wep->itemIdentifier;
+	weapon->weaponID = wep->itemIdentifier;
 	
 }
-
+int32  UWeaponComponent::getAmmoCount()
+{
+	if (weapon) if(weapon->currentlyLoadedBullet) return weapon->currentlyLoadedBullet->ammount;
+	return 0;
+}
 void UWeaponComponent::loadWeapon(AWeapon* ID)
 {
 	weapon = ID;
 	loadedWeapon = ID->weaponID;
 }
+

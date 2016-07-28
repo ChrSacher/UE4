@@ -38,8 +38,8 @@ public:
 
 		TMap<FString,DamageBodyPart> boneBodyPartMap;
 
-	
-		TMap<DamageBodyPart, float> damageModifierMap;
+		
+			TMap<DamageBodyPart, float> damageModifierMap;
 
 	
 	void setup();

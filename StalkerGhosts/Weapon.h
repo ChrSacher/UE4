@@ -3,12 +3,14 @@
 #pragma once
 
 #include "GameFramework/Actor.h"
+
 #include "Weapon.generated.h"
 
 struct FWeaponLookUpTable;
-
+class ABullet;
+class UBulletItem;
 UCLASS()
-class STALKERGHOSTS_API AWeapon : public AActor
+class STALKERGHOSTS_API AWeapon :  public AActor
 {
 	GENERATED_BODY()
 	
@@ -22,7 +24,7 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 	UPROPERTY(EditAnywhere, Category = Weapon)
-		TSubclassOf<UParticleSystem> flash;
+		UParticleSystemComponent* flash;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		USkeletalMeshComponent* mesh;
@@ -30,12 +32,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		int32 ammoCapacity = 30;
 
-	
 	UPROPERTY(EditAnywhere, Category = Magazine)
-		int32 currentAmmoCount = 0;
-
-	UPROPERTY(EditAnywhere, Category = Magazine)
-		FString currentLoadedBullet;
+		UBulletItem* currentlyLoadedBullet;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		float muzzleVelocityCoeff = 1.0f;
@@ -68,5 +66,5 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		TArray<FString> acceptedBullets;
 
-	void loadWeapon(FWeaponLookUpTable* row);
+	
 };

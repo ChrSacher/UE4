@@ -3,6 +3,7 @@
 #include "StalkerGhosts.h"
 #include "DataTables.h"
 #include "Weapon.h"
+#include "Bullet.h"
 
 
 // Sets default values
@@ -11,6 +12,7 @@ AWeapon::AWeapon()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MESH"));
+	flash = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Flash"));
 	RootComponent = mesh;
 }
 
@@ -28,18 +30,3 @@ void AWeapon::Tick( float DeltaTime )
 
 }
 
-void AWeapon::loadWeapon(FWeaponLookUpTable* row)
-{
-	muzzleVelocityCoeff = row->muzzleVelocityCoeff;
-	reloadTime = row->reloadTime;
-	fireRate = row->fireRate;
-	weaponSound = row->weaponSound;
-	emptySound = row->emptySound;
-	acceptedBullets = row->acceptedBullets;
-	ammoCapacity = row->ammoCapacity;
-	mesh->SetSkeletalMesh(row->mesh);
-	flash = row->flash;
-	FireAnimation = row->FireAnimation;
-	ReloadAnimation = row->ReloadAnimation;
-	IdlingAnimation = row->IdlingAnimation;
-}

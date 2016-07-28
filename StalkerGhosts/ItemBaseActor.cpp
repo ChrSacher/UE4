@@ -10,7 +10,7 @@ AItemBaseActor::AItemBaseActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	base = CreateDefaultSubobject<AItemBase>(TEXT("Item"));
+	base = CreateDefaultSubobject<UItemBase>(TEXT("Item"));
 	RootComponent = mesh;
 }
 
@@ -18,7 +18,7 @@ AItemBaseActor::AItemBaseActor()
 void AItemBaseActor::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if(base) if(mesh) if (base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
 }
 
 // Called every frame
@@ -36,7 +36,7 @@ void  AItemBaseActor::interact(AActor* interactor)
 
 }
 
-void  AItemBaseActor::spawn(AItemBase* Base)
+void  AItemBaseActor::spawn(UItemBase* Base)
 {
 	if (!base)
 	{

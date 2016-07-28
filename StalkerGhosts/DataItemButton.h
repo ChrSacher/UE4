@@ -5,7 +5,7 @@
 #include "Components/Button.h"
 #include "DataItemButton.generated.h"
 
-class AItemBase;
+class UItemBase;
 /**
  * 
  */
@@ -17,7 +17,7 @@ class STALKERGHOSTS_API UDataItemButton : public UButton
 	//can be made better but works for now
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = User)
-		AItemBase* UserPointer;
+		UItemBase* UserPointer;
 
 	UDataItemButtonDelegate click;
 	UDataItemButtonDelegate hover;

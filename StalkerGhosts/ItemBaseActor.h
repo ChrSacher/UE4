@@ -24,11 +24,11 @@ public:
 	virtual void interact(AActor* interactor) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
-		AItemBase* base;
+		UItemBase* base;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UStaticMeshComponent* mesh;
-	
-	void spawn(AItemBase* Base);
+
+	void spawn(UItemBase* Base);
 
 };

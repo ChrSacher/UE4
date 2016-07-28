@@ -8,7 +8,7 @@
 
 struct FGrenadeLookUpTable;
 UCLASS()
-class STALKERGHOSTS_API AGrenade : public AItemBase
+class STALKERGHOSTS_API AGrenade : public AActor
 {
 	GENERATED_BODY()
 	
@@ -51,7 +51,6 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		USoundBase* sound;
-	void loadGrenadeFromDataTable(FGrenadeLookUpTable* row); //currently done because of Circle inc
 
 	FTimerHandle explosionTimer;
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)

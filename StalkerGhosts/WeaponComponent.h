@@ -35,36 +35,22 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle reloadHandle;
 
-	
-
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 		FString loadedWeapon;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-		UDataTable* bulletDataTable;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-		UDataTable* weaponDataTable;
-
-	
-
-	
 	
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		bool isReloading = false;
 
-	
-
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		AWeapon* weapon;
 
-		void loadWeapon(FString &ID);
-		void loadWeapon(AWeapon* ID);
+	void loadWeapon(UWeaponItem* wep);
+	void loadWeapon(AWeapon* ID);
 	void playSound(FVector place);
-
+	int32 getAmmoCount();
 	void playEmptySound(FVector place);
 	void startReload();
-	bool reload(int32 &bulletammount);
+	bool reload(UBulletItem* bullet);
 	void endReload();
 	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
 

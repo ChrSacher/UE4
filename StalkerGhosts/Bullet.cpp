@@ -67,14 +67,3 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	}
 }
 
-void  ABullet::loadFromDataTable(FBulletLookUpTable* row)
-{
-	//static const FString ContextString(TEXT("GENERAL"));
-
-	//FBulletLookUpTable* row = table->FindRow<FBulletLookUpTable>(FName(*ID), ContextString);
-	//if (!row) UE_LOG(LogTemp, Warning, TEXT("BulletRowNotFound"));
-	damage = row->damage;
-	damageType = row->damageType;
-	mesh->SetStaticMesh(row->mesh);
-	velocity = row->velocity;
-}

@@ -9,7 +9,7 @@
 #include "Runtime/UMG/Public/Slate/SObjectWidget.h"
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
-
+#include "InventoryInterface.h"
 UInventoryComponent::UInventoryComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -17,7 +17,7 @@ UInventoryComponent::UInventoryComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = false;
 	for (uint8 i = 0; i < uint8(ItemCategory::NUM);i++)
-		items.Add(static_cast<ItemCategory>(i),TMap<AItemBase*, AItemBase*>());
+		items.Add(static_cast<ItemCategory>(i),TMap<UItemBase*, UItemBase*>());
 	
 }
 
@@ -25,7 +25,14 @@ UInventoryComponent::UInventoryComponent()
 void UInventoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
+	loadUI();
 	
+	for (int i = 0; i < beginPlayEquipment.Num(); i++)
+	{
+		UItemBase* x = Cast<UItemBase>(NewObject<UItemBase>(beginPlayEquipment[i]));
+		AWeapon* y = Cast<AWeapon>(x);
+		if (beginPlayEquipment[i]) addItem(x);
+	}
 	// ...
 	
 }
@@ -39,18 +46,19 @@ void UInventoryComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 	// ...
 }
 
-bool UInventoryComponent::addItemCreate(AItemBase* Item)
+bool UInventoryComponent::addItemCreate(UItemBase* Item)
 {
 	items[Item->type].Add(Item,Item);
 	currentWeight += Item->weight * Item->ammount;
 	if (Item->widget) Item->widget->RemoveFromParent();
 	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
 	Item->widget = x;
+
 	//mainInventory->ItemBox->AddChild(x)->SetSize(FSlateChildSize());
 
 	return true;
 }
-bool UInventoryComponent::addItem(AItemBase* Item,bool forceNew)
+bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 {
 	if (!Item) return true;
 
@@ -88,27 +96,25 @@ bool UInventoryComponent::addItem(AItemBase* Item,bool forceNew)
 	refresh();
 	return true;
 }
-AItemBase* UInventoryComponent::addItem(FString& ID, bool forceNew)
+template <typename T>
+T* UInventoryComponent::createItem(FString ID)
 {
-	AItemBase* base = NewObject<AItemBase>();
+	
 	static const FString ContextString(TEXT("GENERAL"));
-	FItemLookUpTable* row = itemTable->FindRow<FItemLookUpTable>(FName(*ID), ContextString);
+	FItemTable* row = standardItemTable->FindRow<FItemTable>(FName(*ID), ContextString);
 	if (!row)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ItemRowNotFound"));
 		return NULL;
 	}
-	base->loadFromTable(row);
-	if (addItem(base, forceNew)) return base;
-	return NULL;
+	return DuplicateObject(Cast<T>(row->base->GetDefaultObject()), NULL);;
 }
-
-bool UInventoryComponent::removeItem(AItemBase* Item, int8 ammount)
+bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
 {
 	if (!Item) return false;
 	if (ammount > 0)
 	{
-		AItemBase* place = items[Item->type][Item];
+		UItemBase* place = items[Item->type][Item];
 		if (place)
 		{
 
@@ -123,23 +129,24 @@ bool UInventoryComponent::removeItem(AItemBase* Item, int8 ammount)
 			return false;
 		}
 	}
-	dropItem(Item);
+	items[Item->type].Remove(Item);
+	refresh();
 	return true;
 
 }
 
-void UInventoryComponent::dropItem(AItemBase* Item)
+void UInventoryComponent::dropItem(UItemBase* Item)
 {
 	items[Item->type].Remove(Item);
 	if(Item->ammount > 0) GetWorld()->SpawnActor<AItemBaseActor>(itemBaseTemplate, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation())->spawn(Item);
 	Item->widget->RemoveFromParent();
 }
 
-AItemBase* UInventoryComponent::splitItem(AItemBase* Item,float ratio)
+UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 {
 	if (!Item) return NULL;
 	if(Item->ammount < 2) return Item;
-	AItemBase* newItem = NewObject<AItemBase>(Item);
+	UItemBase* newItem = DuplicateObject(Item,NULL);
 	int newAmmount = floor(Item->ammount * ratio);
 	newItem->ammount = newAmmount;
 	Item->ammount -= newAmmount;
@@ -149,7 +156,7 @@ AItemBase* UInventoryComponent::splitItem(AItemBase* Item,float ratio)
 
 
 
-bool UInventoryComponent::isEnoughSpace(AItemBase* Item)
+bool UInventoryComponent::isEnoughSpace(UItemBase* Item)
 {
 	if (!Item) return true;
 	return true;
@@ -160,7 +167,7 @@ void UInventoryComponent::print()
 	
 }
 
-AItemBase* UInventoryComponent::lookForFirstItem(FString &name)
+UItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 {
 	for (auto& x : items)
 	{
@@ -171,9 +178,9 @@ AItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 	}
 	return NULL;
 }
-TArray<AItemBase*> UInventoryComponent::lookForItems(FString &name)
+TArray<UItemBase*> UInventoryComponent::lookForItems(FString &name)
 {
-	TArray<AItemBase*> vec;
+	TArray<UItemBase*> vec;
 	for (auto& x : items)
 	{
 		for (auto& y : x.Value)
@@ -191,18 +198,16 @@ void UInventoryComponent::loadUI()
 		if (!mainInventory)
 		{
 			mainInventory = CreateWidget<UMainInventoryWidget>(GetWorld(), mainInventoryTemplate);
-			
 			if (!mainInventory)
 			{
-				
 				return;
 			}
 			
-			mainInventory->AddToViewport();
+			
+			mainInventory->AddToPlayerScreen();
+			
 		}
-		
 	}
-	
 	categories.Empty();
 	if (categoryTemplate)
 	{
@@ -228,6 +233,48 @@ void UInventoryComponent::loadUI()
 			
 		}
 	}
+	
+	if (itemDetailTemplate)
+	{
+		itemDetails = CreateWidget<UItemDetailWidget>(GetWorld(), itemDetailTemplate);
+		itemDetails->SetVisibility(ESlateVisibility::Hidden);
+	}
+	mainInventory->SetVisibility(ESlateVisibility::Hidden);
+	refresh();
+
+	
+
+
+	
+	mainInventory->helmetEquipped->onEq.BindUObject(this,&UInventoryComponent::equip);
+	mainInventory->armorEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->backBackEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->weapon1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->weapon1BulletEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->artifact1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->artifact2Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->artifact3Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->artifact4Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->quick1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->quick2Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->quick3Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+	mainInventory->quick4Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
+
+	mainInventory->helmetEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->armorEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->backBackEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->weapon1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->weapon1BulletEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->artifact1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->artifact2Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->artifact3Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->artifact4Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->quick1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->quick2Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->quick3Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	mainInventory->quick4Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+
+
 }
 
 void UInventoryComponent::refresh()
@@ -266,7 +313,6 @@ void UInventoryComponent::refresh()
 		if (s.Key->widget)
 		{
 			mainInventory->ItemBox->AddChild(s.Key->widget);
-			//mainInventory->ItemBox->
 			s.Key->widget->ItemButton->CategoryIdentifier = false;
 			s.Key->widget->ItemButton->UserPointer = s.Key;
 			s.Key->widget->ItemButton->click.Unbind();
@@ -288,7 +334,7 @@ void UInventoryComponent::setVisiblity(bool Vis)
 
 void UInventoryComponent::onCategoryClicked(UDataItemButton* sender)
 {
-	UE_LOG(LogTemp, Warning, TEXT("cat"));
+	
 	mainInventory->ItemBox->ClearChildren();
 	currentCategory = ItemCategory(sender->UserNumber);
 	auto it = items.Find(currentCategory);
@@ -300,16 +346,55 @@ void UInventoryComponent::onCategoryClicked(UDataItemButton* sender)
 }
 void UInventoryComponent::onItemButtonClicked(UDataItemButton* sender)
 {
-	selectedItem = Cast<AItemBase>(sender->UserPointer);
+	selectedItem = Cast<UItemBase>(sender->UserPointer);
 }
 
 void UInventoryComponent::onItemButtonHovered(UDataItemButton* sender)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Ihover"));
+	
+	itemDetails->SetVisibility(ESlateVisibility::Visible);
+	sender->AddChild(itemDetails);
+//	itemDetails->SetPositionInViewport(sender->RenderTransform.Translation);
 	//details menu
 }
 
 void UInventoryComponent::onItemButtonLeftHovered(UDataItemButton* sender)
 {
 	UE_LOG(LogTemp, Warning, TEXT("Iunh"));
+	sender->RemoveChild(itemDetails);
+	itemDetails->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
+{
+	UE_LOG(LogTemp, Warning, TEXT("EQUIP"));
+	if (slot->allowedType != base->type) return;
+	
+	IInventoryInterface* own = Cast<IInventoryInterface>(GetOwner());
+	if (own)
+	{
+		if(!own->equipmentAdded(base, slot->slotEnum)) return;
+	}
+	slot->ItemButton->UserPointer = base;
+	equippedItems[base->type].Add(base, base);
+	items[base->type].Remove(base);
+	refresh();
+}
+void UInventoryComponent::moveEquip(UEquippedItemWidget* slot, UItemBase* base)
+{
+	
+}
+void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base)
+{
+	UE_LOG(LogTemp, Warning, TEXT("UNEQUIP"));
+	
+	IInventoryInterface* own = Cast<IInventoryInterface>(GetOwner());
+	if (own)
+	{
+		if(!own->equipmentRemoved(base,slot->slotEnum)) return;
+	}
+	slot->ItemButton->UserPointer = NULL;
+	equippedItems[base->type].Remove(base);
+	items[base->type].Add(base,base);
+	refresh();
 }

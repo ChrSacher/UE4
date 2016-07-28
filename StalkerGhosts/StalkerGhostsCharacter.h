@@ -11,11 +11,12 @@
 #include "GrenadeComponent.h"
 #include "WeaponComponent.h"
 #include "MainHudWidget.h"
+#include "InventoryInterface.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
 UCLASS(config=Game)
-class AStalkerGhostsCharacter : public ACharacter , public IDamageInterface
+class AStalkerGhostsCharacter : public ACharacter , public IDamageInterface,public IInventoryInterface
 {
 
 	GENERATED_BODY()
@@ -94,6 +95,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle speedHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		FCharacterEquipment equipment;
 
 	virtual void doDamage(float suggestedDamage, DamageBodyPart BodyPart, EDamageType type, FVector veloc, FVector location) override;
 	UFUNCTION(BlueprintCallable, Category = "Event")
@@ -113,11 +116,25 @@ protected:
 	
 	/** Reload*/
 	void OnReload();
+	void doReload();
 	void offReload();
 
-	void changeWeapon(FString& ID);
-	void changeWeapon(AWeapon* newwep);
-	bool checkMag(TArray<AItemBase*> Items);
+	void changeWeapon(FString ID);
+	void changeWeapon(AWeapon* newewp);
+	void changeWeapon(UWeaponItem* ID);
+	bool checkMag(TArray<UItemBase*> Items);
+
+	bool equipmentAdded(UItemBase* item, SlotInformation slot) override;
+
+	bool equipmentRemoved(UItemBase* item, SlotInformation slot) override;
+
+
+
+
+
+
+
+
 	//sprinting
 	void OnSprint();
 	void OffSprint();

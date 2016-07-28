@@ -13,7 +13,7 @@ UCLASS()
 class STALKERGHOSTS_API UItemWidget : public UUserWidget
 {
 	GENERATED_BODY()
-	
+		
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
@@ -27,5 +27,5 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		FString getName();
-	
+
 };

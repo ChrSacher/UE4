@@ -11,7 +11,7 @@ float UMainHudWidget::getHealthPercentageFromCharacter()
 	{
 		if (character->currentAttributes)
 		{
-			return character->currentAttributes->health / character->currentAttributes->maxHealth;
+			return character->currentAttributes->getAttrib(AttributeType::HEALTH)->getFinal()/ character->currentAttributes->getAttrib(AttributeType::MAXHEALTH)->getFinal();
 		}
 	}
 	return 0;
@@ -23,7 +23,7 @@ float UMainHudWidget::getStaminaPercentageFromCharacter()
 	{
 		if (character->currentAttributes)
 		{
-			return character->currentAttributes->stamina / character->currentAttributes->maxStamina;
+			return character->currentAttributes->getAttrib(AttributeType::STAMINA)->getFinal() / character->currentAttributes->getAttrib(AttributeType::MAXSTAMINA)->getFinal();
 		}
 	}
 	return 0;
@@ -35,7 +35,7 @@ FString UMainHudWidget::getHealthText()
 	{
 		if (character->currentAttributes)
 		{
-			return FString::SanitizeFloat(character->currentAttributes->health) + "/" + FString::SanitizeFloat(character->currentAttributes->maxHealth);
+			return FString::SanitizeFloat(character->currentAttributes->getAttrib(AttributeType::HEALTH)->getFinal()) + "/" + FString::SanitizeFloat(character->currentAttributes->getAttrib(AttributeType::MAXHEALTH)->getFinal());
 		}
 	}
 	return "ERROR";
@@ -47,7 +47,7 @@ FString UMainHudWidget::getStaminaText()
 	{
 		if (character->currentAttributes)
 		{
-			return FString::SanitizeFloat(character->currentAttributes->stamina) + "/" + FString::SanitizeFloat(character->currentAttributes->maxStamina);
+			return FString::SanitizeFloat(character->currentAttributes->getAttrib(AttributeType::STAMINA)->getFinal()) + "/" + FString::SanitizeFloat(character->currentAttributes->getAttrib(AttributeType::MAXSTAMINA)->getFinal());
 		}
 	}
 	return "ERROR";
@@ -63,7 +63,7 @@ FString UMainHudWidget::getAmmoText()
 		{
 			if (character->currentWeapon->weapon)
 			{
-				return FString::FromInt(character->currentWeapon->weapon->currentAmmoCount) + "/" + FString::FromInt(character->currentWeapon->weapon->ammoCapacity);
+				return FString::FromInt(character->currentWeapon->getAmmoCount()) + "/" + FString::FromInt(character->currentWeapon->weapon->ammoCapacity);
 			}
 		}
 	}

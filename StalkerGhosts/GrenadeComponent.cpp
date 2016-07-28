@@ -39,21 +39,26 @@ bool UGrenadeComponent::throwGrenade(FVector SpawnLocation, FRotator SpawnRotati
 	
 	
 	static const FString ContextString(TEXT("GENERAL"));
+	if (ableToThrow)
+	{
+		ableToThrow = false;
+		GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &UGrenadeComponent::endThrow, grenadeReloadTime, true);
+	}
+	else
+	{
 
-	FGrenadeLookUpTable* row = grenadeTable->FindRow<FGrenadeLookUpTable>(FName(*selectedGrenade), ContextString);
-	if (!row)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GrenadeRowNotFound"));
 		return false;
 	}
-	if (!row->grenade)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("GrenadeNotFound"));
-		return false;
-	}
-	AGrenade* gren = GetWorld()->SpawnActor<AGrenade>(row->grenade, SpawnLocation, SpawnRotation);
+
+	AGrenade* gren = GetWorld()->SpawnActor<AGrenade>(selectedGrenade, SpawnLocation, SpawnRotation);
+	gren->ProjectileMovement->InitialSpeed = grenadeThrowVelocity;
+	gren->ProjectileMovement->MaxSpeed = grenadeThrowVelocity;
 	if (!gren) return false;
-	gren->loadGrenadeFromDataTable(row);
 	gren->activate();
 	return true;
+}
+
+void UGrenadeComponent::endThrow()
+{
+	ableToThrow = true;
 }
