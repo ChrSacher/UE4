@@ -66,5 +66,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		TArray<FString> acceptedBullets;
 
-	
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		int32 selectedBulletIndex;
+
+	void reloadMag(UBulletItem* mag);
+	FString getBulletString();
 };

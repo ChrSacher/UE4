@@ -8,6 +8,7 @@
 #include "DataTables.h"
 #include "Weapon.h"
 #include "WeaponComponent.generated.h"
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 
 class STALKERGHOSTS_API UWeaponComponent : public UActorComponent
@@ -46,12 +47,15 @@ public:
 
 	void loadWeapon(UWeaponItem* wep);
 	void loadWeapon(AWeapon* ID);
+	bool loadMag(UBulletItem* ID);
+	void unloadMag();
 	void playSound(FVector place);
 	int32 getAmmoCount();
 	void playEmptySound(FVector place);
 	void startReload();
+	void removeWeapon();
 	bool reload(UBulletItem* bullet);
 	void endReload();
 	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
-
+	UBulletItem* getLoadedMag();
 };

@@ -30,6 +30,7 @@ void UItemBase::loadFromTable(FItemLookUpTable* table)
 		groundMesh = table->groundMesh;
 		worth = table->worth;
 		type= table->type ;
-		dataTabelIdentifier = table->dataTabelIdentifier;
 		itemIdentifier = table->itemIdentifier;
 }
+
+float UItemBase::getWeight() { return ammount * weight; }

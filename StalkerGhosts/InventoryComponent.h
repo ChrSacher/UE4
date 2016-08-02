@@ -7,6 +7,29 @@
 #include "EquippedItemWidget.h"
 #include "InventoryComponent.generated.h"
 
+UCLASS(BlueprintType)
+class UCharacterEquipment : public UObject
+{
+	GENERATED_BODY()
+		UCharacterEquipment();
+		~UCharacterEquipment();
+protected:
+	UPROPERTY(VisibleAnywhere, Category = Gameplay)
+		TArray<UItemBase*> equipment;
+public:
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void equipItem(SlotInformation slot, UItemBase* item);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UItemBase* unequipItem(SlotInformation slot);
+	
+		template <typename T>
+		T* getItem(SlotInformation slot);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		float getWeight();
+
+
+};
+
 class AWeapon;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UInventoryComponent : public UActorComponent
@@ -25,27 +48,24 @@ public:
 
 
 	UPROPERTY(EditAnywhere, Category = Inventory)
-		uint16 maxWeight = 60;
+		float maxWeight = 60;
 
 	UPROPERTY(EditAnywhere, Category = Inventory)
-		uint16 currentWeight;
-	
+		float currentWeight = 0;
 	
 	TMap<ItemCategory, TMap<UItemBase*,UItemBase*>> items;
-	TMap<ItemCategory, TMap<UItemBase*, UItemBase*>> equippedItems;
-
 
 	UItemBase* lookForFirstItem(FString &name);
 
-	TArray<UItemBase*> lookForItems(FString &name);
-
-	UMainInventoryWidget* mainInventory;
-
-	TArray<UItemCategoryWidget*> categories;
-
-	UItemBase* selectedItem;
-
-	ItemCategory currentCategory = ItemCategory::ITEM;
+	TArray<UItemBase*> lookForItems(FString name);
+	UPROPERTY(EditAnywhere, Category = Inventory)
+		UMainInventoryWidget* mainInventory;
+	UPROPERTY(EditAnywhere, Category = Inventory)
+		TArray<UItemCategoryWidget*> categories;
+	UPROPERTY(EditAnywhere, Category = Inventory)
+		UItemBase* selectedItem;
+	UPROPERTY(EditAnywhere, Category = Inventory)
+		ItemCategory currentCategory = ItemCategory::ITEM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UDataTable* categoryTable;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
@@ -75,23 +95,39 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TArray<FString> beginPlayStrings;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UCharacterEquipment* equipment;
 
 
 
 
-
+	//inventoryfuncs
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	bool addItemCreate(UItemBase* Item);
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	bool addItem(UItemBase* Item, bool forceNew = false);
-	bool removeItem(UItemBase* Item, int8 ammount = -1);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	bool removeItem(UItemBase* Item, int32 ammount = -1);
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	UItemBase* splitItem(UItemBase* Item, float ratio);
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	void dropItem(UItemBase* Item);
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	bool isEnoughSpace(UItemBase* Item);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	void calculateWeight();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	float getWeight();
 
 	template <typename T>
 	T* createItem(FString ID);
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	void print();
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	void loadUI();
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	void refresh();
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	void setVisiblity(bool Vis);
 	
 	void onCategoryClicked(UDataItemButton* sender);
@@ -109,48 +145,3 @@ public:
 	void unEquip(UEquippedItemWidget* slot, UItemBase* base);
 };
 
-USTRUCT(BlueprintType)
-struct FCharacterEquipment
-{
-	GENERATED_BODY()
-
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		AWeapon* weapon1;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		ABullet* weapon1Bullet;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* helmet;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* armor;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* backPack;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* boots;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UArtifact* art1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UArtifact* art2;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UArtifact* art3;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UArtifact* art4;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* quick1;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* quick2;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* quick3;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Equipment)
-		UItemBase* quick4;
-
-};

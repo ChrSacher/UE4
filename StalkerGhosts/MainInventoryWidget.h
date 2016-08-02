@@ -48,9 +48,6 @@ public:
 		UEquippedItemWidget* weapon1Equipped;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* weapon1BulletEquipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UEquippedItemWidget* artifact1Equipped;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)

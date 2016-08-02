@@ -30,3 +30,43 @@ void AWeapon::Tick( float DeltaTime )
 
 }
 
+void AWeapon::reloadMag(UBulletItem* mag)
+{
+	if (!mag) return;
+	if(!currentlyLoadedBullet)
+	{
+		selectedBulletIndex = acceptedBullets.Find(mag->itemIdentifier);
+		if (selectedBulletIndex != INDEX_NONE)
+		{
+			currentlyLoadedBullet = DuplicateObject(mag, NULL);
+			currentlyLoadedBullet->ammount = 0;
+		}
+		else return;
+
+	}
+	if (currentlyLoadedBullet->itemIdentifier == mag->itemIdentifier)
+	{
+		if (currentlyLoadedBullet->ammount < ammoCapacity)
+		{
+			int32 toAdd = ammoCapacity - currentlyLoadedBullet->ammount;
+			if (mag->ammount >= toAdd)
+			{
+
+				mag->ammount -= toAdd;
+				currentlyLoadedBullet->ammount += toAdd;
+			}
+			else
+			{
+				currentlyLoadedBullet->ammount += mag->ammount;
+				mag->ammount = 0;
+			}
+			return;
+		}
+	}
+}
+
+FString AWeapon::getBulletString()
+{
+	if (selectedBulletIndex >= 0 && selectedBulletIndex < acceptedBullets.Num()) return acceptedBullets[selectedBulletIndex];
+	return "";
+}

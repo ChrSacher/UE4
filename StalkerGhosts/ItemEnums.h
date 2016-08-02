@@ -11,25 +11,33 @@ enum class ItemCategory : uint8
 	ARTIFACT,
 	NIGHTVISION,
 	ARMOR ,
-	BOOTS ,
-	GLOVES ,
 	ITEM ,
-	MEDICAL ,
-	FOOD ,
+	CONSUMABLE ,
 	GRENADES ,
 	NUM 
 };
 
 UENUM(BlueprintType)
+enum class ArmorSubCategory : uint8
+{
+	HELMET,
+	ARMOR,
+	BACKPACK,
+	BOOTS,
+	PANTS,
+	BODYARMOR
+};
+
+UENUM(BlueprintType)
 enum class SlotInformation : uint8
 {
-	NON,
 	HELMET,
 	ARMOR,
 	BACKPACK,
 	BOOTS,
 	WEAPON1,
-	WEAPON1AMMUNITION,
+	PANTS,
+	BODYARMOR,
 	ARTIFACT1,
 	ARTIFACT2,
 	ARTIFACT3,
@@ -37,5 +45,7 @@ enum class SlotInformation : uint8
 	QUICK1,
 	QUICK2,
 	QUICK3,
-	QUICK4
+	QUICK4,
+	NON,
+	NUM
 };

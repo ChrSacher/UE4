@@ -32,14 +32,20 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 	UCharacterAttributes* parent;
 public:
-	float getRaw();
-	void setRaw(float x);
-	void addRaw(float x);
-	void calculate();
-	float getFinal();
-
-	void addBuff(UBuff* buff);
-	void removeBuff(UBuff* buff);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		float getRaw();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setRaw(float x);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void addRaw(float x);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void calculate();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		float getFinal();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void addBuff(UBuff* buff);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void removeBuff(UBuff* buff);
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 	AttributeType type;
 
@@ -61,21 +67,21 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 protected:
-	UPROPERTY()
-		TMap<AttributeType, UBaseAttribute*> attributes;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
+		TArray<UBaseAttribute*> attributes;
 
 	UPROPERTY()
 		UBaseAttribute* nullAttrib;
 public:
-
-	UBaseAttribute* getAttrib(AttributeType w);
-	void addBuff(UBuff* buff);
-
-	void removeBuff(UBuff* buff);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UBaseAttribute* getAttrib(AttributeType w);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void addBuff(UBuff* buff);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void removeBuff(UBuff* buff);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Gameplay)
 		bool isStaminaRegenerable = true;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		float currentSpeed = 100;
+	
 };

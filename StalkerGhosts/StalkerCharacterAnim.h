@@ -5,6 +5,7 @@
 #include "Animation/AnimInstance.h"
 #include "StalkerCharacterAnim.generated.h"
 
+class AStalkerGhostsCharacter;
 UENUM(BlueprintType)
 enum class Movement : uint8
 {
@@ -39,7 +40,7 @@ public:
 		float playerPitch;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
-		bool jumping;
+		bool isJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
 		UStalkerCharacterAnim* characterAnim;
@@ -51,4 +52,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		WeaponHolding wStance;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
+		AStalkerGhostsCharacter* pawn;
 };

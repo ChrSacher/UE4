@@ -11,8 +11,14 @@ UCharacterAttributes::UCharacterAttributes()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	
-	
+	for (uint8 i = 0; i < (uint8)AttributeType::NUM; i++)
+	{
+		UBaseAttribute* x = NewObject<UBaseAttribute>();
+		x->parent = this;
+		x->type = (AttributeType)i;
+		attributes.Add(x);
+	}
+	nullAttrib = NewObject<UBaseAttribute>();
 	// ...
 }
 
@@ -21,14 +27,8 @@ UCharacterAttributes::UCharacterAttributes()
 void UCharacterAttributes::BeginPlay()
 {
 	Super::BeginPlay();
-	for (uint8 i = 0; i < (uint8)AttributeType::NUM; i++)
-	{
-		UBaseAttribute* x = NewObject<UBaseAttribute>();
-		x->parent = this;
-		x->type = (AttributeType)i;
-		attributes.Add((AttributeType)i, x);
-	}
-	nullAttrib = NewObject<UBaseAttribute>();
+	
+	
 	// ...
 	
 }
@@ -108,8 +108,10 @@ void UBaseAttribute::removeBuff(UBuff* buff)
 
 UBaseAttribute* UCharacterAttributes::getAttrib(AttributeType w)
 {
-	auto y = attributes.Find(w);
-	if(y) return *y;
+	if ((uint8)w >= 0 && w < AttributeType::NUM)
+	{
+		return attributes[(uint8)w];
+	}
 	return nullAttrib;
 }
 void UCharacterAttributes::addBuff(UBuff* buff)

@@ -64,6 +64,25 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* Mesh1P;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* armorMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* pantsMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* bodyArmorMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* bootsMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* backPackMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* helmetMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		class USkeletalMeshComponent* glovesMesh;
 	/** Location on gun mesh where projectiles should spawn. */
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
 		class USceneComponent* FP_MuzzleLocation;
@@ -94,10 +113,11 @@ public:
 		FTimerHandle fireHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-		FTimerHandle speedHandle;
+		bool WeaponOnBack = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-		FCharacterEquipment equipment;
-
+		FTimerHandle speedHandle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		float currentSpeed = 100;
 	virtual void doDamage(float suggestedDamage, DamageBodyPart BodyPart, EDamageType type, FVector veloc, FVector location) override;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void startDamage(FString bonename, ABullet* causer) override;
@@ -117,6 +137,7 @@ protected:
 	/** Reload*/
 	void OnReload();
 	void doReload();
+	void doReload(UBulletItem* toReload);
 	void offReload();
 
 	void changeWeapon(FString ID);
@@ -124,16 +145,16 @@ protected:
 	void changeWeapon(UWeaponItem* ID);
 	bool checkMag(TArray<UItemBase*> Items);
 
-	bool equipmentAdded(UItemBase* item, SlotInformation slot) override;
+	InventoryAcceptance equipmentAdded(UItemBase* item, SlotInformation slot) override;
 
-	bool equipmentRemoved(UItemBase* item, SlotInformation slot) override;
-
-
+	InventoryAcceptance equipmentRemoved(UItemBase* item, SlotInformation slot) override;
 
 
 
 
 
+
+	void syncEquipment();
 
 	//sprinting
 	void OnSprint();

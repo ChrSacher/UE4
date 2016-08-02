@@ -40,7 +40,18 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	Mesh1P->SetVisibility(true);
 	//Mesh1P->RelativeRotation = FRotator(1.9f, -19.19f, 5.2f);
 	//Mesh1P->RelativeLocation = FVector(-0.5f, -4.4f, -155.7f);
-	
+	armorMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("armorMesh"));
+	armorMesh->SetupAttachment(Mesh1P);
+	bootsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("bootsMesh"));
+	bootsMesh->SetupAttachment(Mesh1P);
+	pantsMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("pantsMesh"));
+	pantsMesh->SetupAttachment(Mesh1P);
+	bodyArmorMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("bodyArmorMesh"));
+	bodyArmorMesh->SetupAttachment(Mesh1P);
+	backPackMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("backPackMesh"));
+	backPackMesh->SetupAttachment(Mesh1P);
+	helmetMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("helmetMesh"));
+	helmetMesh->SetupAttachment(Mesh1P);
 	// Create a gun mesh component
 
 	
@@ -62,6 +73,7 @@ void AStalkerGhostsCharacter::BeginPlay()
 	Super::BeginPlay();
 	
 	characterAnim = Cast<UStalkerCharacterAnim>(Mesh1P->GetAnimInstance());
+	characterAnim->pawn = this;
 	changeStance(Movement::JOGGING);
 	//currentInventory = NewObject<UInventoryComponent>();
 	if (currentInventory) 
@@ -87,14 +99,20 @@ void AStalkerGhostsCharacter::BeginPlay()
 	currentAttributes->getAttrib(AttributeType::STAMINACOST)->setRaw(0.5);
 	currentAttributes->getAttrib(AttributeType::STAMINAREGEN)->setRaw(0.5);
 	currentAttributes->getAttrib(AttributeType::MAXHEALTH)->setRaw(100);
-	GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
+	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
 	FString x = FString(TEXT("Ak47"));
 	FString y = FString(("Ak47Bullet"));
 	UBulletItem* w = currentInventory->createItem<UBulletItem>(y);
 	w->ammount = 300;
-	//UWeaponItem* y= currentInventory->createItem<UWeaponItem>(y);
+	UWeaponItem* r= currentInventory->createItem<UWeaponItem>(x);
 	currentInventory->addItem(w);
-	changeWeapon(x);
+	currentInventory->addItem(r);
+	if (armorMesh) armorMesh->SetMasterPoseComponent(Mesh1P);
+	if (pantsMesh) pantsMesh->SetMasterPoseComponent(Mesh1P);
+	if (bodyArmorMesh) bodyArmorMesh->SetMasterPoseComponent(Mesh1P);
+	if (backPackMesh)  backPackMesh->SetMasterPoseComponent(Mesh1P);
+	if (helmetMesh) helmetMesh->SetMasterPoseComponent(Mesh1P);
+	syncEquipment();
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -149,7 +167,7 @@ void AStalkerGhostsCharacter::OnFire()
 	
 	if(stance == Movement::JOGGING || stance ==  Movement::SPRINTING) changeStance(Movement::WALKING);
 	Fire();
-	GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AStalkerGhostsCharacter::Fire, 60 / currentWeapon->weapon->fireRate, true);
+	if(currentWeapon->weapon) GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AStalkerGhostsCharacter::Fire, 60 / currentWeapon->weapon->fireRate, true);
 
 }
 void AStalkerGhostsCharacter::OffFire()
@@ -159,7 +177,7 @@ void AStalkerGhostsCharacter::OffFire()
 }
 void AStalkerGhostsCharacter::changeStance(Movement newStance)
 {
-	if(characterAnim) characterAnim->stance = newStance;
+	
 	prevStance = stance;
 	stance = newStance;
 }
@@ -193,6 +211,19 @@ void AStalkerGhostsCharacter::Fire()
 		}
 	}
 }
+
+void AStalkerGhostsCharacter::syncEquipment()
+{
+	if (currentWeapon->weapon)
+	{
+		currentWeapon->weapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
+		FP_MuzzleLocation->AttachToComponent(currentWeapon->weapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
+		currentWeapon->weapon->mesh->SetVisibility(true);
+	}
+	
+	
+}
+
 void AStalkerGhostsCharacter::changeWeapon(FString ID)
 {
 	UWeaponItem* x = Cast<UWeaponItem>(currentInventory->createItem<UWeaponItem>(ID));
@@ -202,21 +233,12 @@ void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
 {
 	if (!newwep) return;
 	currentWeapon->loadWeapon( newwep);
-	currentWeapon->weapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
-	FP_MuzzleLocation->AttachToComponent(currentWeapon->weapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
-
-	currentWeapon->weapon->mesh->SetVisibility(true);
+	syncEquipment();
 }
 void AStalkerGhostsCharacter::changeWeapon(UWeaponItem* ID)
 {
-
-	currentWeapon->loadWeapon(ID);
-	if (!currentWeapon->weapon) return;
-	currentInventory->mainInventory->weapon1Equipped->ItemButton->UserPointer = Cast<UItemBase>(currentWeapon->weapon);
-	currentWeapon->weapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
-	FP_MuzzleLocation->AttachToComponent(currentWeapon->weapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
-	
-	currentWeapon->weapon->mesh->SetVisibility(true);
+	currentWeapon->loadWeapon(GetWorld()->SpawnActor<AWeapon>(ID->wep, FVector(), FRotator()));
+	syncEquipment();
 }
 
 void AStalkerGhostsCharacter::MoveForward(float Value)
@@ -234,9 +256,10 @@ void AStalkerGhostsCharacter::MoveForward(float Value)
 void AStalkerGhostsCharacter::MoveRight(float Value)
 {
 	characterAnim->strafe = Value;
+	
 	if (Value != 0.0f)
 	{
-		
+		if (stance == Movement::SPRINTING) changeStance(Movement::JOGGING);
 		// add movement in that direction
 		AddMovementInput(GetActorRightVector(), Value);
 	}
@@ -257,9 +280,12 @@ void AStalkerGhostsCharacter::LookUpAtRate(float Rate)
 void AStalkerGhostsCharacter::OnReload()
 {
 	//look through inventory to see if there is ammo
+	if (!currentWeapon->weapon) return;
 	if (!currentInventory || currentWeapon->getAmmoCount() == currentWeapon->weapon->ammoCapacity) return;
 	bool foundMag = false;
-	if (currentWeapon->weapon->currentlyLoadedBullet) foundMag = checkMag(currentInventory->lookForItems(currentWeapon->weapon->currentlyLoadedBullet->itemIdentifier));
+	currentInventory->addItem(Cast<UItemBase>(currentWeapon->getLoadedMag()));
+	currentWeapon->unloadMag();
+	foundMag = checkMag(currentInventory->lookForItems(currentWeapon->weapon->getBulletString()));
 	if (!foundMag)
 	{
 		for (int i = 0; i < currentWeapon->weapon->acceptedBullets.Num(); i++)
@@ -277,7 +303,6 @@ void AStalkerGhostsCharacter::OnReload()
 void AStalkerGhostsCharacter::doReload()
 {
 	currentWeapon->startReload();
-	currentInventory->mainInventory->weapon1BulletEquipped->ItemButton->UserPointer = currentWeapon->weapon->currentlyLoadedBullet;
 	//found mag and reload is possible
 	if (currentWeapon->weapon->ReloadAnimation != NULL)
 	{
@@ -288,6 +313,10 @@ void AStalkerGhostsCharacter::doReload()
 		}
 	}
 }
+void AStalkerGhostsCharacter::doReload(UBulletItem* toReload)
+{
+	currentWeapon->weapon->reloadMag((toReload));
+}
 void AStalkerGhostsCharacter::offReload()
 {
 
@@ -296,8 +325,6 @@ bool AStalkerGhostsCharacter::checkMag(TArray<UItemBase*> Items)
 {
 	if (Items.Num() == 0) return false;
 	int32 ammountCounter = 0;
-	UBulletItem* temp = NULL;
-
 	for (int i = 0; i < Items.Num(); i++)
 	{
 		
@@ -305,30 +332,7 @@ bool AStalkerGhostsCharacter::checkMag(TArray<UItemBase*> Items)
 		{
 			if (Items[i]->IsA<UBulletItem>())
 			{
-				if (!temp)
-				{
-					temp = NewObject<UBulletItem>(Items[i]);
-				}
-				currentWeapon->weapon->currentlyLoadedBullet = temp;
-				ammountCounter += Items[i]->ammount;
-				if (temp->ammount < currentWeapon->weapon->ammoCapacity)
-				{
-					if (Items[i]->ammount >= currentWeapon->weapon->ammoCapacity - temp->ammount)
-					{
-						int32 toAdd = currentWeapon->weapon->ammoCapacity - temp->ammount;
-						Items[i]->ammount -= toAdd;
-						temp->ammount += toAdd;
-					}
-					else
-					{
-						temp->ammount += Items[i]->ammount;
-						Items[i]->ammount = 0;
-					}
-				}
-				else
-				{
-					return true;
-				}
+				doReload(Cast<UBulletItem>(Items[i]));
 			}
 		}
 	}
@@ -338,16 +342,18 @@ bool AStalkerGhostsCharacter::checkMag(TArray<UItemBase*> Items)
 }
 void AStalkerGhostsCharacter::Jump()
 {
+	characterAnim->isJumping = true;
 	bPressedJump = true;
 	JumpKeyHoldTime = 0.0f;
-	characterAnim->jumping = true;
+	//characterAnim->jumping = true;
 }
 
 void AStalkerGhostsCharacter::StopJumping()
 {
+	characterAnim->isJumping = false;
 	bPressedJump = false;
 	JumpKeyHoldTime = 0.0f;
-	characterAnim->jumping = false;
+	//characterAnim->jumping = false;
 	
 }
 void AStalkerGhostsCharacter::Sprint()
@@ -357,7 +363,7 @@ void AStalkerGhostsCharacter::Sprint()
 	{
 		case Movement::SPRINTING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->getAttrib(AttributeType::SPRINTSPEED)->getFinal();
+			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::SPRINTSPEED)->getFinal();
 			currentAttributes->getAttrib(AttributeType::STAMINA)->addRaw(currentAttributes->getAttrib(AttributeType::SPRINTCOST)->getFinal());
 			if (currentAttributes->getAttrib(AttributeType::STAMINA)->getFinal() <= 0)
 			{
@@ -368,21 +374,21 @@ void AStalkerGhostsCharacter::Sprint()
 		}break;
 		case Movement::WALKING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
+			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
 		}break;
 		case Movement::JOGGING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
+			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
 			GetWorld()->GetTimerManager().ClearTimer(speedHandle);
 				return;
 		}break;
 		case Movement::CROUCHING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = (currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal() - currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal()) / 4 + currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
+			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = (currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal() - currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal()) / 4 + currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
 		}break;
 		case Movement::PRONING:
 		{
-			GetCharacterMovement()->MaxWalkSpeed = currentAttributes->currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
+			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
 		}break;
 	}
 	
@@ -503,8 +509,8 @@ void AStalkerGhostsCharacter::OffInventory()
 void AStalkerGhostsCharacter::onInteract()
 {
 	FVector Loc = GetActorLocation();
-	FRotator Rot = FirstPersonCameraComponent->GetComponentRotation();
-	FVector End = Loc + Rot.Vector() * 600; //make variable
+	FVector Rot = FirstPersonCameraComponent->GetForwardVector();
+	FVector End = Loc + Rot * 600; //make variable
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
 	FCollisionResponseParams params2 = FCollisionResponseParams();
 	FHitResult result(ForceInit);
@@ -562,82 +568,121 @@ void AStalkerGhostsCharacter::onGrenade()
 	if (currentGrenade) currentGrenade->throwGrenade(FP_MuzzleLocation->GetComponentLocation(), FirstPersonCameraComponent->GetComponentRotation());
 }
 
-
-bool AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, SlotInformation slot)
+void visSkeletalMesh(USkeletalMeshComponent* mesh, bool vis)
 {
-	if (!item) return false;
+	mesh->SetVisibility(vis);
+	mesh->SetHiddenInGame(!vis);
+}
+
+InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, SlotInformation slot)
+{
+	if (!item) return InventoryAcceptance::DENIED;
 	switch (slot)
 	{
 			case SlotInformation::HELMET:
 			{
-				if (equipment.helmet) equipment.helmet->unEquip(this);
-				equipment.helmet = item;
-				item->equip(this);
+				UHelmetItem* hel = Cast<UHelmetItem>(item);
+				if (!hel) 
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Helmet equip not actually helmet"));
+					return InventoryAcceptance::DENIED;
+				}
+				helmetMesh->SetSkeletalMesh(hel->mesh);
+				visSkeletalMesh(helmetMesh, true);
 			}break;
 			case 	SlotInformation::ARMOR:
 			{
-				equipment.armor = item;
-				item->equip(this);
+				UArmorItem* hel = Cast<UArmorItem>(item);
+				if (!hel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Armor equip not actually helmet"));
+					return InventoryAcceptance::DENIED;
+				}
+				armorMesh->SetSkeletalMesh(hel->mesh);
+				visSkeletalMesh(armorMesh, true);
 			}break;
 			case 	SlotInformation::BACKPACK:
 			{
-				equipment.backPack = item;
-				item->equip(this);
+				UBackPackItem* hel = Cast<UBackPackItem>(item);
+				if (!hel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Backpack equip not actually helmet"));
+					return InventoryAcceptance::DENIED;
+				}
+				backPackMesh->SetSkeletalMesh(hel->mesh);
+				visSkeletalMesh(backPackMesh, true);
+			}break;
+			case 	SlotInformation::BODYARMOR:
+			{
+				UBodyArmorItem* hel = Cast<UBodyArmorItem>(item);
+				if (!hel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Bodyarmor equip not actually helmet"));
+					return InventoryAcceptance::DENIED;
+				}
+				bodyArmorMesh->SetSkeletalMesh(hel->mesh);
+				visSkeletalMesh(bodyArmorMesh, true);
 			}break;
 			case 	SlotInformation::BOOTS:
 			{
-				equipment.boots = item;
-				item->equip(this);
+				UBootItem* hel = Cast<UBootItem>(item);
+				if (!hel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Boots equip not actually helmet"));
+					return InventoryAcceptance::DENIED;
+				}
+				bootsMesh->SetSkeletalMesh(hel->mesh);
+				visSkeletalMesh(bootsMesh, true);
+			}break;
+			case 	SlotInformation::PANTS:
+			{
+				UPantsItem* hel = Cast<UPantsItem>(item);
+				if (!hel)
+				{
+					UE_LOG(LogTemp, Warning, TEXT("Pants equip not actually helmet"));
+					return InventoryAcceptance::DENIED;
+				}
+				pantsMesh->SetSkeletalMesh(hel->mesh);
+				visSkeletalMesh(pantsMesh, true);
 			}break;
 			case 	SlotInformation::WEAPON1:
 			{
-				AWeapon* x = Cast<AWeapon>(item);
-				if (!x) return false;
-				equipment.weapon1 = x;
+				UWeaponItem* x = Cast<UWeaponItem>(item);
+				if (!x) return InventoryAcceptance::DENIED;
 				changeWeapon(x);
-				item->equip(this);
-			}break;
-			case 	SlotInformation::WEAPON1AMMUNITION:
-			{
-				ABullet* x = Cast<ABullet>(item);
-				if (!x) return false;
-				equipment.weapon1Bullet = x;
-				item->equip(this);
+				
+				
 			}break;
 			case 	SlotInformation::ARTIFACT1:
 			{
 				UArtifact* x = Cast<UArtifact>(item);
-				if (!x) return false;
-				equipment.art1 = x;
+				if (!x) return InventoryAcceptance::DENIED;
 				for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->addBuff(x->attachedBuffs[i]);
-				item->equip(this);
+				
 			}
 			case 	SlotInformation::ARTIFACT2:
 			{
 				UArtifact* x = Cast<UArtifact>(item);
-				if (!x) return false;
-				equipment.art2 = x;
+				if (!x) return InventoryAcceptance::DENIED;
 				for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->addBuff(x->attachedBuffs[i]);
-				item->equip(this);
+				
 			}
 			case 	SlotInformation::ARTIFACT3:
 			{
 				UArtifact* x = Cast<UArtifact>(item);
-				if (!x) return false;
-				equipment.art3 = x;
+				if (!x) return InventoryAcceptance::DENIED;
 				for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->addBuff(x->attachedBuffs[i]);
 			}
 			case 	SlotInformation::ARTIFACT4:
 			{
 				UArtifact* x = Cast<UArtifact>(item);
-				if (!x) return false;
-				equipment.art4 = x;
+				if (!x) return InventoryAcceptance::DENIED;
 				for (int32 i = 0; i < x->attachedBuffs.Num();i++) currentAttributes->addBuff(x->attachedBuffs[i]);
-				item->equip(this);
+				
 			}break;
 			case 	SlotInformation::QUICK1:
 			{
-
+				
 			}break;
 			case 	SlotInformation::QUICK2:
 			{
@@ -652,85 +697,90 @@ bool AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, SlotInformation sl
 
 			}break;
 	}
-	return true;
+	item->equip(this);
+	return InventoryAcceptance::ACCEPTED;
 }
 
-bool AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation slot)
+InventoryAcceptance AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation slot)
 {
 	switch (slot)
 	{
-	case SlotInformation::HELMET:
-	{
-
+		case SlotInformation::HELMET:
+		{
+			visSkeletalMesh(helmetMesh, false);
+		}break;
+		case 	SlotInformation::ARMOR:
+		{
+			visSkeletalMesh(armorMesh, false);
+		}break;
+		case 	SlotInformation::BACKPACK:
+		{
+			visSkeletalMesh(backPackMesh, false);
+		}break;
+		case 	SlotInformation::BOOTS:
+		{
+			visSkeletalMesh(bootsMesh, false);
+		}break;
+		
+		case 	SlotInformation::BODYARMOR:
+		{
+			visSkeletalMesh(bodyArmorMesh, false);
+		}break;
+		case 	SlotInformation::PANTS:
+		{
+			visSkeletalMesh(pantsMesh, false);
+		}break;
+		case 	SlotInformation::WEAPON1:
+		{
+			currentWeapon->removeWeapon();
+		
+		}break;
+		case 	SlotInformation::ARTIFACT1:
+		{
+			UArtifact* x = Cast<UArtifact>(item);
+			if (!x) return InventoryAcceptance::DENIED;
+			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
+		
+		}break;
+		case 	SlotInformation::ARTIFACT2:
+		{
+			UArtifact* x = Cast<UArtifact>(item);
+			if (!x) return InventoryAcceptance::DENIED;
+			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
+		
+		}break;
+		case 	SlotInformation::ARTIFACT3:
+		{
+			UArtifact* x = Cast<UArtifact>(item);
+			if (!x) return InventoryAcceptance::DENIED;
+			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
+		
+		}break;
+		case 	SlotInformation::ARTIFACT4:
+		{
+			UArtifact* x = Cast<UArtifact>(item);
+			if (!x) return InventoryAcceptance::DENIED;
+			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
+		
+		}break;
+		case 	SlotInformation::QUICK1:
+		{
+		
+		}break;
+		case 	SlotInformation::QUICK2:
+		{
+		
+		}break;
+		case 	SlotInformation::QUICK3:
+		{
+		
+		}break;
+		case 	SlotInformation::QUICK4:
+		{
+		
+		}break;
 	}
-	case 	SlotInformation::ARMOR:
-	{
-
-	}
-	case 	SlotInformation::BACKPACK:
-	{
-
-	}
-	case 	SlotInformation::BOOTS:
-	{
-
-	}
-	case 	SlotInformation::WEAPON1:
-	{
-
-	}
-	case 	SlotInformation::WEAPON1AMMUNITION:
-	{
-
-	}
-	case 	SlotInformation::ARTIFACT1:
-	{
-		UArtifact* x = Cast<UArtifact>(item);
-		if (!x) return false;
-		equipment.art1 = x;
-		for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
-		item->unEquip(this);
-	}
-	case 	SlotInformation::ARTIFACT2:
-	{
-		UArtifact* x = Cast<UArtifact>(item);
-		if (!x) return false;
-		equipment.art2 = x;
-		for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
-		item->unEquip(this);
-	}
-	case 	SlotInformation::ARTIFACT3:
-	{
-		UArtifact* x = Cast<UArtifact>(item);
-		if (!x) return false;
-		equipment.art3 = x;
-		for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
-		item->unEquip(this);
-	}
-	case 	SlotInformation::ARTIFACT4:
-	{
-		UArtifact* x = Cast<UArtifact>(item);
-		if (!x) return false;
-		equipment.art4 = x;
-		for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
-		item->unEquip(this);
-	}
-	case 	SlotInformation::QUICK1:
-	{
-
-	}
-	case 	SlotInformation::QUICK2:
-	{
-
-	}
-	case 	SlotInformation::QUICK3:
-	{
-
-	}
-	case 	SlotInformation::QUICK4:
-	{
-
-	}
-	}
-	return true;
+	currentInventory->addItem(item);
+	item->unEquip(this);
+	return InventoryAcceptance::ACCEPTED;
 }

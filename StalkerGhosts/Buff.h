@@ -27,8 +27,8 @@ enum class AttributeType :uint8 //this is used for BUFFS and stuff
 	STAMINAREGEN,
 	HEALTH,
 	MAXHEALTH,
-	NUM,
-	NONE //so it doesn't have affect pretty much
+	NUM, //do not remove
+	NONE //so it doesn't have affect pretty much also do not remove
 
 };
 

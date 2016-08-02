@@ -43,14 +43,12 @@ public:
 		ItemCategory type = ItemCategory::ITEM;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		FString dataTabelIdentifier;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		FString itemIdentifier;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UItemWidget* widget;
 
+	float getWeight();
 
 
 	bool equals(UItemBase* other);
@@ -68,8 +66,95 @@ class UArtifact : public UItemBase
 public:
 	UArtifact() { type = ItemCategory::ARTIFACT; }
 	~UArtifact() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<UBuff*> attachedBuffs;
+};
 
-	TArray<UBuff*> attachedBuffs;
+UCLASS(Blueprintable, BlueprintType)
+class UArmorItem : public UItemBase
+{
+	GENERATED_BODY()
+public:
+	UArmorItem() 
+	{
+		type = ItemCategory::ARMOR;
+		armorType = ArmorSubCategory::ARMOR;
+	}
+	~UArmorItem() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		USkeletalMesh* mesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		ArmorSubCategory armorType = ArmorSubCategory::ARMOR;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class UBackPackItem : public UArmorItem
+{
+	GENERATED_BODY()
+public:
+	UBackPackItem()
+	{ 
+		armorType = ArmorSubCategory::BACKPACK;
+	}
+	~UBackPackItem() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<UBuff*> attachedBuffs;
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class UBodyArmorItem : public UArmorItem
+{
+	GENERATED_BODY()
+public:
+	UBodyArmorItem() 
+	{
+		armorType = ArmorSubCategory::BODYARMOR;
+	}
+	~UBodyArmorItem() {}
+	
+
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class UHelmetItem : public UArmorItem
+{
+	GENERATED_BODY()
+public:
+	UHelmetItem() 
+	{  
+		armorType = ArmorSubCategory::HELMET;
+	}
+	~UHelmetItem() {}
+
+	
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class UBootItem : public UArmorItem
+{
+	GENERATED_BODY()
+public:
+	UBootItem() 
+	{ 
+		armorType = ArmorSubCategory::BOOTS;
+	}
+	~UBootItem() {}
+
+	
+};
+
+UCLASS(Blueprintable, BlueprintType)
+class UPantsItem : public UArmorItem
+{
+	GENERATED_BODY()
+public:
+	UPantsItem() 
+	{ 
+		armorType = ArmorSubCategory::PANTS;
+	}
+	~UPantsItem() {}
+
+
 };
 UCLASS(Blueprintable, BlueprintType)
 class UNightVisionItem : public UItemBase
@@ -79,8 +164,9 @@ public:
 	UNightVisionItem () { type = ItemCategory::NIGHTVISION; }
 	~UNightVisionItem () {}
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-	UPostProcessComponent* nightvision;
+		UPostProcessComponent* nightvision;
 };
+
 class ABullet;
 UCLASS(Blueprintable, BlueprintType)
 class UBulletItem : public UItemBase
@@ -90,8 +176,10 @@ public:
 	UBulletItem() { type = ItemCategory::AMMUNITION; }
 	~UBulletItem() {}
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-	TSubclassOf<ABullet> bullet;
+		TSubclassOf<ABullet> bullet;
 };
+
+
 class AWeapon;
 UCLASS(Blueprintable, BlueprintType)
 class UWeaponItem : public UItemBase
@@ -101,8 +189,9 @@ public:
 	UWeaponItem() { type = ItemCategory::AMMUNITION; }
 	~UWeaponItem() {}
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-	TSubclassOf<AWeapon> wep;
+		TSubclassOf<AWeapon> wep;
 };
+
 class AGrenade;
 UCLASS(Blueprintable, BlueprintType)
 class UGrenadeItem : public UItemBase
@@ -112,5 +201,5 @@ public:
 	UGrenadeItem() { type = ItemCategory::AMMUNITION; }
 	~UGrenadeItem() {}
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-	TSubclassOf<AGrenade> gren;
+		TSubclassOf<AGrenade> gren;
 };

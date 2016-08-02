@@ -64,8 +64,15 @@ void UWeaponComponent::endReload()
 {
 	isReloading = false;
 }
+
+UBulletItem* UWeaponComponent::getLoadedMag()
+{
+	if (weapon) return weapon->currentlyLoadedBullet;
+	return NULL;
+};
 bool UWeaponComponent::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 {
+	if (!weapon) return false;
 	if (isReloading || !weapon->currentlyLoadedBullet)
 	{
 		//needs to be in 2 times because first one is a check if variable is NULL
@@ -96,6 +103,7 @@ void UWeaponComponent::loadWeapon(UWeaponItem* wep)
 {
 	
 	if (weapon) weapon->Destroy();
+
 	weapon = GetWorld()->SpawnActor<AWeapon>(wep->wep, FVector(), FRotator());
 	if (!weapon) return;
 	loadedWeapon = wep->itemIdentifier;
@@ -109,7 +117,42 @@ int32  UWeaponComponent::getAmmoCount()
 }
 void UWeaponComponent::loadWeapon(AWeapon* ID)
 {
+	if (weapon) weapon->Destroy();
 	weapon = ID;
 	loadedWeapon = ID->weaponID;
 }
+void UWeaponComponent::removeWeapon()
+{
+	if (weapon) weapon->Destroy();
+	weapon = NULL;
+	loadedWeapon = "";
 
+}
+
+bool UWeaponComponent::loadMag(UBulletItem* ID)
+{
+	if (!ID) return false;
+	UBulletItem* x = DuplicateObject(ID, NULL);
+	x->ammount = 0;
+	if (weapon)
+	{
+		if (weapon->ammoCapacity <= ID->ammount)
+		{
+			x->ammount = weapon->ammoCapacity;
+			ID->ammount -= weapon->ammoCapacity;
+		}
+		else
+		{
+			x->ammount = ID->ammount;
+			ID->ammount = 0;
+		}
+		weapon->currentlyLoadedBullet = x;
+	}
+	else return false;
+	return true;
+}
+
+void UWeaponComponent::unloadMag()
+{
+	weapon->currentlyLoadedBullet = NULL;
+}

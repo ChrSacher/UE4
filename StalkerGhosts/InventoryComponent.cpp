@@ -18,7 +18,8 @@ UInventoryComponent::UInventoryComponent()
 	PrimaryComponentTick.bCanEverTick = false;
 	for (uint8 i = 0; i < uint8(ItemCategory::NUM);i++)
 		items.Add(static_cast<ItemCategory>(i),TMap<UItemBase*, UItemBase*>());
-	
+
+	equipment = CreateDefaultSubobject<UCharacterEquipment>(TEXT("equipment"));
 }
 
 // Called when the game starts
@@ -29,7 +30,7 @@ void UInventoryComponent::BeginPlay()
 	
 	for (int i = 0; i < beginPlayEquipment.Num(); i++)
 	{
-		UItemBase* x = Cast<UItemBase>(NewObject<UItemBase>(beginPlayEquipment[i]));
+		UItemBase* x = Cast<UItemBase>(DuplicateObject(Cast<UItemBase>(beginPlayEquipment[i]->GetDefaultObject()),NULL));
 		AWeapon* y = Cast<AWeapon>(x);
 		if (beginPlayEquipment[i]) addItem(x);
 	}
@@ -93,6 +94,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 			}
 		}
 	}
+	calculateWeight();
 	refresh();
 	return true;
 }
@@ -107,9 +109,10 @@ T* UInventoryComponent::createItem(FString ID)
 		UE_LOG(LogTemp, Warning, TEXT("ItemRowNotFound"));
 		return NULL;
 	}
+	calculateWeight();
 	return DuplicateObject(Cast<T>(row->base->GetDefaultObject()), NULL);;
 }
-bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
+bool UInventoryComponent::removeItem(UItemBase* Item, int32 ammount)
 {
 	if (!Item) return false;
 	if (ammount > 0)
@@ -131,6 +134,7 @@ bool UInventoryComponent::removeItem(UItemBase* Item, int8 ammount)
 	}
 	items[Item->type].Remove(Item);
 	refresh();
+	calculateWeight();
 	return true;
 
 }
@@ -140,6 +144,7 @@ void UInventoryComponent::dropItem(UItemBase* Item)
 	items[Item->type].Remove(Item);
 	if(Item->ammount > 0) GetWorld()->SpawnActor<AItemBaseActor>(itemBaseTemplate, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation())->spawn(Item);
 	Item->widget->RemoveFromParent();
+	calculateWeight();
 }
 
 UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
@@ -151,6 +156,7 @@ UItemBase* UInventoryComponent::splitItem(UItemBase* Item,float ratio)
 	newItem->ammount = newAmmount;
 	Item->ammount -= newAmmount;
 	addItem(newItem);
+	
 	return newItem;
 }
 
@@ -173,19 +179,19 @@ UItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 	{
 		for (auto& y : x.Value)
 		{
-			if (y.Value->dataTabelIdentifier == name) return y.Value;
+			if (y.Value->itemIdentifier == name) return y.Value;
 		}
 	}
 	return NULL;
 }
-TArray<UItemBase*> UInventoryComponent::lookForItems(FString &name)
+TArray<UItemBase*> UInventoryComponent::lookForItems(FString name)
 {
 	TArray<UItemBase*> vec;
 	for (auto& x : items)
 	{
 		for (auto& y : x.Value)
 		{
-			if (y.Key->dataTabelIdentifier == name) vec.Add(y.Value);
+			if (y.Key->itemIdentifier == name) vec.Add(y.Value);
 		}
 	}
 	return vec;
@@ -219,6 +225,7 @@ void UInventoryComponent::loadUI()
 			mainInventory->CategoryBox->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
 			x->CategoryButton->UserNumber = i;
 			x->CategoryButton->CategoryIdentifier = true;
+			
 			x->CategoryButton->click.BindUObject(this, &UInventoryComponent::onCategoryClicked);
 			FCategoryLookUpTable* row = categoryTable->FindRow<FCategoryLookUpTable>(FName(* FString::FromInt(i)), ContextString);
 			if (!row)
@@ -227,8 +234,8 @@ void UInventoryComponent::loadUI()
 			}
 			else
 			{
-				x->CategoryPicture = row->CategoryPicture;
-				x->categoryText = row->categoryText;
+				x->pic->SetBrushFromTexture(row->CategoryPicture);
+				x->text->SetText(FText::FromString(row->categoryText));
 			}
 			
 		}
@@ -250,7 +257,6 @@ void UInventoryComponent::loadUI()
 	mainInventory->armorEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
 	mainInventory->backBackEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
 	mainInventory->weapon1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->weapon1BulletEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
 	mainInventory->artifact1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
 	mainInventory->artifact2Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
 	mainInventory->artifact3Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
@@ -264,7 +270,6 @@ void UInventoryComponent::loadUI()
 	mainInventory->armorEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
 	mainInventory->backBackEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
 	mainInventory->weapon1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->weapon1BulletEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
 	mainInventory->artifact1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
 	mainInventory->artifact2Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
 	mainInventory->artifact3Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
@@ -368,15 +373,17 @@ void UInventoryComponent::onItemButtonLeftHovered(UDataItemButton* sender)
 void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
 {
 	UE_LOG(LogTemp, Warning, TEXT("EQUIP"));
-	if (slot->allowedType != base->type) return;
+	if (slot->allowedType != base->type || slot->allowedType == ItemCategory::ALL) return;
 	
 	IInventoryInterface* own = Cast<IInventoryInterface>(GetOwner());
+	InventoryAcceptance t = InventoryAcceptance::DENIED;
 	if (own)
 	{
-		if(!own->equipmentAdded(base, slot->slotEnum)) return;
+		if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer);
+		t = own->equipmentAdded(base, slot->slotEnum);
+		if(InventoryAcceptance::DENIED == t) return;
 	}
 	slot->ItemButton->UserPointer = base;
-	equippedItems[base->type].Add(base, base);
 	items[base->type].Remove(base);
 	refresh();
 }
@@ -391,10 +398,70 @@ void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base)
 	IInventoryInterface* own = Cast<IInventoryInterface>(GetOwner());
 	if (own)
 	{
-		if(!own->equipmentRemoved(base,slot->slotEnum)) return;
+		if(InventoryAcceptance::DENIED == own->equipmentRemoved(base,slot->slotEnum)) return;
 	}
+	addItem(base);
 	slot->ItemButton->UserPointer = NULL;
-	equippedItems[base->type].Remove(base);
-	items[base->type].Add(base,base);
 	refresh();
 }
+
+void UInventoryComponent::calculateWeight()
+{
+	currentWeight = 0;
+	for (auto& x : items)
+	{
+		for (auto& y : x.Value)
+		{
+			currentWeight += y.Key->getWeight();
+		}
+	}
+	currentWeight += equipment->getWeight();
+}
+
+float UInventoryComponent::getWeight()
+{
+	calculateWeight();
+	return currentWeight;
+}
+
+
+UCharacterEquipment::UCharacterEquipment()
+{
+	for (uint8 i = 0; i < (uint8)SlotInformation::NUM;i++)
+	{ 
+		equipment.Add(NULL);
+	}
+}
+UCharacterEquipment::~UCharacterEquipment()
+{
+
+}
+void UCharacterEquipment::equipItem(SlotInformation slot, UItemBase* item)
+{
+	equipment[(uint8)slot] = item;
+}
+UItemBase* UCharacterEquipment::unequipItem(SlotInformation slot)
+{
+	UItemBase* x = getItem<UItemBase>(slot);
+	equipment[(uint8)slot] = NULL;
+	return x;
+
+}
+template <typename T>
+T* UCharacterEquipment::getItem(SlotInformation slot)
+{
+
+	if((uint8)SlotInformation::NUM > (uint8)slot && (uint8)slot >= 0) return Cast<T>(equipment[(uint8)slot]);
+	return NULL;
+}
+
+float UCharacterEquipment::getWeight()
+{
+	float y = 0;
+	for (int i = 0; i < equipment.Num();i++)
+	{
+		if (equipment[i]) y += equipment[i]->weight;
+	}
+	return y;
+}
+
