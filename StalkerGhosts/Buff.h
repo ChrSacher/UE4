@@ -2,6 +2,7 @@
 
 #pragma once
 #include "GameFramework/Character.h"
+#include "DamageEnum.h"
 #include "Buff.generated.h"
 /**
  * 
@@ -32,6 +33,7 @@ enum class AttributeType :uint8 //this is used for BUFFS and stuff
 
 };
 
+
 class UCharacterAttributes;
 UENUM(BlueprintType)
 enum class BuffType :uint8
@@ -40,13 +42,33 @@ enum class BuffType :uint8
 	ADDITIVE,
 	MULTIPLICATIVE,
 };
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FBuffInit
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		AttributeType typeAffected = AttributeType::NONE;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		BuffType type = BuffType::ADDITIVE;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		float timeBetweenTicks = 0;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		float lifeTime = 60;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		float value = 1;
+};
 UCLASS(BlueprintType)
 class STALKERGHOSTS_API UBuff : public UObject
 {
 	GENERATED_BODY()
 public:
 	UBuff();
+	void load(FBuffInit& init);
 	~UBuff();
 
 public:

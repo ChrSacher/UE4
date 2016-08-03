@@ -20,6 +20,7 @@ class STALKERGHOSTS_API UEquippedItemWidget : public UUserWidget
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UDataItemButton* ItemButton;
+
 	UEquippedItemDelegate onEq;
 	UEquippedItemDelegate offEq;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
@@ -29,6 +30,7 @@ public:
 		SlotInformation slotEnum = SlotInformation::NON;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		UTexture2D* getTexture();
+
 	//void called when itemWidget gets dropped on this
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	void onEquip(UItemBase* base)

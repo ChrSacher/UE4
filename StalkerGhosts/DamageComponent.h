@@ -8,7 +8,19 @@
 #include "Bullet.h"
 #include "DamageComponent.generated.h"
 
-
+class UArmorItem;
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FDamageStruct
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		FString boneName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		DamageBodyPart type;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float modifierValue;
+};
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UDamageComponent : public UActorComponent
 {
@@ -23,25 +35,20 @@ public:
 	
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
-
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		UPhysicsAsset* physicsAsset;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Damage)
+		TArray< float> armorValues;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TArray<FString> boneNames;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TArray<DamageBodyPart> damageTypes;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TArray<float> damageModifiers;
-
+		TArray< FDamageStruct> damageValues;
+	UPROPERTY()
 		TMap<FString,DamageBodyPart> boneBodyPartMap;
+	UPROPERTY()
+		TMap<DamageBodyPart, float> damageModifierMap;
 
-		
-			TMap<DamageBodyPart, float> damageModifierMap;
-
-	
+public:
 	void setup();
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		float damageAmmount(DamageBodyPart BodyPart, ABullet* bullet);
@@ -52,4 +59,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		DamageBodyPart getDamagedBodyPart(FString bonename);
+
+	void addArmor(UArmorItem* armor);
+	void removeArmor(UArmorItem* armor);
 };

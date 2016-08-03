@@ -34,3 +34,18 @@ void UItemBase::loadFromTable(FItemLookUpTable* table)
 }
 
 float UItemBase::getWeight() { return ammount * weight; }
+
+TArray<UBuff*>& UArmorItem::getBuffs()
+{
+	if (!init)
+	{
+		for (int32 i = 0; i < buffInit.Num(); i++)
+		{
+			UBuff* x = NewObject<UBuff>();
+			x->load(buffInit[i]);;
+			attachedBuffs.Add(x);
+		}
+		init = true;
+	}
+	return attachedBuffs;
+}

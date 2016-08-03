@@ -84,21 +84,7 @@ void AStalkerGhostsCharacter::BeginPlay()
 	FirstPersonCameraComponent->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
 	
 	
-	currentAttributes->getAttrib(AttributeType::ENDURANCE)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::AGILITY)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::INTELLIGENCE)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::CHARISMA)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::STRENGTH)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::LUCK)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::PERCEPTION)->setRaw(5);
-	currentAttributes->getAttrib(AttributeType::SPRINTSPEED)->setRaw(600);
-	currentAttributes->getAttrib(AttributeType::SPRINTCOST)->setRaw(-0.2);
-	currentAttributes->getAttrib(AttributeType::JOGSPEED)->setRaw(400);
-	currentAttributes->getAttrib(AttributeType::WALKSPEED)->setRaw(200);
-	currentAttributes->getAttrib(AttributeType::MAXSTAMINA)->setRaw(100);
-	currentAttributes->getAttrib(AttributeType::STAMINACOST)->setRaw(0.5);
-	currentAttributes->getAttrib(AttributeType::STAMINAREGEN)->setRaw(0.5);
-	currentAttributes->getAttrib(AttributeType::MAXHEALTH)->setRaw(100);
+	currentAttributes->setup();
 	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
 	FString x = FString(TEXT("Ak47"));
 	FString y = FString(("Ak47Bullet"));
@@ -589,6 +575,8 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, Slo
 				}
 				helmetMesh->SetSkeletalMesh(hel->mesh);
 				visSkeletalMesh(helmetMesh, true);
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+				damageComponent->addArmor(hel);
 			}break;
 			case 	SlotInformation::ARMOR:
 			{
@@ -598,8 +586,10 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, Slo
 					UE_LOG(LogTemp, Warning, TEXT("Armor equip not actually helmet"));
 					return InventoryAcceptance::DENIED;
 				}
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
 				armorMesh->SetSkeletalMesh(hel->mesh);
 				visSkeletalMesh(armorMesh, true);
+				damageComponent->addArmor(hel);
 			}break;
 			case 	SlotInformation::BACKPACK:
 			{
@@ -609,8 +599,10 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, Slo
 					UE_LOG(LogTemp, Warning, TEXT("Backpack equip not actually helmet"));
 					return InventoryAcceptance::DENIED;
 				}
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
 				backPackMesh->SetSkeletalMesh(hel->mesh);
 				visSkeletalMesh(backPackMesh, true);
+				damageComponent->addArmor(hel);
 			}break;
 			case 	SlotInformation::BODYARMOR:
 			{
@@ -620,8 +612,10 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, Slo
 					UE_LOG(LogTemp, Warning, TEXT("Bodyarmor equip not actually helmet"));
 					return InventoryAcceptance::DENIED;
 				}
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
 				bodyArmorMesh->SetSkeletalMesh(hel->mesh);
 				visSkeletalMesh(bodyArmorMesh, true);
+				damageComponent->addArmor(hel);
 			}break;
 			case 	SlotInformation::BOOTS:
 			{
@@ -631,8 +625,10 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, Slo
 					UE_LOG(LogTemp, Warning, TEXT("Boots equip not actually helmet"));
 					return InventoryAcceptance::DENIED;
 				}
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
 				bootsMesh->SetSkeletalMesh(hel->mesh);
 				visSkeletalMesh(bootsMesh, true);
+				damageComponent->addArmor(hel);
 			}break;
 			case 	SlotInformation::PANTS:
 			{
@@ -642,8 +638,10 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentAdded(UItemBase* item, Slo
 					UE_LOG(LogTemp, Warning, TEXT("Pants equip not actually helmet"));
 					return InventoryAcceptance::DENIED;
 				}
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
 				pantsMesh->SetSkeletalMesh(hel->mesh);
 				visSkeletalMesh(pantsMesh, true);
+				damageComponent->addArmor(hel);
 			}break;
 			case 	SlotInformation::WEAPON1:
 			{
@@ -707,27 +705,64 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, S
 	{
 		case SlotInformation::HELMET:
 		{
+			UHelmetItem* hel = Cast<UHelmetItem>(item);
+			if (hel)
+			{
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+			}
 			visSkeletalMesh(helmetMesh, false);
+			damageComponent->removeArmor(hel);
 		}break;
 		case 	SlotInformation::ARMOR:
 		{
+			UArmorItem* hel = Cast<UArmorItem>(item);
+			if (hel)
+			{
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+			}
 			visSkeletalMesh(armorMesh, false);
+			damageComponent->removeArmor(hel);
 		}break;
 		case 	SlotInformation::BACKPACK:
 		{
+			UBackPackItem* hel = Cast<UBackPackItem>(item);
+			if (hel)
+			{
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+			}
 			visSkeletalMesh(backPackMesh, false);
+			damageComponent->removeArmor(hel);
 		}break;
 		case 	SlotInformation::BOOTS:
 		{
+			UBootItem* hel = Cast<UBootItem>(item);
+			if (hel)
+			{
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+			}
 			visSkeletalMesh(bootsMesh, false);
+			damageComponent->removeArmor(hel);
 		}break;
 		
 		case 	SlotInformation::BODYARMOR:
 		{
+			UBodyArmorItem* hel = Cast<UBodyArmorItem>(item);
+			if (hel)
+			{
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+			}
 			visSkeletalMesh(bodyArmorMesh, false);
+			damageComponent->removeArmor(hel);
 		}break;
 		case 	SlotInformation::PANTS:
+			
 		{
+			UPantsItem* hel = Cast<UPantsItem>(item);
+			if (hel)
+			{
+				for (int32 i = 0; i < hel->attachedBuffs.Num(); i++) currentAttributes->addBuff(hel->attachedBuffs[i]);
+			}
+			damageComponent->removeArmor(hel);
 			visSkeletalMesh(pantsMesh, false);
 		}break;
 		case 	SlotInformation::WEAPON1:
@@ -738,28 +773,28 @@ InventoryAcceptance AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, S
 		case 	SlotInformation::ARTIFACT1:
 		{
 			UArtifact* x = Cast<UArtifact>(item);
-			if (!x) return InventoryAcceptance::DENIED;
+			if (!x) return InventoryAcceptance::ACCEPTED;
 			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
 		
 		}break;
 		case 	SlotInformation::ARTIFACT2:
 		{
 			UArtifact* x = Cast<UArtifact>(item);
-			if (!x) return InventoryAcceptance::DENIED;
+			if (!x) return InventoryAcceptance::ACCEPTED;
 			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
 		
 		}break;
 		case 	SlotInformation::ARTIFACT3:
 		{
 			UArtifact* x = Cast<UArtifact>(item);
-			if (!x) return InventoryAcceptance::DENIED;
+			if (!x) return InventoryAcceptance::ACCEPTED;
 			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
 		
 		}break;
 		case 	SlotInformation::ARTIFACT4:
 		{
 			UArtifact* x = Cast<UArtifact>(item);
-			if (!x) return InventoryAcceptance::DENIED;
+			if (!x) return InventoryAcceptance::ACCEPTED;
 			for (int32 i = 0; i < x->attachedBuffs.Num(); i++) currentAttributes->removeBuff(x->attachedBuffs[i]);
 		
 		}break;

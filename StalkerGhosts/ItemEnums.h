@@ -25,7 +25,8 @@ enum class ArmorSubCategory : uint8
 	BACKPACK,
 	BOOTS,
 	PANTS,
-	BODYARMOR
+	BODYARMOR,
+	NUM
 };
 
 UENUM(BlueprintType)
@@ -46,6 +47,6 @@ enum class SlotInformation : uint8
 	QUICK2,
 	QUICK3,
 	QUICK4,
-	NON,
-	NUM
+	NUM,
+	NON
 };

@@ -25,6 +25,7 @@ class STALKERGHOSTS_API UMainInventoryWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UItemScrollBoxWidget* ItemBoxWidget;
 
@@ -35,40 +36,15 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UItemDetailWidget* details;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* helmetEquipped;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		TArray<UEquippedItemWidget*> widgets;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* armorEquipped;
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setEquippedWidget(SlotInformation sslot, UEquippedItemWidget* widget);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UEquippedItemWidget* getEquippedWidget(SlotInformation sslot);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setup();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* backBackEquipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* weapon1Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* artifact1Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* artifact2Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* artifact3Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* artifact4Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* quick1Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* quick2Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* quick3Equipped;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEquippedItemWidget* quick4Equipped;
 
 };

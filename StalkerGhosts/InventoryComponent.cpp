@@ -252,33 +252,11 @@ void UInventoryComponent::loadUI()
 	
 
 
-	
-	mainInventory->helmetEquipped->onEq.BindUObject(this,&UInventoryComponent::equip);
-	mainInventory->armorEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->backBackEquipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->weapon1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->artifact1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->artifact2Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->artifact3Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->artifact4Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->quick1Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->quick2Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->quick3Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-	mainInventory->quick4Equipped->onEq.BindUObject(this, &UInventoryComponent::equip);
-
-	mainInventory->helmetEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->armorEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->backBackEquipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->weapon1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->artifact1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->artifact2Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->artifact3Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->artifact4Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->quick1Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->quick2Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->quick3Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-	mainInventory->quick4Equipped->offEq.BindUObject(this, &UInventoryComponent::unEquip);
-
+	for (uint8 i = 0; i < (uint8)SlotInformation::NUM; i++)
+	{
+		mainInventory->widgets[i]->onEq.BindUObject(this, &UInventoryComponent::equip);
+		mainInventory->widgets[i]->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+	}
 
 }
 

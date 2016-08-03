@@ -20,18 +20,18 @@ enum class EDamageType : uint8
 UENUM(BlueprintType)
 enum class DamageBodyPart : uint8
 {
-	NON = 0,
-	FOOT = 1,
-	LOWERLEG = 2,
-	UPPERLEG = 3,
-	PELVIS = 4,
-	STOMACH = 5,
-	CHEST = 6,
-	UPPERARM = 7,
-	LOWERARM = 8,
-	HAND = 9,
-	THROAT = 10,
-	HEAD = 11,
-	NUM = 12
+	NON ,
+	FOOT ,
+	LOWERLEG ,
+	UPPERLEG ,
+	PELVIS ,
+	STOMACH ,
+	CHEST ,
+	UPPERARM ,
+	LOWERARM ,
+	HAND ,
+	THROAT ,
+	HEAD ,
+	NUM 
 };
 

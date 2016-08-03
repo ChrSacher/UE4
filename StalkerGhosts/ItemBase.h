@@ -4,7 +4,8 @@
 #include "GameFramework/Actor.h"
 #include "ItemWidget.h"
 #include "ItemEnums.h"
-
+#include "DamageEnum.h"
+#include "Buff.h"
 //#include "DataTables.h"
 #include "ItemBase.generated.h"
 class AStalkerGhostsCharacter;
@@ -54,9 +55,19 @@ public:
 	bool equals(UItemBase* other);
 	void loadFromTable(FItemLookUpTable* table);
 
-	virtual void use(AStalkerGhostsCharacter* user) {};
-	virtual void equip(AStalkerGhostsCharacter* user) {};
-	virtual void unEquip(AStalkerGhostsCharacter* user) {};
+	UFUNCTION(BlueprintImplementableEvent)
+		void useItem();
+	UFUNCTION(BlueprintImplementableEvent)
+		void equipItem();
+	UFUNCTION(BlueprintImplementableEvent)
+		void unEquipItem();
+
+	virtual void use(AStalkerGhostsCharacter* user) { this->useItem(); };
+	
+	virtual void equip(AStalkerGhostsCharacter* user) { this->equipItem(); };
+	
+	virtual void unEquip(AStalkerGhostsCharacter* user) { this->unEquipItem(); };
+
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -64,10 +75,39 @@ class UArtifact : public UItemBase
 {
 	GENERATED_BODY()
 public:
-	UArtifact() { type = ItemCategory::ARTIFACT; }
+	UArtifact() 
+	{ 
+		type = ItemCategory::ARTIFACT; 
+	}
 	~UArtifact() {}
+protected:
+
+	
+
+	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		bool init = false;
+
+public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		TArray<UBuff*> attachedBuffs;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<FBuffInit> buffInit;
+	TArray<UBuff*>& getBuffs()
+	{
+		if (!init)
+		{
+			for (int32 i = 0; i < buffInit.Num(); i++)
+			{
+				UBuff* x = NewObject<UBuff>();
+				x->load(buffInit[i]);;
+				attachedBuffs.Add(x);
+			}
+			init = true;
+		}
+		return attachedBuffs;
+	}
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -79,12 +119,31 @@ public:
 	{
 		type = ItemCategory::ARMOR;
 		armorType = ArmorSubCategory::ARMOR;
+		
 	}
+
+public:
+	TArray<UBuff*>& getBuffs();
 	~UArmorItem() {}
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray< FBuffInit> buffInit;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		float ArmorValue = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		USkeletalMesh* mesh;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		ArmorSubCategory armorType = ArmorSubCategory::ARMOR;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<DamageBodyPart> affectedParts;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<UBuff*> attachedBuffs;	
+	
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		bool init = false;
+	
+	
+	
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -97,8 +156,7 @@ public:
 		armorType = ArmorSubCategory::BACKPACK;
 	}
 	~UBackPackItem() {}
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		TArray<UBuff*> attachedBuffs;
+	
 };
 
 UCLASS(Blueprintable, BlueprintType)

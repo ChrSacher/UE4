@@ -8,7 +8,19 @@
 
 class UCharacterAttributes;
 
-UCLASS()
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FCharacterAttributesInit
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float baseValue;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		AttributeType type;
+};
+
+UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UBaseAttribute : public UObject
 {
 	GENERATED_BODY()
@@ -28,6 +40,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 		TArray<UBuff*> currentBuffs;
+
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = UI)
 	UCharacterAttributes* parent;
@@ -67,8 +81,11 @@ public:
 	// Called every frame
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 protected:
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Gameplay)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		TArray<UBaseAttribute*> attributes;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<FCharacterAttributesInit> initVars;
 
 	UPROPERTY()
 		UBaseAttribute* nullAttrib;
@@ -83,5 +100,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Gameplay)
 		bool isStaminaRegenerable = true;
 
+	void setup();
 	
 };
