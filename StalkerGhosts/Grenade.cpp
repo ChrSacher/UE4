@@ -26,8 +26,6 @@ AGrenade::AGrenade()
 	
 	flash = CreateDefaultSubobject<UParticleSystem>(TEXT("MyParticle"));
 	RootComponent = CollisionComp;
-	explosionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("ExplosionComp"));
-	explosionSphere->InitSphereRadius(100.0f);
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = RootComponent;
@@ -101,12 +99,10 @@ void AGrenade::explode()
 			if (traced)
 			{
 				//deal with traced
-				IDamageInterface* actor = Cast<IDamageInterface>(result.GetActor());
-				if (actor)
-				{
-					UE_LOG(LogTemp, Warning, TEXT("OverlapGrenade"));
-					actor->startShrapnelDamage(result.BoneName.ToString(),this);
-				}
+				FMainDamageEvent da;
+				da.hit = result;
+				da.type = type;
+				result.GetActor()->TakeDamage(damage, da, controllerOver, this);
 			}
 		}
 		Destroy();
@@ -115,68 +111,10 @@ void AGrenade::explode()
 
 void AGrenade::explosionTrace()
 {
-	explosionSphere->SetSphereRadius(range);
-	explosionSphere->SetCollisionProfileName(TEXT("OverlapAll"));
-	
-	
-	const FVector& Start = GetActorLocation();
-	const FVector& End = GetActorLocation() + FVector(0,1,0);
-	const float Radius = range;
-	TArray<FHitResult> HitOut;
-	ECollisionChannel TraceChannel = ECollisionChannel::ECC_Pawn;
-	FCollisionQueryParams TraceParams(FName(TEXT("Trace")), true, this);
-	TraceParams.bTraceComplex = false;
-	//TraceParams.bTraceAsyncScene = true;
-	TraceParams.bReturnPhysicalMaterial = false;
-	TraceParams.AddIgnoredActor(this);
-	
-		//Get World Source
-	
-		bool traced = GetWorld()->SweepMultiByChannel(
-			HitOut,
-			Start,
-			End,
-			FQuat(),
-			TraceChannel,
-			FCollisionShape::MakeSphere(Radius),
-			TraceParams
-			);
-	 
-		if (traced)
-		{
-			TArray<AActor*> ignore;
-			
-			for (int32 i = 0; i < HitOut.Num(); i++)
-			{
-				
-				auto* x = Cast < IDamageInterface>(HitOut[i].GetActor());
-				if (x && (ignore.Find(HitOut[i].GetActor()) == INDEX_NONE))
-				{
-					const FVector& Start = GetActorLocation();
-					const FVector& End = GetActorLocation() + (HitOut[i].GetActor()->GetActorLocation()- GetActorLocation()  )*10;
-					FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
-					FCollisionResponseParams params2 = FCollisionResponseParams();
-					FHitResult result(ForceInit);
-					//const FName TraceTag("MyTraceTag");
-					//GetWorld()->DebugDrawTraceTag = TraceTag;
-					//params.TraceTag = TraceTag;
-					params.bTraceComplex = true;
-					params.bTraceAsyncScene = true;
-					params.bReturnPhysicalMaterial = true;
-					bool traced2 = GetWorld()->LineTraceSingleByChannel(result, Start, End, ECollisionChannel::ECC_Visibility, params, params2);
-					if (traced2)
-					{
-						if (HitOut[i].GetActor() == result.GetActor())
-						{
-							x->takeGrenadeDamage(this);
-							ignore.Add(HitOut[i].GetActor());
-						}
-						
-					}
-				}
-				
-			}
-		}
+
+	TArray<AActor*> x;
+	x.Add(this);
+	UGameplayStatics::ApplyRadialDamage(GetWorld(), damage, GetActorLocation(), range, NULL, x, this, controllerOver);
 
 }
 

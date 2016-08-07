@@ -24,11 +24,7 @@ public:
 	virtual void TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction ) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
-		TArray <FString> allowedGrenadesStrings;
-	
-	TMap<FString, AGrenade*> allowedGrenadesMap;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
-		TSubclassOf<AGrenade> selectedGrenade;
+		UGrenadeItem* selectedGrenade;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)
 		float grenadeReloadTime = 5;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Grenade)

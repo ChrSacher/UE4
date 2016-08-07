@@ -11,14 +11,7 @@ UCharacterAttributes::UCharacterAttributes()
 	// off to improve performance if you don't need them.
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
-	for (uint8 i = 0; i < (uint8)AttributeType::NUM; i++)
-	{
-		UBaseAttribute* x = NewObject<UBaseAttribute>();
-		x->parent = this;
-		x->type = (AttributeType)i;
-		attributes.Add(x);
-	}
-	nullAttrib = NewObject<UBaseAttribute>();
+	
 	// ...
 }
 
@@ -33,7 +26,21 @@ void UCharacterAttributes::BeginPlay()
 	
 }
 
-
+void UCharacterAttributes::setup()
+{
+	for (uint8 i = 0; i < (uint8)AttributeType::NUM; i++)
+	{
+		UBaseAttribute* x = NewObject<UBaseAttribute>();
+		x->parent = this;
+		x->type = (AttributeType)i;
+		attributes.Add(x);
+	}
+	for (int32 i = 0; i < initVars.Num(); i++)
+	{
+		attributes[(uint8)(initVars[i].type)]->setRaw(initVars[i].baseValue);
+	}
+	nullAttrib = NewObject<UBaseAttribute>();
+}
 // Called every frame
 void UCharacterAttributes::TickComponent( float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction )
 {

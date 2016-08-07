@@ -18,6 +18,7 @@ AItemBaseActor::AItemBaseActor()
 void AItemBaseActor::BeginPlay()
 {
 	Super::BeginPlay();
+	if (itemBaseTemplate) base = DuplicateObject<UItemBase>(Cast<UItemBase>(itemBaseTemplate->GetDefaultObject()), NULL);
 	if(base) if(mesh) if (base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
 }
 

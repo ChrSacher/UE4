@@ -4,25 +4,21 @@
 #include "GameFramework/Actor.h"
 #include "Bullet.h"
 #include "Grenade.h"
+#include "DamageEnum.h"
 #include "DamageComponent.h"
 #include "DamageInterface.generated.h"
 
 
-UINTERFACE(MinimalAPI)
-class UDamageInterface : public UInterface
-{
-	GENERATED_UINTERFACE_BODY()
-public:
 
+USTRUCT(Blueprintable)
+struct FMainDamageEvent :public FDamageEvent
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		FHitResult hit;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		EDamageType type;
+	virtual bool IsOfType(int32 InID) const { return FMainDamageEvent::ClassID == InID; };
+	static const int32 ClassID = 5;
 };
-
-class IDamageInterface
-{
-	GENERATED_IINTERFACE_BODY()
-public:
-	virtual void doDamage(float damage,DamageBodyPart BodyPart, EDamageType type, FVector veloc = FVector(), FVector location = FVector()) {};
-	virtual void startDamage(FString bonename, ABullet* causer) {}
-
-	virtual void takeGrenadeDamage(AGrenade* Causer) {}
-	virtual void startShrapnelDamage(FString bonename, AGrenade* causer) {};
-}; 

@@ -59,13 +59,10 @@ FString UMainHudWidget::getAmmoText()
 {
 	if (character)
 	{
-		if (character->currentWeapon)
-		{
-			if (character->currentWeapon->weapon)
+			if (character->weapon)
 			{
-				return FString::FromInt(character->currentWeapon->getAmmoCount()) + "/" + FString::FromInt(character->currentWeapon->weapon->ammoCapacity);
+				return FString::FromInt(character->weapon->getAmmoCount()) + "/" + FString::FromInt(character->weapon->ammoCapacity);
 			}
-		}
 	}
 	return "ERROR";
 }

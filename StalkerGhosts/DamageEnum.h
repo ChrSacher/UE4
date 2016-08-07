@@ -7,13 +7,14 @@
 UENUM(BlueprintType)
 enum class EDamageType : uint8
 {
-	NON = 0,
-	BULLET = 1,
-	SHRAPNEL = 2,
-	EXPLOSION = 3,
-	BLUNT = 4,
-	SLICE = 5,
-	STAB = 6,
+	NON,
+	BULLET,
+	SHRAPNEL,
+	EXPLOSION,
+	BLUNT,
+	SLICE,
+	STAB,
+	RADIATION,
 	NUM 
 };
 
@@ -32,6 +33,7 @@ enum class DamageBodyPart : uint8
 	HAND ,
 	THROAT ,
 	HEAD ,
+	ALL, //is used for everything which doesn't have a kind of attack angle like radiation
 	NUM 
 };
 

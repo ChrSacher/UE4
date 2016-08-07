@@ -9,6 +9,7 @@
 #include "Runtime/UMG/Public/Slate/SObjectWidget.h"
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
+#include "Runtime/UMG/Public/Blueprint/WidgetLayoutLibrary.h"
 #include "InventoryInterface.h"
 UInventoryComponent::UInventoryComponent()
 {
@@ -334,9 +335,16 @@ void UInventoryComponent::onItemButtonClicked(UDataItemButton* sender)
 
 void UInventoryComponent::onItemButtonHovered(UDataItemButton* sender)
 {
-	
+	UE_LOG(LogTemp, Warning, TEXT("wwww"));
 	itemDetails->SetVisibility(ESlateVisibility::Visible);
 	sender->AddChild(itemDetails);
+	UCanvasPanelSlot* canvasSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(sender->GetParent());
+	if (canvasSlot)
+	{
+		canvasSlot->GetPosition();
+	}
+	return;
+	//canvasSlot->GetPosition();
 //	itemDetails->SetPositionInViewport(sender->RenderTransform.Translation);
 	//details menu
 }

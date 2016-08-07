@@ -5,12 +5,13 @@
 #include "ItemWidget.h"
 #include "ItemEnums.h"
 #include "DamageEnum.h"
-#include "Buff.h"
+
 //#include "DataTables.h"
 #include "ItemBase.generated.h"
 class AStalkerGhostsCharacter;
 struct FItemLookUpTable;
 class UBuff;
+
 UCLASS(Blueprintable, BlueprintType)
 class UItemBase : public UObject
 {
@@ -62,16 +63,34 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void unEquipItem();
 
-	virtual void use(AStalkerGhostsCharacter* user) { this->useItem(); };
+	virtual void use(AStalkerGhostsCharacter* user) {useItem(); };
 	
-	virtual void equip(AStalkerGhostsCharacter* user) { this->equipItem(); };
+	virtual void equip(AStalkerGhostsCharacter* user) { equipItem(); };
 	
-	virtual void unEquip(AStalkerGhostsCharacter* user) { this->unEquipItem(); };
+	virtual void unEquip(AStalkerGhostsCharacter* user) { unEquipItem(); };
 
+};
+UCLASS(Blueprintable, BlueprintType)
+class UBuffHolderItem : public UItemBase
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<TSubclassOf<UBuff>> buffInit;
+
+protected:
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Item)
+		TArray<UBuff*> attachedBuffs;
+
+	UPROPERTY()
+		bool init = false;
+public:
+	virtual TArray<UBuff*> getBuffs();
 };
 
 UCLASS(Blueprintable, BlueprintType)
-class UArtifact : public UItemBase
+class UArtifact : public UBuffHolderItem
 {
 	GENERATED_BODY()
 public:
@@ -82,36 +101,12 @@ public:
 	~UArtifact() {}
 protected:
 
-	
-
-	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		bool init = false;
-
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		TArray<UBuff*> attachedBuffs;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		TArray<FBuffInit> buffInit;
-	TArray<UBuff*>& getBuffs()
-	{
-		if (!init)
-		{
-			for (int32 i = 0; i < buffInit.Num(); i++)
-			{
-				UBuff* x = NewObject<UBuff>();
-				x->load(buffInit[i]);;
-				attachedBuffs.Add(x);
-			}
-			init = true;
-		}
-		return attachedBuffs;
-	}
+	
 };
 
 UCLASS(Blueprintable, BlueprintType)
-class UArmorItem : public UItemBase
+class UArmorItem : public UBuffHolderItem
 {
 	GENERATED_BODY()
 public:
@@ -123,10 +118,8 @@ public:
 	}
 
 public:
-	TArray<UBuff*>& getBuffs();
+	
 	~UArmorItem() {}
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		TArray< FBuffInit> buffInit;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		float ArmorValue = 10;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
@@ -135,12 +128,6 @@ public:
 		ArmorSubCategory armorType = ArmorSubCategory::ARMOR;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		TArray<DamageBodyPart> affectedParts;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		TArray<UBuff*> attachedBuffs;	
-	
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		bool init = false;
 	
 	
 	
@@ -184,7 +171,7 @@ public:
 	}
 	~UHelmetItem() {}
 
-	
+	bool hasNightVision = true;
 };
 
 UCLASS(Blueprintable, BlueprintType)
@@ -214,16 +201,7 @@ public:
 
 
 };
-UCLASS(Blueprintable, BlueprintType)
-class UNightVisionItem : public UItemBase
-{
-	GENERATED_BODY()
-public:
-	UNightVisionItem () { type = ItemCategory::NIGHTVISION; }
-	~UNightVisionItem () {}
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
-		UPostProcessComponent* nightvision;
-};
+
 
 class ABullet;
 UCLASS(Blueprintable, BlueprintType)

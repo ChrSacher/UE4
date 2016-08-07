@@ -4,9 +4,3 @@
 #include "DamageInterface.h"
 #include "StalkerGhostsCharacter.h"
 
-
-UDamageInterface::UDamageInterface(const class FObjectInitializer& ObjectInitializer)
-	: Super(ObjectInitializer)
-{
-
-}

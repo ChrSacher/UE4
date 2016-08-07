@@ -29,6 +29,9 @@ public:
 		uint32 sharpnelAmmount = 10;
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		EDamageType type = EDamageType::EXPLOSION;
+
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		float explosionForce = 10000;//will form a vector from grenade to actor normalize and multiply
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
@@ -51,13 +54,12 @@ public:
 
 	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
 		USoundBase* sound;
-
+	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+		AController* controllerOver;
 	FTimerHandle explosionTimer;
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 		class USphereComponent* CollisionComp;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-		class USphereComponent* explosionSphere;
 
 		/** Projectile movement component */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
@@ -80,3 +82,6 @@ public:
 		/** Returns ProjectileMovement subobject **/
 		FORCEINLINE class UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 };
+
+
+

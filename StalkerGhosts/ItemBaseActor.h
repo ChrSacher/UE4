@@ -27,6 +27,11 @@ public:
 		UItemBase* base;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		TSubclassOf<UItemBase> itemBaseTemplate;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
+		bool init = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UStaticMeshComponent* mesh;
 
 	void spawn(UItemBase* Base);

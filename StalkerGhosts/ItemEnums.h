@@ -39,6 +39,7 @@ enum class SlotInformation : uint8
 	WEAPON1,
 	PANTS,
 	BODYARMOR,
+	GRENADE,
 	ARTIFACT1,
 	ARTIFACT2,
 	ARTIFACT3,

@@ -41,7 +41,7 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Damage)
 		TArray< float> armorValues;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
 		TArray< FDamageStruct> damageValues;
 	UPROPERTY()
 		TMap<FString,DamageBodyPart> boneBodyPartMap;
@@ -56,7 +56,7 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		float calculateGrenadeDamage(AGrenade* grenade);
-
+		
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		DamageBodyPart getDamagedBodyPart(FString bonename);
 

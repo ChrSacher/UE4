@@ -33,29 +33,9 @@ public:
 
 	
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
-		FTimerHandle reloadHandle;
-
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
-		FString loadedWeapon;
 	
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool isReloading = false;
-
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		AWeapon* weapon;
 
-	void loadWeapon(UWeaponItem* wep);
-	void loadWeapon(AWeapon* ID);
-	bool loadMag(UBulletItem* ID);
-	void unloadMag();
-	void playSound(FVector place);
-	int32 getAmmoCount();
-	void playEmptySound(FVector place);
-	void startReload();
-	void removeWeapon();
-	bool reload(UBulletItem* bullet);
-	void endReload();
-	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
-	UBulletItem* getLoadedMag();
+	
 };

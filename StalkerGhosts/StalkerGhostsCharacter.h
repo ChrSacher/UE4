@@ -12,11 +12,13 @@
 #include "WeaponComponent.h"
 #include "MainHudWidget.h"
 #include "InventoryInterface.h"
+
+#include "Weapon.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
 UCLASS(config=Game)
-class AStalkerGhostsCharacter : public ACharacter , public IDamageInterface,public IInventoryInterface
+class AStalkerGhostsCharacter : public ACharacter , public IInventoryInterface
 {
 
 	GENERATED_BODY()
@@ -54,10 +56,6 @@ public:
 	FVector GunOffset;
 
 
-	/** Sound to play each time we fire */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		UWeaponComponent* currentWeapon;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		UGrenadeComponent* currentGrenade;
 
@@ -66,6 +64,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* armorMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+		AWeapon* weapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* pantsMesh;
@@ -106,6 +107,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		UDamageComponent* damageComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		UPostProcessComponent* nightVisionComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		UPostProcessComponent* normalPPComponent;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle staminaHandle;
 
@@ -118,11 +125,16 @@ public:
 		FTimerHandle speedHandle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		float currentSpeed = 100;
-	virtual void doDamage(float suggestedDamage, DamageBodyPart BodyPart, EDamageType type, FVector veloc, FVector location) override;
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		void startDamage(FString bonename, ABullet* causer) override;
-	virtual void takeGrenadeDamage(AGrenade* Causer);
-	virtual void startShrapnelDamage(FString bonename, AGrenade* causer) ;
+
+	//will point to the inventory equipment
+	//should be overwritten if character doesn't have an inventory
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UCharacterEquipment* equipment;
+
+	
+	virtual void doDamage(float suggestedDamage, DamageBodyPart BodyPart, EDamageType type) ;
+
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser) override;
 
 
 protected:
@@ -136,7 +148,7 @@ protected:
 	
 	/** Reload*/
 	void OnReload();
-	void doReload();
+	void playReload();
 	void doReload(UBulletItem* toReload);
 	void offReload();
 
@@ -153,7 +165,8 @@ protected:
 
 
 
-
+	//nightvision
+	void OnNightVision();
 	void syncEquipment();
 
 	//sprinting
@@ -167,7 +180,12 @@ protected:
 	//inventory
 	void OnInventory();
 	void OffInventory();
-
+	
+	//quickslots
+	void OnQuickSlot1();
+	void OnQuickSlot2();
+	void OnQuickSlot3();
+	void OnQuickSlot4();
 	//prone
 	void OnProne();
 	void OffProne();

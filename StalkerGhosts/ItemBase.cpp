@@ -3,7 +3,7 @@
 #include "StalkerGhosts.h"
 #include "DataTables.h"
 #include "ItemBase.h"
-
+#include "Buff.h"
 UItemBase::UItemBase()
 {
 	
@@ -35,15 +35,13 @@ void UItemBase::loadFromTable(FItemLookUpTable* table)
 
 float UItemBase::getWeight() { return ammount * weight; }
 
-TArray<UBuff*>& UArmorItem::getBuffs()
+TArray<UBuff*> UBuffHolderItem::getBuffs()
 {
 	if (!init)
 	{
-		for (int32 i = 0; i < buffInit.Num(); i++)
+		for (int i = 0; i < buffInit.Num(); i++)
 		{
-			UBuff* x = NewObject<UBuff>();
-			x->load(buffInit[i]);;
-			attachedBuffs.Add(x);
+			attachedBuffs.Add(DuplicateObject<UBuff>(Cast<UBuff>(buffInit[i]->GetDefaultObject()), NULL));
 		}
 		init = true;
 	}

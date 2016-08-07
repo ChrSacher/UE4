@@ -16,7 +16,9 @@ UDamageComponent::UDamageComponent()
 	// ...
 	for (int i = 0; i < (uint8)DamageBodyPart::NUM; i++)
 	{
-		damageValues.Add(FDamageStruct());
+		FDamageStruct x = FDamageStruct();
+		x.modifierValue = 1;
+		damageValues.Add(x);
 		
 	};
 }
@@ -26,11 +28,7 @@ UDamageComponent::UDamageComponent()
 void UDamageComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	for (int i = 0; i < damageValues.Num(); i++)
-	{
-		boneBodyPartMap.Add(damageValues[i].boneName, damageValues[i].type);
-		damageModifierMap.Add(damageValues[i].type, damageValues[i].modifierValue);
-	}
+	
 	// ...
 	
 }
@@ -46,6 +44,12 @@ void UDamageComponent::TickComponent( float DeltaTime, ELevelTick TickType, FAct
 
 void UDamageComponent::setup()
 {
+	for (int i = 0; i < damageValues.Num(); i++)
+	{
+		boneBodyPartMap.Add(damageValues[i].boneName, damageValues[i].type);
+		damageModifierMap.Add(damageValues[i].type, damageValues[i].modifierValue);
+	}
+	for(int32 i = 0; i  < (uint8) DamageBodyPart::NUM;i++) armorValues.Add(1.0f);
 }
 
 float  UDamageComponent::damageAmmount(DamageBodyPart BodyPart,ABullet* bullet)
@@ -69,7 +73,7 @@ float UDamageComponent::damageAmmount(DamageBodyPart BodyPart, float damage)
 		{
 			armorMod = 2 - 100 / (100 - armor);
 		}
-		return damage * *mod + armorMod;
+		return damage * *mod * armorMod;
 	}
 	return damage;;
 }

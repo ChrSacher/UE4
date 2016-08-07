@@ -39,6 +39,8 @@ bool UGrenadeComponent::throwGrenade(FVector SpawnLocation, FRotator SpawnRotati
 	
 	
 	static const FString ContextString(TEXT("GENERAL"));
+
+	if (!selectedGrenade) return false;
 	if (ableToThrow)
 	{
 		ableToThrow = false;
@@ -49,11 +51,13 @@ bool UGrenadeComponent::throwGrenade(FVector SpawnLocation, FRotator SpawnRotati
 
 		return false;
 	}
-
-	AGrenade* gren = GetWorld()->SpawnActor<AGrenade>(selectedGrenade, SpawnLocation, SpawnRotation);
+	if (selectedGrenade->ammount <= 0) return false;
+	AGrenade* gren = GetWorld()->SpawnActor<AGrenade>(selectedGrenade->gren, SpawnLocation, SpawnRotation);
+	
+	if (!gren) return false;
+	selectedGrenade->ammount -= 1;
 	gren->ProjectileMovement->InitialSpeed = grenadeThrowVelocity;
 	gren->ProjectileMovement->MaxSpeed = grenadeThrowVelocity;
-	if (!gren) return false;
 	gren->activate();
 	return true;
 }

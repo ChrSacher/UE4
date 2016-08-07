@@ -55,14 +55,11 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	// Only add impulse and destroy projectile if we hit a physics
 	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) )
 	{
-		if(OtherComp->IsSimulatingPhysics())	OtherComp->AddImpulseAtLocation(GetVelocity(), GetActorLocation());
-		IDamageInterface* act = Cast<IDamageInterface>(OtherActor);
-		if (act)
-		{
-			
-			UE_LOG(LogTemp, Warning, TEXT("%s"), *Hit.BoneName.ToString());
-			act->startDamage(Hit.BoneName.ToString(), this);
-		}
+		FMainDamageEvent da;
+		da.hit = Hit;
+		da.type = damageType;
+		OtherActor->TakeDamage(damage, da, controllerOver, this);
+		if (OtherComp->IsSimulatingPhysics())	OtherComp->AddImpulseAtLocation(GetVelocity(), GetActorLocation());
 		Destroy();
 	}
 }

@@ -35,7 +35,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		UStaticMeshComponent* mesh;
 
-	
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		AController* controllerOver;
 	
 								 /** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)

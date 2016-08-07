@@ -11,14 +11,7 @@ UBuff::~UBuff()
 {
 	
 }
-void UBuff::load(FBuffInit& init)
-{
-	typeAffected = init.typeAffected;
-	type = init.type;
-	timeBetweenTicks = init.timeBetweenTicks;
-	lifeTime = init.lifeTime;
-	value = init.value;
-};
+
 
 void UBuff::onStart(UCharacterAttributes* attributes)
 {
