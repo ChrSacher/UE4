@@ -10,17 +10,27 @@
 
 class UArmorItem;
 USTRUCT(Blueprintable, BlueprintType)
-struct STALKERGHOSTS_API FDamageStruct
+struct STALKERGHOSTS_API FDamageModifierStruct
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		FString boneName;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		DamageBodyPart type;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		float modifierValue;
 };
+
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FBoneBodyPartStruct
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<FString> boneNames;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		DamageBodyPart type;
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UDamageComponent : public UActorComponent
 {
@@ -42,7 +52,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Damage)
 		TArray< float> armorValues;
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
-		TArray< FDamageStruct> damageValues;
+		TArray<FDamageModifierStruct> damageValues;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
+		TArray<FBoneBodyPartStruct> boneBodyParts;
 	UPROPERTY()
 		TMap<FString,DamageBodyPart> boneBodyPartMap;
 	UPROPERTY()

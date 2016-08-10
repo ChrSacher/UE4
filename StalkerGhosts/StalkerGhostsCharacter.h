@@ -18,7 +18,7 @@
 
 class UInputComponent;
 UCLASS(config=Game)
-class AStalkerGhostsCharacter : public ACharacter , public IInventoryInterface
+class AStalkerGhostsCharacter : public ACharacter
 {
 
 	GENERATED_BODY()
@@ -108,11 +108,15 @@ public:
 		UDamageComponent* damageComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		UPostProcessComponent* nightVisionComponent;
+		FPostProcessSettings nightVisionPostProcessSettings;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		FPostProcessSettings normalPostProcessSettings;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
 		UPostProcessComponent* normalPPComponent;
 
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle staminaHandle;
 
@@ -144,7 +148,8 @@ protected:
 	void OffFire();
 
 	void Fire();
-
+	void weaponFired();
+	void switchFireMode();
 	
 	/** Reload*/
 	void OnReload();
@@ -157,9 +162,9 @@ protected:
 	void changeWeapon(UWeaponItem* ID);
 	bool checkMag(TArray<UItemBase*> Items);
 
-	InventoryAcceptance equipmentAdded(UItemBase* item, SlotInformation slot) override;
+	void equipmentAdded(UItemBase* item, SlotInformation slot,bool& acceptance);
 
-	InventoryAcceptance equipmentRemoved(UItemBase* item, SlotInformation slot) override;
+	void equipmentRemoved(UItemBase* item, SlotInformation slot, bool& acceptance);
 
 
 

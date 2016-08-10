@@ -73,3 +73,35 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		TSubclassOf<UItemBase> base;
 };
+
+
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FCraftingItemAmmount
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		FString itemName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float ammount;
+};
+
+class UItemBase;
+USTRUCT(Blueprintable)
+struct FCraftingTable : public FTableRowBase
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		FString displayName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		FString identifierName;
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		TArray< FCraftingItemAmmount> requiredItems;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		TSubclassOf<UItemBase> finalProduct;
+};

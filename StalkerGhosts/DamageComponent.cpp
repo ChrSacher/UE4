@@ -14,13 +14,13 @@ UDamageComponent::UDamageComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = true;
 	// ...
-	for (int i = 0; i < (uint8)DamageBodyPart::NUM; i++)
+	for (uint8 i = 0; i <(uint8) DamageBodyPart::NUM; i++)
 	{
-		FDamageStruct x = FDamageStruct();
-		x.modifierValue = 1;
+		FDamageModifierStruct x;
+		x.type = (DamageBodyPart)i;
+		x.modifierValue = 1.0f;
 		damageValues.Add(x);
-		
-	};
+	}
 }
 
 
@@ -44,11 +44,20 @@ void UDamageComponent::TickComponent( float DeltaTime, ELevelTick TickType, FAct
 
 void UDamageComponent::setup()
 {
-	for (int i = 0; i < damageValues.Num(); i++)
+	for (int32 i = 0; i < damageValues.Num(); i++)
 	{
-		boneBodyPartMap.Add(damageValues[i].boneName, damageValues[i].type);
+		
 		damageModifierMap.Add(damageValues[i].type, damageValues[i].modifierValue);
 	}
+	for (int32 i = 0; i < boneBodyParts.Num(); i++)
+	{
+		for (int32 y = 0; y < boneBodyParts[i].boneNames.Num(); y++)
+		{
+			boneBodyPartMap.Add(boneBodyParts[i].boneNames[y], boneBodyParts[i].type);
+		}
+		
+	}
+	
 	for(int32 i = 0; i  < (uint8) DamageBodyPart::NUM;i++) armorValues.Add(1.0f);
 }
 

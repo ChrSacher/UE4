@@ -22,47 +22,54 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		float fuzeTime = 5.0f;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		uint32 sharpnelAmmount = 10;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		EDamageType type = EDamageType::EXPLOSION;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		float explosionForce = 10000;//will form a vector from grenade to actor normalize and multiply
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		float damage = 10;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		float shrapnelDamage = 10;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		float range = 150;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		float shrapnelVelocitry = 1000;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		UParticleSystem* flash;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		UStaticMeshComponent* mesh;
 
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		USoundBase* sound;
-	UPROPERTY(VisibleDefaultsOnly, Category = Grenade)
+
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
+		USoundBase* earRingingSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TSubclassOf<UCameraShake> explosionShake;
+
+	UPROPERTY(EditDefaultsOnly, Category = Grenade)
 		AController* controllerOver;
 	FTimerHandle explosionTimer;
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+	UPROPERTY(EditDefaultsOnly, Category = Projectile)
 		class USphereComponent* CollisionComp;
 
 
 		/** Projectile movement component */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		class UProjectileMovementComponent* ProjectileMovement;
 
 	UFUNCTION()

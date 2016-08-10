@@ -7,6 +7,9 @@
 #include "EquippedItemWidget.h"
 #include "InventoryComponent.generated.h"
 
+
+
+
 UCLASS(BlueprintType)
 class UCharacterEquipment : public UObject
 {
@@ -40,7 +43,9 @@ public:
 	// Sets default values for this component's properties
 	UInventoryComponent();
 
-	
+	DECLARE_DELEGATE_ThreeParams(EquipDelegate, UItemBase*, SlotInformation,bool&);
+		EquipDelegate equipDelegate;
+		EquipDelegate unEquipDelegate;
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	// Called every frameini

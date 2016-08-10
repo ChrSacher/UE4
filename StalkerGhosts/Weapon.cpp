@@ -87,25 +87,23 @@ void AWeapon::playEmptySound(FVector place)
 		UGameplayStatics::PlaySoundAtLocation(this, emptySound, place);
 	}
 }
-
 void AWeapon::startReload()
 {
-	isReloading = true;
-	GetWorld()->GetTimerManager().SetTimer(reloadHandle, this, &AWeapon::endReload,reloadTime, false);
+	startUnUsablity(reloadTime);
+}
+void AWeapon::startUnUsablity(float time)
+{
+	isUsable = false;
+	GetWorld()->GetTimerManager().SetTimer(reloadHandle, this, &AWeapon::endUnUsablity,time, false);
 }
 void  AWeapon::startEquip()
 {
-	isEquipping = true;
-	GetWorld()->GetTimerManager().SetTimer(equippingHandle, this, &AWeapon::endEquip, equipTime, false);
+	startUnUsablity(equipTime);
 }
 
-void AWeapon::endReload()
+void AWeapon::endUnUsablity()
 {
-	isReloading = false;
-}
-void AWeapon::endEquip()
-{
-	isEquipping = false;
+	isUsable = true;
 }
 
 
@@ -123,38 +121,17 @@ UBulletItem* AWeapon::getLoadedMag()
 
 bool AWeapon::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 {
-	if (isEquipping) return false;
-	if (isReloading || !currentlyLoadedBullet || isEquipping  )
+	if (!isUsable) return false;
+	if (!currentlyLoadedBullet)
 	{
 		//needs to be in 2 times because first one is a check if variable is NULL
 		playEmptySound(SpawnLocation);
 		return false;
 	}
-	
+	canEndFire = false;
 	bool empty = currentlyLoadedBullet->ammount <= 0;
 
-	if (getFireMode() == WeaponFireMode::SINGLE)
-	{
-		canEndFire = false;
-		if (firedBullets >= 1)
-		{
-			canEndFire = true;
-			firedBullets = 0;
-			return false;
-		}
-		
-	}
-	if (getFireMode() == WeaponFireMode::BURST)
-	{
-		canEndFire = false;
-		if (firedBullets >= 3)
-		{
-			canEndFire = true;
-			firedBullets = 0;
-			return false;
-			
-		}
-	}
+	
 	if (empty)
 	{
 		canEndFire = true;
@@ -169,11 +146,33 @@ bool AWeapon::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 		if (Cast<ACharacter>(GetOwner())) x->controllerOver = Cast<ACharacter>(GetOwner())->GetController();
 		currentlyLoadedBullet->ammount -= 1;
 		firedBullets += 1;
-		return true;
+		weaponFire.ExecuteIfBound();
 	}
+	if (getFireMode() == WeaponFireMode::SINGLE)
+	{
+		
+		if (firedBullets >= 1)
+		{
+			canEndFire = true;	
+		}
+
+	}
+
+	if (getFireMode() == WeaponFireMode::BURST)
+	{
+		canEndFire = false;
+		if (firedBullets >= 3)
+		{
+			canEndFire = true;
+		}
+	}
+	return true;
 }
 
-
+void AWeapon::endFire()
+{
+	firedBullets = 0;
+}
 
 
 
@@ -226,10 +225,11 @@ void AWeapon::switchFireMode()
 }
 WeaponFireMode AWeapon::getFireMode()
 {
-	if (selectedFireMode >= allowedFireModes.Num() && selectedFireMode >= 0)
+	if (selectedFireMode <= allowedFireModes.Num() && selectedFireMode >= 0)
 	{
 		return allowedFireModes[selectedFireMode];
 	}
 	selectedFireMode = 0;
-	return WeaponFireMode::SINGLE;
+	if(allowedFireModes.Num() == 0) return WeaponFireMode::SINGLE;
+	return allowedFireModes[selectedFireMode];
 }

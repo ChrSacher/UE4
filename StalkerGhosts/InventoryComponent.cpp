@@ -361,16 +361,13 @@ void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
 	UE_LOG(LogTemp, Warning, TEXT("EQUIP"));
 	if (slot->allowedType != base->type || slot->allowedType == ItemCategory::ALL) return;
 	
-	IInventoryInterface* own = Cast<IInventoryInterface>(GetOwner());
-	InventoryAcceptance t = InventoryAcceptance::DENIED;
-	if (own)
-	{
-		if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer);
-		t = own->equipmentAdded(base, slot->slotEnum);
-		if(InventoryAcceptance::DENIED == t) return;
-	}
+	bool t = true;
+	if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer);
+	equipDelegate.Execute(base, slot->slotEnum,t);
+	if(!t) return;
 	slot->ItemButton->UserPointer = base;
 	items[base->type].Remove(base);
+	equipment->equipItem(slot->slotEnum, base);
 	refresh();
 }
 void UInventoryComponent::moveEquip(UEquippedItemWidget* slot, UItemBase* base)
@@ -380,14 +377,12 @@ void UInventoryComponent::moveEquip(UEquippedItemWidget* slot, UItemBase* base)
 void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UNEQUIP"));
-	
-	IInventoryInterface* own = Cast<IInventoryInterface>(GetOwner());
-	if (own)
-	{
-		if(InventoryAcceptance::DENIED == own->equipmentRemoved(base,slot->slotEnum)) return;
-	}
+	bool t = true;
+	unEquipDelegate.ExecuteIfBound(base, slot->slotEnum,t);
+	if (!t) return;
 	addItem(base);
 	slot->ItemButton->UserPointer = NULL;
+	equipment->unequipItem(slot->slotEnum);
 	refresh();
 }
 

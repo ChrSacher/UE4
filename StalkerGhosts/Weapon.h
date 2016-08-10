@@ -11,6 +11,28 @@ class ABullet;
 class UBulletItem;
 
 
+USTRUCT(Blueprintable)
+struct FRecoilPattern
+{
+	GENERATED_BODY()
+public:
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		TSubclassOf<UCameraShake> recoilShake;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float xOffsetMin = -1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float xOffsetMax = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float yOffsetMin = -1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float yOffsetMax = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		bool recoilEnabled = true;
+};
 
 UENUM(BlueprintType)
 enum class WeaponFireMode : uint8
@@ -24,11 +46,12 @@ UCLASS()
 class STALKERGHOSTS_API AWeapon :  public AActor
 {
 	GENERATED_BODY()
-	
+
+	DECLARE_DELEGATE(WeaponFire)
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
-
+	WeaponFire weaponFire;
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
@@ -59,7 +82,7 @@ public:
 		float equipTime = 2.0f;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool canEndFire = true;
+		bool canEndFire = false;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedFireMode = 0;
@@ -102,23 +125,23 @@ public:
 		FTimerHandle equippingHandle;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool isReloading = false;
-
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool isEquipping = false;
+		bool isUsable;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedBulletIndex;
 
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		FRecoilPattern recoil;
 	void reloadMag(UBulletItem* mag);
 	FString getBulletString();
 
 	void playEmptySound(FVector place);
 	void playSound(FVector place);
+	void startUnUsablity(float time);
 	void startReload();
 	void startEquip();
-	void endReload();
-	void endEquip();
+	void endUnUsablity();
+
 	void switchFireMode();
 	WeaponFireMode getFireMode();
 	bool loadWeapon(AWeapon* ID);
@@ -132,5 +155,6 @@ public:
 	bool reload(UBulletItem* bullet);
 
 	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
+	void endFire();
 	UBulletItem* getLoadedMag();
 };

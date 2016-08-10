@@ -28,8 +28,11 @@ enum class DamageBodyPart : uint8
 	PELVIS ,
 	STOMACH ,
 	CHEST ,
+	LOWERBACK,
+	UPPERBACK,
 	UPPERARM ,
 	LOWERARM ,
+	
 	HAND ,
 	THROAT ,
 	HEAD ,
