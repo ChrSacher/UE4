@@ -11,17 +11,20 @@ AWeapon::AWeapon()
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
+	root = CreateDefaultSubobject<USceneComponent>(TEXT("Scene"));
+	RootComponent = root;
 	mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MESH"));
+	mesh->SetupAttachment(root);
 	flash = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("Flash"));
+	flash->SetupAttachment(mesh);
 	allowedFireModes.Add(WeaponFireMode::AUTO);
-	RootComponent = mesh;
 }
 
 // Called when the game starts or when spawned
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	animInstance = Cast<UWeaponAnim>(mesh->GetAnimInstance());
 }
 
 // Called every frame
@@ -90,6 +93,11 @@ void AWeapon::playEmptySound(FVector place)
 void AWeapon::startReload()
 {
 	startUnUsablity(reloadTime);
+	if (weaponReloadAnimation && animInstance)
+	{
+		
+		animInstance->Montage_Play(weaponReloadAnimation, 1.0f);
+	}
 }
 void AWeapon::startUnUsablity(float time)
 {

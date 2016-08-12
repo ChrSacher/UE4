@@ -4,6 +4,7 @@
 
 #include "GameFramework/Actor.h"
 #include "Bullet.h"
+#include "WeaponAnim.h"
 #include "Weapon.generated.h"
 
 struct FWeaponLookUpTable;
@@ -62,7 +63,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		USkeletalMeshComponent* mesh;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		UWeaponAnim* animInstance;
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		int32 ammoCapacity = 30;
 
@@ -90,6 +92,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		TArray<WeaponFireMode> allowedFireModes;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class USceneComponent* root;
+
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 		int32 firedBullets = 0;
 
@@ -111,6 +116,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* ReloadAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* weaponReloadAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* IdlingAnimation;

@@ -22,6 +22,7 @@ protected:
 public:
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void equipItem(SlotInformation slot, UItemBase* item);
+
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		UItemBase* unequipItem(SlotInformation slot);
 	
@@ -73,6 +74,7 @@ public:
 		ItemCategory currentCategory = ItemCategory::ITEM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UDataTable* categoryTable;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class UItemCategoryWidget> categoryTemplate;
 
@@ -103,7 +105,8 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UCharacterEquipment* equipment;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UInventoryComponent* otherInventoryForTransfering;
 
 
 	//inventoryfuncs
@@ -120,10 +123,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	bool isEnoughSpace(UItemBase* Item);
 	UFUNCTION(BlueprintCallable, Category = "Event")
+		bool isItemInInvenotry(UItemBase* Item);
+	UFUNCTION(BlueprintCallable, Category = "Event")
 	void calculateWeight();
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	float getWeight();
-
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void loadCategories(UInventoryComponent* parent, UHorizontalBox* box);
+	void loadItemWidget(UItemBase* item, UScrollBox* scrollBox);
 	template <typename T>
 	T* createItem(FString ID);
 	UFUNCTION(BlueprintCallable, Category = "Event")
@@ -140,13 +147,18 @@ public:
 	void onItemButtonHovered(UDataItemButton* sender);
 	void onItemButtonLeftHovered(UDataItemButton* sender);
 
-
+	void openTransferWindow(UInventoryComponent* otherInventory);
 	//Slot function
 	//param 1 which equippment widget was selected  param 2 is which item has been moved
 	//for equip it is which item was placed onto the slot
 	//for unequip it is which item has been removed from the slot
-	void equip(UEquippedItemWidget* slot, UItemBase* base);
-	void moveEquip(UEquippedItemWidget* slot, UItemBase* base);
-	void unEquip(UEquippedItemWidget* slot, UItemBase* base);
+	//move is for unequipping item and then moving it to the other inventory
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void equip(UEquippedItemWidget* slot, UItemBase* base);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void moveItem(UItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void unEquip(UEquippedItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender);
+
 };
 

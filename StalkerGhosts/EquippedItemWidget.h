@@ -8,6 +8,7 @@
 #include "EquippedItemWidget.generated.h"
 
 class UItemBase;
+class UInventoryComponent;
 /**
  * 
  */
@@ -21,8 +22,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UDataItemButton* ItemButton;
 
-	UEquippedItemDelegate onEq;
-	UEquippedItemDelegate offEq;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		ItemCategory allowedType = ItemCategory::ALL;
 
@@ -30,21 +29,10 @@ public:
 		SlotInformation slotEnum = SlotInformation::NON;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		UTexture2D* getTexture();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UInventoryComponent* inventoryParent;
 
-	//void called when itemWidget gets dropped on this
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	void onEquip(UItemBase* base)
-	{
-		
-		onEq.ExecuteIfBound(this, base);
-	}
-	//called when this is droppedon an itembox
-	UFUNCTION(BlueprintCallable, Category = "Event")
-	void onUnequiped(UItemBase* base)
-	{
-		
-		offEq.ExecuteIfBound(this, base);
-		
-	}
+		void OnItemDrop(UDragDropOperation* operation);
 	
 };

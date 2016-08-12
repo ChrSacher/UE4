@@ -35,6 +35,11 @@ void UInventoryComponent::BeginPlay()
 		AWeapon* y = Cast<AWeapon>(x);
 		if (beginPlayEquipment[i]) addItem(x);
 	}
+	categories.Empty();
+	for (uint8 i = 0; i < uint8(ItemCategory::NUM); i++)
+	{
+		categories.Add(NULL);
+	}
 	// ...
 	
 }
@@ -50,7 +55,8 @@ void UInventoryComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 
 bool UInventoryComponent::addItemCreate(UItemBase* Item)
 {
-	items[Item->type].Add(Item,Item);
+	items[Item->type].Add(Item, Item);
+	Item->itemParent = this;
 	currentWeight += Item->weight * Item->ammount;
 	if (Item->widget) Item->widget->RemoveFromParent();
 	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
@@ -63,15 +69,17 @@ bool UInventoryComponent::addItemCreate(UItemBase* Item)
 bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 {
 	if (!Item) return true;
-
+	
+	if (items.Find(Item->type) == NULL) return false;
+	if (items[Item->type].Find(Item) != NULL) return true;
 	if (forceNew)
 	{
 		addItemCreate(Item);
 	}
 	else
 	{
-		if (items.Find(Item->type))
-		{
+		
+		
 			for (auto& x : items[Item->type])
 			{
 				if (x.Key->name == Item->name)
@@ -93,8 +101,9 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 			{
 				addItemCreate(Item);
 			}
-		}
+		
 	}
+	Item->itemParent = this;
 	calculateWeight();
 	refresh();
 	return true;
@@ -197,7 +206,44 @@ TArray<UItemBase*> UInventoryComponent::lookForItems(FString name)
 	}
 	return vec;
 }
+void UInventoryComponent::loadCategories(UInventoryComponent* parent, UHorizontalBox* box)
+{
+	if (categoryTemplate)
+	{
+		static const FString ContextString(TEXT("GENERAL"));
+		for (uint8 i = 0; i < categories.Num(); i++)
+		{
+			UItemCategoryWidget* x = NULL;
+			if(categories[i])
+			{
+				x = categories[i];
+			}
+			else
+			{
+				x = CreateWidget<UItemCategoryWidget>(GetWorld(), categoryTemplate);
+				categories[i] = x;
+			}
+			
+			
+			box->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
+			x->CategoryButton->UserNumber = i;
+			x->CategoryButton->CategoryIdentifier = true;
 
+			x->CategoryButton->click.BindUObject(parent, &UInventoryComponent::onCategoryClicked);
+			FCategoryLookUpTable* row = categoryTable->FindRow<FCategoryLookUpTable>(FName(*FString::FromInt(i)), ContextString);
+			if (!row)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("CategoryRowNotFound"));
+			}
+			else
+			{
+				x->pic->SetBrushFromTexture(row->CategoryPicture);
+				x->text->SetText(FText::FromString(row->categoryText));
+			}
+
+		}
+	}
+}
 void UInventoryComponent::loadUI()
 {
 	if (mainInventoryTemplate)
@@ -216,38 +262,16 @@ void UInventoryComponent::loadUI()
 		}
 	}
 	categories.Empty();
-	if (categoryTemplate)
-	{
-		static const FString ContextString(TEXT("GENERAL"));
-		for (uint8 i = 0; i < uint8(ItemCategory::NUM); i++)
-		{
-			UItemCategoryWidget* x = CreateWidget<UItemCategoryWidget>(GetWorld(), categoryTemplate);
-			categories.Add(x);
-			mainInventory->CategoryBox->AddChildToHorizontalBox(x)->SetSize(FSlateChildSize(ESlateSizeRule::Fill));
-			x->CategoryButton->UserNumber = i;
-			x->CategoryButton->CategoryIdentifier = true;
-			
-			x->CategoryButton->click.BindUObject(this, &UInventoryComponent::onCategoryClicked);
-			FCategoryLookUpTable* row = categoryTable->FindRow<FCategoryLookUpTable>(FName(* FString::FromInt(i)), ContextString);
-			if (!row)
-			{
-				UE_LOG(LogTemp, Warning, TEXT("CategoryRowNotFound"));
-			}
-			else
-			{
-				x->pic->SetBrushFromTexture(row->CategoryPicture);
-				x->text->SetText(FText::FromString(row->categoryText));
-			}
-			
-		}
-	}
+	loadCategories(this, mainInventory->CategoryBox);
 	
 	if (itemDetailTemplate)
 	{
 		itemDetails = CreateWidget<UItemDetailWidget>(GetWorld(), itemDetailTemplate);
 		itemDetails->SetVisibility(ESlateVisibility::Hidden);
 	}
+	mainInventory->ItemBoxWidget->inventoryParent = this;
 	mainInventory->SetVisibility(ESlateVisibility::Hidden);
+	
 	refresh();
 
 	
@@ -255,58 +279,60 @@ void UInventoryComponent::loadUI()
 
 	for (uint8 i = 0; i < (uint8)SlotInformation::NUM; i++)
 	{
-		mainInventory->widgets[i]->onEq.BindUObject(this, &UInventoryComponent::equip);
-		mainInventory->widgets[i]->offEq.BindUObject(this, &UInventoryComponent::unEquip);
+		mainInventory->widgets[i]->inventoryParent = this;
 	}
 
 }
-
+void UInventoryComponent::loadItemWidget(UItemBase* item,UScrollBox* scrollBox)
+{
+	if (!item) return;
+	if (!item->widget)
+	{
+		item->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+		if (!item->widget) return;
+	}
+	scrollBox->AddChild(item->widget);
+	item->widget->ItemButton->CategoryIdentifier = false;
+	item->widget->ItemButton->UserPointer = item;
+	item->widget->ItemButton->click.Unbind();
+	item->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
+	item->widget->ItemButton->hover.Unbind();
+	item->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
+	item->widget->ItemButton->unhover.Unbind();
+	item->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+}
 void UInventoryComponent::refresh()
 {
 	mainInventory->ItemBox->ClearChildren();
-	if (currentCategory == ItemCategory::ALL)
+	for (auto& s : items)
 	{
-		for (auto& s : items)
+		if (s.Key == currentCategory || currentCategory == ItemCategory::ALL)
 		{
 			for (auto& w : s.Value)
 			{
-				if (!w.Key->widget)
-				{
-					w.Key->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
-				}
-				mainInventory->ItemBox->AddChild(w.Key->widget);
-				w.Key->widget->ItemButton->CategoryIdentifier = false;
-				w.Key->widget->ItemButton->UserPointer = w.Key;
-				w.Key->widget->ItemButton->click.Unbind();
-				w.Key->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
-				w.Key->widget->ItemButton->hover.Unbind();
-				w.Key->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
-				w.Key->widget->ItemButton->unhover.Unbind();
-				w.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
+
+				loadItemWidget(w.Key, mainInventory->ItemBox);
+
 			}
 		}
-		return;
+		
 	}
-	
-	for (auto& s : items[currentCategory])
+	if (otherInventoryForTransfering)
 	{
-		if (!s.Key->widget)
+		for (auto& s : otherInventoryForTransfering->items)
 		{
-			s.Key->widget = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+			if (s.Key == otherInventoryForTransfering->currentCategory || otherInventoryForTransfering->currentCategory == ItemCategory::ALL)
+			{
+				for (auto& w : s.Value)
+				{
+
+					loadItemWidget(w.Key, mainInventory->otherItemBox);
+
+				}
+			}
+
 		}
-		if (s.Key->widget)
-		{
-			mainInventory->ItemBox->AddChild(s.Key->widget);
-			s.Key->widget->ItemButton->CategoryIdentifier = false;
-			s.Key->widget->ItemButton->UserPointer = s.Key;
-			s.Key->widget->ItemButton->click.Unbind();
-			s.Key->widget->ItemButton->click.BindUObject(this, &UInventoryComponent::onItemButtonClicked);
-			s.Key->widget->ItemButton->hover.Unbind();
-			s.Key->widget->ItemButton->hover.BindUObject(this, &UInventoryComponent::onItemButtonHovered);
-			s.Key->widget->ItemButton->unhover.Unbind();
-			s.Key->widget->ItemButton->unhover.BindUObject(this, &UInventoryComponent::onItemButtonLeftHovered);
-		}
-	} 
+	}
 }
 
 
@@ -362,30 +388,65 @@ void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
 	if (slot->allowedType != base->type || slot->allowedType == ItemCategory::ALL) return;
 	
 	bool t = true;
-	if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer);
+	if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer,NULL);
 	equipDelegate.Execute(base, slot->slotEnum,t);
 	if(!t) return;
 	slot->ItemButton->UserPointer = base;
-	items[base->type].Remove(base);
+	if (base->itemParent)
+	{
+		base->itemParent->removeItem(base);
+		base->itemParent = this;
+	}
+
 	equipment->equipItem(slot->slotEnum, base);
 	refresh();
 }
-void UInventoryComponent::moveEquip(UEquippedItemWidget* slot, UItemBase* base)
+
+void UInventoryComponent::moveItem(UItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender)
 {
-	
+	if (!base) return;
+	base->itemParent->removeItem(base);
+	sender->inventoryParent->addItem(base);
 }
-void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base)
+void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender)
 {
 	UE_LOG(LogTemp, Warning, TEXT("UNEQUIP"));
 	bool t = true;
 	unEquipDelegate.ExecuteIfBound(base, slot->slotEnum,t);
 	if (!t) return;
-	addItem(base);
+	if (sender)
+	{
+		sender->inventoryParent->addItem(base);
+	}
+	else
+	{
+		addItem(base);
+	}
+
 	slot->ItemButton->UserPointer = NULL;
 	equipment->unequipItem(slot->slotEnum);
 	refresh();
 }
 
+void  UInventoryComponent::openTransferWindow(UInventoryComponent* otherInventory)
+{
+	mainInventory->otherBorder->SetVisibility(ESlateVisibility::Visible);
+	loadCategories(otherInventory, mainInventory->otherCategoryBox);
+	mainInventory->otherItemBoxWidget->inventoryParent = otherInventory;
+	otherInventoryForTransfering = otherInventory;
+	refresh();
+
+}
+void closeTransferWindow()
+{
+
+}
+bool  UInventoryComponent::isItemInInvenotry(UItemBase* Item)
+{
+	if (items.Find(Item->type) == NULL) return true;
+	if (items[Item->type].Find(Item) != NULL) return true;
+	return false;
+}
 void UInventoryComponent::calculateWeight()
 {
 	currentWeight = 0;
@@ -404,6 +465,21 @@ float UInventoryComponent::getWeight()
 	calculateWeight();
 	return currentWeight;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 UCharacterEquipment::UCharacterEquipment()

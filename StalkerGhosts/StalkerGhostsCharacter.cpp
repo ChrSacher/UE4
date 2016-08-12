@@ -27,7 +27,7 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	// Create a CameraComponent	
 	FirstPersonCameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
 	//FirstPersonCameraComponent->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
+	//FirstPersonCameraComponent->RelativeLocation = FVector(-39.56f, 1.75f, 64.f); // Position the camera
 	FirstPersonCameraComponent->bUsePawnControlRotation = true;
 	currentAttributes = CreateDefaultSubobject<UCharacterAttributes>(TEXT("Attributes"));
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
@@ -149,6 +149,8 @@ void AStalkerGhostsCharacter::SetupPlayerInputComponent(class UInputComponent* I
 
 	InputComponent->BindAction("NightVision", IE_Pressed, this, &AStalkerGhostsCharacter::OnNightVision);
 
+	InputComponent->BindAction("AimDown", IE_Pressed, this, &AStalkerGhostsCharacter::aimDownSight);
+
 	InputComponent->BindAction("FireMode", IE_Pressed, this, &AStalkerGhostsCharacter::switchFireMode); 
 	InputComponent->BindAxis("MoveForward", this, &AStalkerGhostsCharacter::MoveForward);
 	InputComponent->BindAxis("MoveRight", this, &AStalkerGhostsCharacter::MoveRight);
@@ -173,7 +175,7 @@ void AStalkerGhostsCharacter::OnFire()
 void AStalkerGhostsCharacter::OffFire()
 {
 	GetWorld()->GetTimerManager().ClearTimer(fireHandle);
-	if (weapon) weapon->endFire();
+	if (weapon) if(weapon->canEndFire) weapon->endFire();
 }
 void AStalkerGhostsCharacter::changeStance(Movement newStance)
 {
@@ -229,6 +231,7 @@ void AStalkerGhostsCharacter::syncEquipment()
 {
 	if (weapon)
 	{
+		stopAimingDownSight();
 		weapon->weaponFire.Unbind();
 		weapon->weaponFire.BindUObject(this, &AStalkerGhostsCharacter::weaponFired);
 		weapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
@@ -237,6 +240,28 @@ void AStalkerGhostsCharacter::syncEquipment()
 	}
 	
 	
+}
+void AStalkerGhostsCharacter::aimDownSight()
+{
+	if (isAimingDownSight)
+	{
+		stopAimingDownSight();
+		return;
+	}
+	if (!weapon) return;
+	if (!weapon->mesh) return;
+	const USkeletalMeshSocket* eye =  weapon->mesh->GetSocketByName("EyePos");
+	if (eye)
+	{
+		FirstPersonCameraComponent->AttachToComponent(weapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("EyePos"));
+		FirstPersonCameraComponent->SetRelativeRotation(FRotator());
+		isAimingDownSight = true;
+	}
+}
+void AStalkerGhostsCharacter::stopAimingDownSight()
+{
+	FirstPersonCameraComponent->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
+	isAimingDownSight = false;
 }
 
 void AStalkerGhostsCharacter::changeWeapon(FString ID)
@@ -247,7 +272,7 @@ void AStalkerGhostsCharacter::changeWeapon(FString ID)
 void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
 {
 	if (!newwep) return;
-	
+	stopAimingDownSight();
 	weapon = newwep;
 	weapon->startEquip();
 	
@@ -328,6 +353,7 @@ void AStalkerGhostsCharacter::OnReload()
 void AStalkerGhostsCharacter::playReload()
 {
 	if (!weapon) return;
+	stopAimingDownSight();
 	weapon->startReload();
 	//found mag and reload is possible
 	if (weapon->ReloadAnimation != NULL)

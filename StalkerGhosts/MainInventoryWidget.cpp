@@ -2,8 +2,8 @@
 
 #include "StalkerGhosts.h"
 #include "MainInventoryWidget.h"
-
-
+#include "ItemWidget.h"
+#include "InventoryComponent.h"
 
 void UMainInventoryWidget::setEquippedWidget(SlotInformation sslot, UEquippedItemWidget* widget)
 {
@@ -20,4 +20,23 @@ void UMainInventoryWidget::setup()
 	{
 		widgets.Add(NULL);
 	}
+}
+
+void UItemScrollBoxWidget::OnItemDrop(UDragDropOperation* operation)
+{
+	UItemWidget* x = Cast<UItemWidget>(operation->Payload);
+	if (!inventoryParent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SCROLLBOX MAJOR ERROR"));
+	}
+	if (x)
+	{
+		inventoryParent->moveItem(x, x->ItemButton->UserPointer, this);
+	}
+	UEquippedItemWidget* y = Cast<UEquippedItemWidget>(operation->Payload);
+	if (y)
+	{
+		x->ItemButton->UserPointer->itemParent->unEquip(y, y->ItemButton->UserPointer,this);
+	}
+	//
 }

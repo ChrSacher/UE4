@@ -115,7 +115,8 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
 		UPostProcessComponent* normalPPComponent;
-
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
+		bool isAimingDownSight = false;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle staminaHandle;
@@ -125,8 +126,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		bool WeaponOnBack = false;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle speedHandle;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		float currentSpeed = 100;
 
@@ -151,6 +154,8 @@ protected:
 	void weaponFired();
 	void switchFireMode();
 	
+	void aimDownSight();
+	void stopAimingDownSight();
 	/** Reload*/
 	void OnReload();
 	void playReload();
