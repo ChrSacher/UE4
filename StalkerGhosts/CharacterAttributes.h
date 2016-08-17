@@ -20,6 +20,18 @@ public:
 		AttributeType type;
 };
 
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FPhysicsMaterialSounds
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TEnumAsByte<EPhysicalSurface> surfaceType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<USoundBase*> sounds;
+};
+
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UBaseAttribute : public UObject
 {

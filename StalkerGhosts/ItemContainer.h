@@ -4,10 +4,11 @@
 
 #include "GameFramework/Actor.h"
 #include "InventoryComponent.h"
+#include "InteractInterface.h"
 #include "ItemContainer.generated.h"
 
 UCLASS()
-class STALKERGHOSTS_API AItemContainer : public AActor
+class STALKERGHOSTS_API AItemContainer : public AActor ,public IInteractInterface
 {
 	GENERATED_BODY()
 	
@@ -21,6 +22,6 @@ public:
 	// Called every frame
 	virtual void Tick( float DeltaSeconds ) override;
 
-	
+	virtual void interact(AActor* interactor) override;
 	UInventoryComponent* container;
 };

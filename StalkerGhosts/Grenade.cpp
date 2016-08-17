@@ -98,6 +98,7 @@ void AGrenade::explode()
 			bool traced = GetWorld()->LineTraceSingleByChannel(result, Loc, End, ECollisionChannel::ECC_Visibility, params, params2);
 			if (traced)
 			{
+				result.PhysMaterial.Get()->SurfaceType;
 				//deal with traced
 				FMainDamageEvent da;
 				da.hit = result;

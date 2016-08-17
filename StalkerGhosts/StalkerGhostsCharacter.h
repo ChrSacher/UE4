@@ -36,8 +36,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category=Camera)
 		float BaseTurnRate;
 
-	
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Gameplay)
 		bool isSprinting = false;
 
@@ -55,6 +53,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category=Gameplay)
 	FVector GunOffset;
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		TArray<FPhysicsMaterialSounds> PhysicsMaterialSounds;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		UGrenadeComponent* currentGrenade;
@@ -76,6 +77,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* bootsMesh;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* backPackMesh;
 
@@ -128,10 +130,20 @@ public:
 		bool WeaponOnBack = false;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		bool in3rdPerson = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle speedHandle;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		float currentSpeed = 100;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class USpringArmComponent* CameraBoom;
+
+	/** Follow camera */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+		class UCameraComponent* FollowCamera;
 
 	//will point to the inventory equipment
 	//should be overwritten if character doesn't have an inventory
@@ -145,7 +157,9 @@ public:
 
 
 protected:
-	
+	//phyisics material 
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		USoundBase* getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index = -1);
 	/** Fires a projectile. */
 	void OnFire();
 	void OffFire();
@@ -172,7 +186,7 @@ protected:
 	void equipmentRemoved(UItemBase* item, SlotInformation slot, bool& acceptance);
 
 
-
+	void switchPerson();
 
 
 	//nightvision

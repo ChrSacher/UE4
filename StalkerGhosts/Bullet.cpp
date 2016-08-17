@@ -64,3 +64,23 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 	}
 }
 
+ABulletEjectActor::ABulletEjectActor()
+{
+	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BulletMesh"));
+	RootComponent = mesh;
+	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
+}
+
+void ABulletEjectActor::eject(FVector direction, UStaticMesh* newMesh)
+{
+	if (newMesh) if (mesh) mesh->SetStaticMesh(newMesh);
+	ProjectileMovement->UpdatedComponent = RootComponent;
+	ProjectileMovement->InitialSpeed = 0;
+	ProjectileMovement->MaxSpeed = 1000;
+	direction.Normalize();
+	ProjectileMovement->Velocity = (direction * 300);
+	ProjectileMovement->bRotationFollowsVelocity = false;
+	ProjectileMovement->bShouldBounce = false;
+
+	InitialLifeSpan = 0.6f;
+}

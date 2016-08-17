@@ -5,6 +5,7 @@
 #include "ItemCategoryWidget.h"
 #include "DataTables.h"
 #include "EquippedItemWidget.h"
+#include "Weapon.h"
 #include "InventoryComponent.generated.h"
 
 
@@ -68,10 +69,15 @@ public:
 		UMainInventoryWidget* mainInventory;
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		TArray<UItemCategoryWidget*> categories;
+
+	UPROPERTY(EditAnywhere, Category = Inventory)
+		TArray<UItemCategoryWidget*> otherCategories;
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		UItemBase* selectedItem;
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		ItemCategory currentCategory = ItemCategory::ITEM;
+	UPROPERTY(EditAnywhere, Category = Inventory)
+		ItemCategory otherCurrentCategory = ItemCategory::ITEM;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UDataTable* categoryTable;
 	
@@ -129,10 +135,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	float getWeight();
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		void loadCategories(UInventoryComponent* parent, UHorizontalBox* box);
+		void loadCategories();
 	void loadItemWidget(UItemBase* item, UScrollBox* scrollBox);
 	template <typename T>
-	T* createItem(FString ID);
+	T* createItem(FString ID, UWorld* world);
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	void print();
 	UFUNCTION(BlueprintCallable, Category = "Event")
@@ -143,10 +149,12 @@ public:
 	void setVisiblity(bool Vis);
 	
 	void onCategoryClicked(UDataItemButton* sender);
+	void onOtherCategoryClicked(UDataItemButton* sender);
 	void onItemButtonClicked(UDataItemButton* sender);
 	void onItemButtonHovered(UDataItemButton* sender);
 	void onItemButtonLeftHovered(UDataItemButton* sender);
 
+	void closeTransferWindow();
 	void openTransferWindow(UInventoryComponent* otherInventory);
 	//Slot function
 	//param 1 which equippment widget was selected  param 2 is which item has been moved
@@ -159,6 +167,11 @@ public:
 		void moveItem(UItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender);
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void unEquip(UEquippedItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender);
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void attachWeaponAttachment(UWeaponAttachmentWidget* slot, UItemBase* base);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void detachWeaponAttachment(UWeaponAttachmentWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender);
 
 };
 

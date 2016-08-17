@@ -24,11 +24,11 @@ void UMainInventoryWidget::setup()
 
 void UItemScrollBoxWidget::OnItemDrop(UDragDropOperation* operation)
 {
-	UItemWidget* x = Cast<UItemWidget>(operation->Payload);
 	if (!inventoryParent)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("SCROLLBOX MAJOR ERROR"));
 	}
+	UItemWidget* x = Cast<UItemWidget>(operation->Payload);
 	if (x)
 	{
 		inventoryParent->moveItem(x, x->ItemButton->UserPointer, this);
@@ -36,7 +36,13 @@ void UItemScrollBoxWidget::OnItemDrop(UDragDropOperation* operation)
 	UEquippedItemWidget* y = Cast<UEquippedItemWidget>(operation->Payload);
 	if (y)
 	{
-		x->ItemButton->UserPointer->itemParent->unEquip(y, y->ItemButton->UserPointer,this);
+		inventoryParent->unEquip(y, y->ItemButton->UserPointer,this);
 	}
+	UWeaponAttachmentWidget* z = Cast<UWeaponAttachmentWidget>(operation->Payload);
+	if (z)
+	{
+		inventoryParent->detachWeaponAttachment(z, z->ItemButton->UserPointer, this);
+	}
+
 	//
 }

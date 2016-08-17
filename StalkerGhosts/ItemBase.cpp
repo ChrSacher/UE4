@@ -4,6 +4,7 @@
 #include "DataTables.h"
 #include "ItemBase.h"
 #include "Buff.h"
+#include "Weapon.h"
 UItemBase::UItemBase()
 {
 	
@@ -35,15 +36,23 @@ void UItemBase::loadFromTable(FItemLookUpTable* table)
 
 float UItemBase::getWeight() { return ammount * weight; }
 
+void UBuffHolderItem::initialize(UWorld* world)
+{
+	attachedBuffs.Empty();
+	for (int i = 0; i < buffInit.Num(); i++)
+	{
+		attachedBuffs.Add(DuplicateObject<UBuff>(Cast<UBuff>(buffInit[i]->GetDefaultObject()), NULL));
+	}
+}
+
 TArray<UBuff*> UBuffHolderItem::getBuffs()
 {
-	if (!init)
-	{
-		for (int i = 0; i < buffInit.Num(); i++)
-		{
-			attachedBuffs.Add(DuplicateObject<UBuff>(Cast<UBuff>(buffInit[i]->GetDefaultObject()), NULL));
-		}
-		init = true;
-	}
+	
 	return attachedBuffs;
+}
+
+void UWeaponItem::initialize(UWorld* world)
+{
+	generatedWeapon = world->SpawnActor<AWeapon>(wep, FVector(), FRotator());
+	if(generatedWeapon) generatedWeapon->SetActorHiddenInGame(true);
 }

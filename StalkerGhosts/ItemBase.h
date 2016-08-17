@@ -64,6 +64,7 @@ public:
 	UFUNCTION(BlueprintImplementableEvent)
 		void unEquipItem();
 
+	virtual void initialize(UWorld* world) {};
 	virtual void use(AStalkerGhostsCharacter* user) {useItem(); };
 	
 	virtual void equip(AStalkerGhostsCharacter* user) { equipItem(); };
@@ -83,9 +84,7 @@ public:
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Item)
 		TArray<UBuff*> attachedBuffs;
-
-	UPROPERTY()
-		bool init = false;
+	void initialize(UWorld* world);
 public:
 	virtual TArray<UBuff*> getBuffs();
 };
@@ -223,10 +222,30 @@ class UWeaponItem : public UItemBase
 {
 	GENERATED_BODY()
 public:
-	UWeaponItem() { type = ItemCategory::AMMUNITION; }
+	UWeaponItem() { type = ItemCategory::WEAPON; }
 	~UWeaponItem() {}
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		TSubclassOf<AWeapon> wep;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		AWeapon* generatedWeapon;
+
+	void initialize(UWorld* world) override;
+	
+};
+UCLASS(Blueprintable, BlueprintType)
+class UWeaponAttachmentItem : public UItemBase
+{
+	GENERATED_BODY()
+
+public:
+	UWeaponAttachmentItem() { type = ItemCategory::WEAPON; }
+	~UWeaponAttachmentItem() {}
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		UStaticMesh* attachmentMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TArray<FString> allowedWeapons;
+
 };
 
 class AGrenade;

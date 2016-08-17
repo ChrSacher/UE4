@@ -34,17 +34,19 @@ public:
 		EDamageType damageType;
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		UStaticMeshComponent* mesh;
-
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		UStaticMesh* ejectionMesh;
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		class UProjectileMovementComponent* ProjectileMovement;
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		AController* controllerOver;
-	
-								 /** Sphere collision component */
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		bool bulletEjectenabled = true;						 /** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
 	class UBoxComponent* CollisionComp;
 
 	/** Projectile movement component */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	class UProjectileMovementComponent* ProjectileMovement;
+
 
 
 	/** called when projectile hits something */
@@ -56,4 +58,20 @@ public:
 	/** Returns ProjectileMovement subobject **/
 	FORCEINLINE class UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
 	
+};
+UCLASS(config = Game)
+class STALKERGHOSTS_API ABulletEjectActor :public AActor
+{
+	GENERATED_BODY()
+
+public:
+	ABulletEjectActor();
+
+	void eject(FVector direction, UStaticMesh* newMesh);
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		UStaticMeshComponent* mesh;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+		class UProjectileMovementComponent* ProjectileMovement;
+
 };

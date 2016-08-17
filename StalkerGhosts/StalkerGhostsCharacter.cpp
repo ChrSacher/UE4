@@ -52,6 +52,16 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	helmetMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("helmetMesh"));
 	helmetMesh->SetupAttachment(Mesh1P);
 	// Create a gun mesh component
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
+	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
+
+												// Create a follow camera
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
+	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->Deactivate();
 
 	normalPPComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("normalPostProcess"));
 	normalPPComponent->SetupAttachment(RootComponent);
@@ -87,15 +97,15 @@ void AStalkerGhostsCharacter::BeginPlay()
 	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
 	FString x = FString(TEXT("Ak47"));
 	FString y = FString(("Ak47Bullet"));
-	UBulletItem* w = currentInventory->createItem<UBulletItem>(y);
+	UBulletItem* w = currentInventory->createItem<UBulletItem>(y, GetWorld());
 	w->ammount = 300;
-	UWeaponItem* r= currentInventory->createItem<UWeaponItem>(x);
-	UGrenadeItem* h = currentInventory->createItem<UGrenadeItem>("MasterGrenade");
+	UWeaponItem* r= currentInventory->createItem<UWeaponItem>(x, GetWorld());
+	UGrenadeItem* h = currentInventory->createItem<UGrenadeItem>("MasterGrenade", GetWorld());
 	h->ammount = 10;
 	currentInventory->addItem(w);
 	currentInventory->addItem(r);
 	currentInventory->addItem(h);
-	currentInventory->addItem(currentInventory->createItem<UArmorItem>("M1Helmet"));
+	currentInventory->addItem(currentInventory->createItem<UArmorItem>("M1Helmet", GetWorld()));
 	if (armorMesh) armorMesh->SetMasterPoseComponent(Mesh1P);
 	if (pantsMesh) pantsMesh->SetMasterPoseComponent(Mesh1P);
 	if (bodyArmorMesh) bodyArmorMesh->SetMasterPoseComponent(Mesh1P);
@@ -150,7 +160,7 @@ void AStalkerGhostsCharacter::SetupPlayerInputComponent(class UInputComponent* I
 	InputComponent->BindAction("NightVision", IE_Pressed, this, &AStalkerGhostsCharacter::OnNightVision);
 
 	InputComponent->BindAction("AimDown", IE_Pressed, this, &AStalkerGhostsCharacter::aimDownSight);
-
+	InputComponent->BindAction("SwitchPerson", IE_Pressed, this, &AStalkerGhostsCharacter::switchPerson);
 	InputComponent->BindAction("FireMode", IE_Pressed, this, &AStalkerGhostsCharacter::switchFireMode); 
 	InputComponent->BindAxis("MoveForward", this, &AStalkerGhostsCharacter::MoveForward);
 	InputComponent->BindAxis("MoveRight", this, &AStalkerGhostsCharacter::MoveRight);
@@ -174,8 +184,21 @@ void AStalkerGhostsCharacter::OnFire()
 }
 void AStalkerGhostsCharacter::OffFire()
 {
-	GetWorld()->GetTimerManager().ClearTimer(fireHandle);
-	if (weapon) if(weapon->canEndFire) weapon->endFire();
+	
+	if (weapon)
+	{
+		if (weapon->canEndFire)
+		{
+			weapon->endFire();
+			GetWorld()->GetTimerManager().ClearTimer(fireHandle);
+		}
+
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().ClearTimer(fireHandle);
+	}
+	
 }
 void AStalkerGhostsCharacter::changeStance(Movement newStance)
 {
@@ -202,7 +225,7 @@ void AStalkerGhostsCharacter::Fire()
 	{
 		GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AStalkerGhostsCharacter::Fire, 60 / weapon->fireRate, false);
 	}
-	if (weapon->canEndFire) OffFire();
+	if (weapon->mustEndFire) OffFire();
 	
 }
 void AStalkerGhostsCharacter::weaponFired()
@@ -266,7 +289,7 @@ void AStalkerGhostsCharacter::stopAimingDownSight()
 
 void AStalkerGhostsCharacter::changeWeapon(FString ID)
 {
-	UWeaponItem* x = Cast<UWeaponItem>(currentInventory->createItem<UWeaponItem>(ID));
+	UWeaponItem* x = Cast<UWeaponItem>(currentInventory->createItem<UWeaponItem>(ID,GetWorld()));
 	if(x) changeWeapon(x);
 }
 void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
@@ -274,6 +297,7 @@ void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
 	if (!newwep) return;
 	stopAimingDownSight();
 	weapon = newwep;
+	weapon->SetActorHiddenInGame(false);
 	weapon->startEquip();
 	
 	//UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
@@ -288,7 +312,8 @@ void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
 }
 void AStalkerGhostsCharacter::changeWeapon(UWeaponItem* ID)
 {
-	changeWeapon(GetWorld()->SpawnActor<AWeapon>(ID->wep, FVector(), FRotator()));
+	if (!ID) return;
+	changeWeapon(ID->generatedWeapon);
 }
 
 void AStalkerGhostsCharacter::MoveForward(float Value)
@@ -576,6 +601,7 @@ void AStalkerGhostsCharacter::onInteract()
 	bool traced = GetWorld()->LineTraceSingleByChannel(result, Loc, End, ECollisionChannel::ECC_Visibility, params,params2);
 	if (traced)
 	{
+		
 		//deal with traced
 		IInteractInterface* actor = Cast<IInteractInterface>(result.GetActor());
 		if (actor)
@@ -839,7 +865,7 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 			UHelmetItem* hel = Cast<UHelmetItem>(item);
 			if (hel)
 			{
-				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->addBuff(hel->getBuffs()[i]);
+				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->removeBuff(hel->getBuffs()[i]);
 				damageComponent->removeArmor(hel);
 			}
 			visSkeletalMesh(helmetMesh, false);
@@ -851,7 +877,7 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 			UArmorItem* hel = Cast<UArmorItem>(item);
 			if (hel)
 			{
-				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->addBuff(hel->getBuffs()[i]);
+				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->removeBuff(hel->getBuffs()[i]);
 				damageComponent->removeArmor(hel);
 			}
 			visSkeletalMesh(armorMesh, false);
@@ -862,7 +888,7 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 			UBackPackItem* hel = Cast<UBackPackItem>(item);
 			if (hel)
 			{
-				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->addBuff(hel->getBuffs()[i]);
+				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->removeBuff(hel->getBuffs()[i]);
 				damageComponent->removeArmor(hel);
 			}
 			visSkeletalMesh(backPackMesh, false);
@@ -873,7 +899,7 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 			UBootItem* hel = Cast<UBootItem>(item);
 			if (hel)
 			{
-				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->addBuff(hel->getBuffs()[i]);
+				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->removeBuff(hel->getBuffs()[i]);
 				damageComponent->removeArmor(hel);
 			}
 			visSkeletalMesh(bootsMesh, false);
@@ -885,7 +911,7 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 			UBodyArmorItem* hel = Cast<UBodyArmorItem>(item);
 			if (hel)
 			{
-				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->addBuff(hel->getBuffs()[i]);
+				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->removeBuff(hel->getBuffs()[i]);
 				damageComponent->removeArmor(hel);
 			}
 			visSkeletalMesh(bodyArmorMesh, false);
@@ -897,7 +923,7 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 			UPantsItem* hel = Cast<UPantsItem>(item);
 			if (hel)
 			{
-				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->addBuff(hel->getBuffs()[i]);
+				for (int32 i = 0; i < hel->getBuffs().Num(); i++) currentAttributes->removeBuff(hel->getBuffs()[i]);
 				damageComponent->removeArmor(hel);
 			}
 			
@@ -905,9 +931,11 @@ void AStalkerGhostsCharacter::equipmentRemoved(UItemBase* item, SlotInformation 
 		}break;
 		case 	SlotInformation::WEAPON1:
 		{
-			currentInventory->addItem(weapon->getLoadedMag());
-			weapon->Destroy();
-
+			weapon->SetActorHiddenInGame(true);
+			weapon->DetachRootComponentFromParent();
+			stopAimingDownSight();
+			OffFire();
+			weapon = NULL;
 		
 		}break;
 		case SlotInformation::GRENADE:
@@ -1014,4 +1042,48 @@ void AStalkerGhostsCharacter::switchFireMode()
 {
 	if (weapon) weapon->switchFireMode();
 	OffFire();
+}
+
+void AStalkerGhostsCharacter::switchPerson()
+{
+	if (!in3rdPerson)
+	{
+		FollowCamera->Activate();
+		FirstPersonCameraComponent->Deactivate();
+		in3rdPerson = true;
+	}
+	else
+	{
+		FollowCamera->Deactivate();
+		FirstPersonCameraComponent->Activate();
+		in3rdPerson = false;
+	}
+}
+
+USoundBase* AStalkerGhostsCharacter::getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index)
+{
+	for (int32 i = 0; i < PhysicsMaterialSounds.Num(); i++)
+	{
+		if (type = PhysicsMaterialSounds[i].surfaceType)
+		{
+			if (PhysicsMaterialSounds[i].sounds.Num() == 0) return NULL;
+			if (index <= -1)
+			{
+				
+				return PhysicsMaterialSounds[i].sounds[FMath::RandRange(0, PhysicsMaterialSounds[i].sounds.Num() - 1)];
+			}
+			else
+			{
+				if (index < PhysicsMaterialSounds[i].sounds.Num())
+				{
+					return PhysicsMaterialSounds[i].sounds[index];
+				}
+				else
+				{
+					return PhysicsMaterialSounds[i].sounds.Last();
+				}
+			}
+		}
+	}
+	return NULL;
 }

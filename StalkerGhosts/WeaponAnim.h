@@ -19,6 +19,7 @@ UENUM(BlueprintType)
 enum class WeaponStance : uint8
 {
 	FIRING,
+	IDLE,
 	RELOADING,
 	JAMMED,
 	OVERHEATED,

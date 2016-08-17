@@ -2,7 +2,7 @@
 
 #include "StalkerGhosts.h"
 #include "ItemContainer.h"
-
+#include "StalkerGhostsCharacter.h"
 
 // Sets default values
 AItemContainer::AItemContainer()
@@ -26,3 +26,7 @@ void AItemContainer::Tick( float DeltaTime )
 
 }
 
+void AItemContainer::interact(AActor* interactor)
+{
+	Cast<AStalkerGhostsCharacter>(interactor)->currentInventory->openTransferWindow(container);
+}

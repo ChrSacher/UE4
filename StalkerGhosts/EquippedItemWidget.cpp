@@ -32,3 +32,30 @@ void UEquippedItemWidget::OnItemDrop(UDragDropOperation* operation)
 	}
 	//
 }
+
+UTexture2D* UWeaponAttachmentWidget::getTexture()
+{
+	if (ItemButton)
+	{
+		if (ItemButton->UserPointer)
+		{
+			if (ItemButton->UserPointer->picture)
+			{
+				return ItemButton->UserPointer->picture;
+			}
+		}
+	}
+	return NULL;
+}
+
+void UWeaponAttachmentWidget::OnItemDrop(UDragDropOperation* operation)
+{
+
+	UItemWidget* x = Cast<UItemWidget>(operation->Payload);
+	if (!x) return;
+	if (x->ItemButton->UserPointer)
+	{
+		inventoryParent->attachWeaponAttachment(this, x->ItemButton->UserPointer);
+	}
+	//
+}

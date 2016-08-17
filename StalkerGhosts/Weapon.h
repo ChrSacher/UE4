@@ -10,7 +10,15 @@
 struct FWeaponLookUpTable;
 class ABullet;
 class UBulletItem;
-
+class UWeaponAttachmentItem;
+UENUM(BlueprintType)
+enum class WeaponAttachmentSlot : uint8
+{
+	SCOPE,
+	MUZZLEBRAKE,
+	GRIP,
+	NUM
+};
 
 USTRUCT(Blueprintable)
 struct FRecoilPattern
@@ -34,7 +42,26 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		bool recoilEnabled = true;
 };
+USTRUCT(Blueprintable)
+struct FWeaponAttachment
+{
+		GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		WeaponAttachmentSlot slot;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		UStaticMeshComponent* mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		bool isEnabled = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		bool isAttached = false;
+
+
+
+};
 UENUM(BlueprintType)
 enum class WeaponFireMode : uint8
 {
@@ -63,6 +90,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		USkeletalMeshComponent* mesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		TArray< FWeaponAttachment> attachedMeshes;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		UWeaponAnim* animInstance;
 	UPROPERTY(EditAnywhere, Category = Magazine)
@@ -84,8 +115,9 @@ public:
 		float equipTime = 2.0f;
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool canEndFire = false;
-
+		bool mustEndFire = false;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		bool canEndFire = true;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedFireMode = 0;
 
@@ -122,7 +154,11 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		class UAnimMontage* IdlingAnimation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		TSubclassOf<ABulletEjectActor> ejectionTemplate;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UArrowComponent* ejectionDirection;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		TArray<FString> acceptedBullets;
 
@@ -158,7 +194,9 @@ public:
 
 	int32 getAmmoCount();
 
-
+	bool attachAttachment(WeaponAttachmentSlot slot, UWeaponAttachmentItem* item);
+	void detachAttachment(WeaponAttachmentSlot slot);
+	bool hasAttachment(WeaponAttachmentSlot slot);
 	void removeWeapon();
 	bool reload(UBulletItem* bullet);
 
@@ -166,3 +204,4 @@ public:
 	void endFire();
 	UBulletItem* getLoadedMag();
 };
+
