@@ -5,6 +5,7 @@
 #include "GameFramework/Actor.h"
 #include "DamageEnum.h"
 #include "ItemBase.h"
+#include "PhysicsMaterialCollectionData.h"
 #include "Bullet.generated.h"
 
 
@@ -41,9 +42,17 @@ public:
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		AController* controllerOver;
 	UPROPERTY(EditAnywhere, Category = Bullet)
+		AActor* owningPlayer;
+	UPROPERTY(EditAnywhere, Category = Bullet)
 		bool bulletEjectenabled = true;						 /** Sphere collision component */
 	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	class UBoxComponent* CollisionComp;
+		class UBoxComponent* CollisionComp;
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+		TArray<AActor*> OverlappedActors;
+	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
+		class UBoxComponent* suppresionBox;
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		UPhysicsMaterialCollectionData* physicsMaterialCollection;
 
 	/** Projectile movement component */
 
@@ -52,7 +61,8 @@ public:
 	/** called when projectile hits something */
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
-
+	UFUNCTION()
+		void OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	/** Returns CollisionComp subobject **/
 	FORCEINLINE class UBoxComponent* GetCollisionComp() const { return CollisionComp; }
 	/** Returns ProjectileMovement subobject **/
@@ -73,5 +83,5 @@ public:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
 		class UProjectileMovementComponent* ProjectileMovement;
-
+	
 };

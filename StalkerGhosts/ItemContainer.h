@@ -23,5 +23,6 @@ public:
 	virtual void Tick( float DeltaSeconds ) override;
 
 	virtual void interact(AActor* interactor) override;
-	UInventoryComponent* container;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		 UInventoryComponent* container;
 };

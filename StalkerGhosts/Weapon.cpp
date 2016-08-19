@@ -52,6 +52,8 @@ AWeapon::AWeapon()
 	{
 		if(attachedMeshes[i].mesh) attachedMeshes[i].mesh->SetupAttachment(mesh);
 	}
+	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	FP_FiringDirection = CreateDefaultSubobject<USceneComponent>(TEXT("FiringDirection"));
 }
 
 // Called when the game starts or when spawned
@@ -59,7 +61,14 @@ void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 	animInstance = Cast<UWeaponAnim>(mesh->GetAnimInstance());
-
+	if (!ejectionDirection->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::KeepWorld, true), TEXT("EjectionPoint")))
+	{
+		bulletEjectable = false;
+	}
+	FP_MuzzleLocation->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
+	hasFiringDirection = FP_FiringDirection->AttachToComponent(mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("FiringDirection"));
+	dispersion.finalDispersionY = dispersion.standardDispersionY;
+	dispersion.finalDispersionX = dispersion.standardDispersionX;
 }
 
 // Called every frame
@@ -162,8 +171,9 @@ UBulletItem* AWeapon::getLoadedMag()
 	return currentlyLoadedBullet;
 };
 
-bool AWeapon::Fire(FVector SpawnLocation, FRotator SpawnRotation)
+bool AWeapon::Fire()
 {
+	FVector SpawnLocation = GetActorLocation();
 	if (!isUsable) return false;
 	if (!currentlyLoadedBullet)
 	{
@@ -184,24 +194,62 @@ bool AWeapon::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 	}
 	else //if thjere is no bullets in the mag play the 
 	{
+		//check for dispersion
+		if (dispersion.decreaseSpreadWhenFireEnded)
+		{
+			GetWorld()->GetTimerManager().ClearTimer(dispersion.decreaseSpreadTimer);
+		}
+		else
+		{
+			if(!GetWorld()->GetTimerManager().IsTimerActive(dispersion.decreaseSpreadTimer))
+				GetWorld()->GetTimerManager().SetTimer(dispersion.decreaseSpreadTimer, this, &AWeapon::decreaseSpread, dispersion.timePerDecrease, true);
+		}
 		
+		//spawn Bullet
+		FVector dir = FP_MuzzleLocation->GetComponentLocation() - (FP_FiringDirection->GetComponentLocation());
+		dir.Normalize();
+		FRotator rot = dir.ToOrientationRotator();
+		if (hasFiringDirection) rot = GetActorForwardVector().ToOrientationRotator();
+		rot.Pitch += dispersion.finalDispersionY;
+		rot.Yaw += dispersion.finalDispersionX;
+		increaseSpread();
 		playSound(SpawnLocation);
-		ABullet* x = GetWorld()->SpawnActor<ABullet>(currentlyLoadedBullet->bullet, SpawnLocation, SpawnRotation);
+		ABullet* x = GetWorld()->SpawnActor<ABullet>(currentlyLoadedBullet->bullet,FP_MuzzleLocation->GetComponentLocation(),rot);
 		if (!x)
 		{
 			return false;
 		}
-		if (Cast<ACharacter>(GetOwner())) x->controllerOver = Cast<ACharacter>(GetOwner())->GetController();
+		if (Cast<ACharacter>(GetOwner()))
+		{
+			x->owningPlayer = owningPlayer;
+			if(owningPlayer) x->controllerOver = owningPlayer->GetController();
+		}
 		currentlyLoadedBullet->ammount -= 1;
 		firedBullets += 1;
 		weaponFire.ExecuteIfBound();
 
-		if (ejectionTemplate && x->bulletEjectenabled)
+
+
+
+
+		//eject a bullter
+		if (ejectionTemplate && x->bulletEjectenabled && bulletEjectable)
 		{
-			ABulletEjectActor* eject = GetWorld()->SpawnActor<ABulletEjectActor>(ejectionTemplate, SpawnLocation, SpawnRotation);
-			eject->eject(FVector(),x->ejectionMesh);
+			ABulletEjectActor* eject = GetWorld()->SpawnActor<ABulletEjectActor>(ejectionTemplate, ejectionDirection->GetComponentLocation(),FRotator());
+			if (!x->ejectionMesh)
+			{
+				eject->eject(ejectionDirection->GetForwardVector(), x->mesh->StaticMesh);
+			}
+			else
+			{
+				eject->eject(ejectionDirection->GetForwardVector(), x->ejectionMesh);
+			}
+			
 		}
 	}
+
+
+	//check Firemodes
 	if (getFireMode() == WeaponFireMode::SINGLE)
 	{
 		
@@ -222,8 +270,9 @@ bool AWeapon::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 			canEndFire = true;
 		}
 	}
-	if (getFireMode() == WeaponFireMode::BURST)
+	if (getFireMode() == WeaponFireMode::AUTO)
 	{
+		mustEndFire = false;
 		if (firedBullets >= 0)
 		{
 			
@@ -236,6 +285,7 @@ bool AWeapon::Fire(FVector SpawnLocation, FRotator SpawnRotation)
 void AWeapon::endFire()
 {
 	firedBullets = 0;
+	if(dispersion.decreaseSpreadWhenFireEnded) GetWorld()->GetTimerManager().SetTimer(dispersion.decreaseSpreadTimer, this, &AWeapon::decreaseSpread, dispersion.timePerDecrease, true);
 }
 
 
@@ -305,6 +355,7 @@ bool  AWeapon::attachAttachment(WeaponAttachmentSlot slot, UWeaponAttachmentItem
 	if (attachedMeshes[(uint8)slot].isAttached) detachAttachment(slot);
 	attachedMeshes[(uint8)slot].mesh->SetStaticMesh(item->attachmentMesh);
 	attachedMeshes[(uint8)slot].mesh->SetVisibility(true);
+	
 	attachedMeshes[(uint8)slot].isAttached = true;
 	return true;
 }
@@ -318,4 +369,25 @@ bool  AWeapon::hasAttachment(WeaponAttachmentSlot slot)
 {
 	if (!((uint8)slot >= 0 && (uint8)slot < attachedMeshes.Num()) || !mesh) return false;
 	return attachedMeshes[(uint8)slot].isAttached;
+}
+
+void AWeapon::decreaseSpread()
+{
+	dispersion.finalDispersionX -= dispersion.spreadDecreaseXPerSecond * dispersion.timePerDecrease;
+	dispersion.finalDispersionY -= dispersion.spreadDecreaseYPerSecond * dispersion.timePerDecrease;
+	if (dispersion.finalDispersionY < dispersion.standardDispersionY) dispersion.finalDispersionY = dispersion.standardDispersionY;
+	if (dispersion.finalDispersionX < dispersion.standardDispersionX) dispersion.finalDispersionX = dispersion.standardDispersionX;
+	if (dispersion.finalDispersionY <= dispersion.standardDispersionY && dispersion.finalDispersionX <= dispersion.standardDispersionX)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(dispersion.decreaseSpreadTimer);
+	}
+	
+}
+
+void AWeapon::increaseSpread()
+{
+	dispersion.finalDispersionX += dispersion.perBulletDispersionX;
+	dispersion.finalDispersionY += dispersion.perBulletDispersionY;
+	if (dispersion.finalDispersionY < dispersion.standardDispersionY) dispersion.finalDispersionY = dispersion.maxDispersionY;
+	if (dispersion.finalDispersionX < dispersion.standardDispersionX) dispersion.finalDispersionX = dispersion.maxDispersionX;
 }

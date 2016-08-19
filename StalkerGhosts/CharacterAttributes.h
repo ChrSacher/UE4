@@ -20,17 +20,7 @@ public:
 		AttributeType type;
 };
 
-USTRUCT(Blueprintable, BlueprintType)
-struct STALKERGHOSTS_API FPhysicsMaterialSounds
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TEnumAsByte<EPhysicalSurface> surfaceType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TArray<USoundBase*> sounds;
-};
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
 class UBaseAttribute : public UObject
@@ -96,8 +86,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		TArray<UBaseAttribute*> attributes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TArray<FCharacterAttributesInit> initVars;
+	
 
 	UPROPERTY()
 		UBaseAttribute* nullAttrib;
@@ -111,7 +100,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Gameplay)
 		bool isStaminaRegenerable = true;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<FCharacterAttributesInit> initVars;
 	void setup();
 	
 };

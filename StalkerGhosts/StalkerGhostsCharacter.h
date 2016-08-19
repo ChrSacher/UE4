@@ -12,7 +12,7 @@
 #include "WeaponComponent.h"
 #include "MainHudWidget.h"
 #include "InventoryInterface.h"
-
+#include "PhysicsMaterialCollectionData.h"
 #include "Weapon.h"
 #include "StalkerGhostsCharacter.generated.h"
 
@@ -54,8 +54,7 @@ public:
 	FVector GunOffset;
 
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		TArray<FPhysicsMaterialSounds> PhysicsMaterialSounds;
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		UGrenadeComponent* currentGrenade;
@@ -87,8 +86,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 		class USkeletalMeshComponent* glovesMesh;
 	/** Location on gun mesh where projectiles should spawn. */
-	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
-		class USceneComponent* FP_MuzzleLocation;
+	
 
 	/** First person camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
@@ -109,10 +107,10 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		UDamageComponent* damageComponent;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
 		FPostProcessSettings nightVisionPostProcessSettings;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
 		FPostProcessSettings normalPostProcessSettings;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Damage)
@@ -138,11 +136,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		float currentSpeed = 100;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
 	/** Follow camera */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class UCameraComponent* FollowCamera;
 
 	//will point to the inventory equipment
@@ -150,16 +148,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UCharacterEquipment* equipment;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UPhysicsMaterialCollectionData* physicsMaterialCollection;
+ 
 	virtual void doDamage(float suggestedDamage, DamageBodyPart BodyPart, EDamageType type) ;
 
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser) override;
-
-
-protected:
-	//phyisics material 
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		USoundBase* getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index = -1);
+		void footStep(Movement animationStance);
+protected:
+	
 	/** Fires a projectile. */
 	void OnFire();
 	void OffFire();

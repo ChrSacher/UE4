@@ -29,7 +29,12 @@ class STALKERGHOSTS_API UMainInventoryWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		TArray<UItemCategoryWidget*> categories;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		TArray<UItemCategoryWidget*> otherCategories;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UItemScrollBoxWidget* ItemBoxWidget;
 

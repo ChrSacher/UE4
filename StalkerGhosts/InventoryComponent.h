@@ -35,6 +35,19 @@ public:
 
 };
 
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FInventoryItemInitializer
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TSubclassOf<UItemBase> item;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float ammount;
+
+	
+};
+
 class AWeapon;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UInventoryComponent : public UActorComponent
@@ -48,6 +61,11 @@ public:
 	DECLARE_DELEGATE_ThreeParams(EquipDelegate, UItemBase*, SlotInformation,bool&);
 		EquipDelegate equipDelegate;
 		EquipDelegate unEquipDelegate;
+
+
+	DECLARE_DELEGATE_FourParams(itemMovedDelegate, UItemBase*, UInventoryComponent*, UInventoryComponent*, bool&);
+	//item,from,to,acceptance
+		itemMovedDelegate itemMoved;
 	// Called when the game starts
 	virtual void BeginPlay() override;
 	// Called every frameini
@@ -67,22 +85,13 @@ public:
 	TArray<UItemBase*> lookForItems(FString name);
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		UMainInventoryWidget* mainInventory;
-	UPROPERTY(EditAnywhere, Category = Inventory)
-		TArray<UItemCategoryWidget*> categories;
 
-	UPROPERTY(EditAnywhere, Category = Inventory)
-		TArray<UItemCategoryWidget*> otherCategories;
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		UItemBase* selectedItem;
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		ItemCategory currentCategory = ItemCategory::ITEM;
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		ItemCategory otherCurrentCategory = ItemCategory::ITEM;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UDataTable* categoryTable;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TSubclassOf<class UItemCategoryWidget> categoryTemplate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class UMainInventoryWidget> mainInventoryTemplate;
@@ -92,7 +101,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class AItemBaseActor> itemBaseTemplate;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		FTimerHandle transferRangeTimer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UDataTable* standardItemTable;
 
@@ -103,11 +113,11 @@ public:
 		TSubclassOf<class UItemDetailWidget> itemDetailTemplate;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<TSubclassOf<class UItemBase>> beginPlayEquipment;
+		TArray<FInventoryItemInitializer> beginPlayEquipment;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TArray<FString> beginPlayStrings;
-
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UCharacterEquipment* equipment;
 
@@ -119,35 +129,44 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	bool addItemCreate(UItemBase* Item);
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	bool addItem(UItemBase* Item, bool forceNew = false);
+		bool addItem(UItemBase* Item, bool forceNew = false);
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	bool removeItem(UItemBase* Item, int32 ammount = -1);
+		bool removeItem(UItemBase* Item, int32 ammount = -1);
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	UItemBase* splitItem(UItemBase* Item, float ratio);
+		UItemBase* splitItem(UItemBase* Item, float ratio);
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	void dropItem(UItemBase* Item);
+		void dropItem(UItemBase* Item);
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	bool isEnoughSpace(UItemBase* Item);
+		bool isEnoughSpace(UItemBase* Item);
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		bool isItemInInvenotry(UItemBase* Item);
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	void calculateWeight();
+		void calculateWeight();
 	UFUNCTION(BlueprintCallable, Category = "Event")
-	float getWeight();
+		float getWeight();
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void loadCategories();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		bool isInRangeOfOtherInventory(UInventoryComponent* otherInventory);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void checkRangeOnOtherInventory();
 	void loadItemWidget(UItemBase* item, UScrollBox* scrollBox);
-	template <typename T>
-	T* createItem(FString ID, UWorld* world);
-	UFUNCTION(BlueprintCallable, Category = "Event")
-	void print();
-	UFUNCTION(BlueprintCallable, Category = "Event")
-	void loadUI();
-	UFUNCTION(BlueprintCallable, Category = "Event")
-	void refresh();
-	UFUNCTION(BlueprintCallable, Category = "Event")
-	void setVisiblity(bool Vis);
 	
+	template <typename T>
+		T* createItem(FString ID);
+		
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void print();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void loadUI();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void refresh();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setVisiblity(bool Vis);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void showInventory();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void hideInventory();
 	void onCategoryClicked(UDataItemButton* sender);
 	void onOtherCategoryClicked(UDataItemButton* sender);
 	void onItemButtonClicked(UDataItemButton* sender);

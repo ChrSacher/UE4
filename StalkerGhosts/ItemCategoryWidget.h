@@ -23,14 +23,14 @@ class STALKERGHOSTS_API UItemCategoryWidget : public UUserWidget
 	
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
-		UTextBlock* text;
+		FString text;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
-		UBorder* pic;
+		UTexture2D* picture;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UDataItemButton* CategoryButton;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
-	ItemCategory cat;
+		ItemCategory cat;
 };

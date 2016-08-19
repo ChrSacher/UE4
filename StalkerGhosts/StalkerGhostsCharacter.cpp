@@ -52,20 +52,20 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	helmetMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("helmetMesh"));
 	helmetMesh->SetupAttachment(Mesh1P);
 	// Create a gun mesh component
-	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("cameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
 	CameraBoom->TargetArmLength = 300.0f; // The camera follows at this distance behind the character	
 	CameraBoom->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 
 												// Create a follow camera
-	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("followCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 	FollowCamera->Deactivate();
-
+	physicsMaterialCollection = CreateDefaultSubobject<UPhysicsMaterialCollectionData>(TEXT("PhysicsMaterialCollection"));
 	normalPPComponent = CreateDefaultSubobject<UPostProcessComponent>(TEXT("normalPostProcess"));
 	normalPPComponent->SetupAttachment(RootComponent);
-	FP_MuzzleLocation = CreateDefaultSubobject<USceneComponent>(TEXT("MuzzleLocation"));
+	
 	stance = Movement::JOGGING;
 	//FP_MuzzleLocation->SetRelativeLocation(FVector(0.2f, 48.4f, -10.6f));
 	
@@ -91,21 +91,11 @@ void AStalkerGhostsCharacter::BeginPlay()
 		
 	}
 	FirstPersonCameraComponent->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
+	CameraBoom->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Camera"));
 	damageComponent->setup();
 	currentAttributes = DuplicateObject(currentAttributes, this);
 	currentAttributes->setup();
 	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
-	FString x = FString(TEXT("Ak47"));
-	FString y = FString(("Ak47Bullet"));
-	UBulletItem* w = currentInventory->createItem<UBulletItem>(y, GetWorld());
-	w->ammount = 300;
-	UWeaponItem* r= currentInventory->createItem<UWeaponItem>(x, GetWorld());
-	UGrenadeItem* h = currentInventory->createItem<UGrenadeItem>("MasterGrenade", GetWorld());
-	h->ammount = 10;
-	currentInventory->addItem(w);
-	currentInventory->addItem(r);
-	currentInventory->addItem(h);
-	currentInventory->addItem(currentInventory->createItem<UArmorItem>("M1Helmet", GetWorld()));
 	if (armorMesh) armorMesh->SetMasterPoseComponent(Mesh1P);
 	if (pantsMesh) pantsMesh->SetMasterPoseComponent(Mesh1P);
 	if (bodyArmorMesh) bodyArmorMesh->SetMasterPoseComponent(Mesh1P);
@@ -215,13 +205,7 @@ void AStalkerGhostsCharacter::Fire()
 		OffFire();
 		return;
 	}
-	const FRotator SpawnRotation = GetControlRotation();
-	// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-	FVector SpawnLocation;
-	if (FP_MuzzleLocation != nullptr) SpawnLocation = FP_MuzzleLocation->GetComponentLocation();
-		else SpawnLocation = GetActorLocation() + SpawnRotation.RotateVector(GunOffset);
-
-	if (weapon->Fire(SpawnLocation, SpawnRotation))
+	if (weapon->Fire())
 	{
 		GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AStalkerGhostsCharacter::Fire, 60 / weapon->fireRate, false);
 	}
@@ -258,7 +242,7 @@ void AStalkerGhostsCharacter::syncEquipment()
 		weapon->weaponFire.Unbind();
 		weapon->weaponFire.BindUObject(this, &AStalkerGhostsCharacter::weaponFired);
 		weapon->AttachToComponent(Mesh1P, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("GripPoint"));//Attach gun mesh component to Skeleton, doing it here because the skelton is not yet created in the constructor
-		FP_MuzzleLocation->AttachToComponent(weapon->mesh, FAttachmentTransformRules(EAttachmentRule::SnapToTarget, true), TEXT("Muzzle"));
+		
 		weapon->mesh->SetVisibility(true);
 	}
 	
@@ -289,7 +273,7 @@ void AStalkerGhostsCharacter::stopAimingDownSight()
 
 void AStalkerGhostsCharacter::changeWeapon(FString ID)
 {
-	UWeaponItem* x = Cast<UWeaponItem>(currentInventory->createItem<UWeaponItem>(ID,GetWorld()));
+	UWeaponItem* x = Cast<UWeaponItem>(currentInventory->createItem<UWeaponItem>(ID));
 	if(x) changeWeapon(x);
 }
 void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
@@ -299,7 +283,7 @@ void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
 	weapon = newwep;
 	weapon->SetActorHiddenInGame(false);
 	weapon->startEquip();
-	
+	weapon->owningPlayer = this;
 	//UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
 	if (characterAnim != NULL)
 	{
@@ -574,9 +558,12 @@ void AStalkerGhostsCharacter::OnInventory()
 	}
 	if (! (currentInventory->mainInventory->GetVisibility() == ESlateVisibility::Visible))
 	{
-		currentInventory->mainInventory->SetVisibility(ESlateVisibility::Visible);
+		currentInventory->showInventory();
 	}
-	else currentInventory->mainInventory->SetVisibility(ESlateVisibility::Hidden);
+	else
+	{
+		currentInventory->hideInventory();
+	}
 	
 }
 void AStalkerGhostsCharacter::OffInventory()
@@ -657,14 +644,18 @@ float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEven
 			doDamage(damageComponent->damageAmmount(DamageBodyPart::ALL, DamageAmount), DamageBodyPart::ALL, causer->type);
 		}
 	}
+	if (DamageEvent.IsOfType(FSuppresionDamageEvent::ClassID))
+	{
+		FSuppresionDamageEvent*  causer = (FSuppresionDamageEvent*)&DamageEvent;
 		
+	}
 	return DamageAmount;
 }
 
 
 void AStalkerGhostsCharacter::onGrenade()
 {
-	if (currentGrenade) currentGrenade->throwGrenade(FP_MuzzleLocation->GetComponentLocation(), FirstPersonCameraComponent->GetComponentRotation());
+	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,50),Mesh1P->GetForwardVector().ToOrientationRotator());
 }
 
 void visSkeletalMesh(USkeletalMeshComponent* mesh, bool vis)
@@ -1060,30 +1051,27 @@ void AStalkerGhostsCharacter::switchPerson()
 	}
 }
 
-USoundBase* AStalkerGhostsCharacter::getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index)
+void  AStalkerGhostsCharacter::footStep(Movement animationStance)
 {
-	for (int32 i = 0; i < PhysicsMaterialSounds.Num(); i++)
+	if (animationStance != stance) return;
+	FVector Loc = GetActorLocation();
+	FVector End = GetActorLocation() + FVector(0, 0, -100);
+	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
+	FCollisionResponseParams params2 = FCollisionResponseParams();
+	FHitResult result(ForceInit);
+	const FName TraceTag("MyTraceTag");
+	GetWorld()->DebugDrawTraceTag = TraceTag;
+	params.TraceTag = TraceTag;
+	params.bTraceComplex = true;
+	params.bTraceAsyncScene = true;
+	params.bReturnPhysicalMaterial = true;
+	bool traced = GetWorld()->LineTraceSingleByChannel(result, Loc, End, ECollisionChannel::ECC_Visibility, params, params2);
+	if (traced)
 	{
-		if (type = PhysicsMaterialSounds[i].surfaceType)
-		{
-			if (PhysicsMaterialSounds[i].sounds.Num() == 0) return NULL;
-			if (index <= -1)
-			{
-				
-				return PhysicsMaterialSounds[i].sounds[FMath::RandRange(0, PhysicsMaterialSounds[i].sounds.Num() - 1)];
-			}
-			else
-			{
-				if (index < PhysicsMaterialSounds[i].sounds.Num())
-				{
-					return PhysicsMaterialSounds[i].sounds[index];
-				}
-				else
-				{
-					return PhysicsMaterialSounds[i].sounds.Last();
-				}
-			}
-		}
+		USoundBase* sound = physicsMaterialCollection->getPhysicsSound(result.PhysMaterial.Get()->SurfaceType);
+		if (sound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, result.ImpactPoint, 0.5f);
+		//do AI stuff here
+		//spawn particle for footstepw
 	}
-	return NULL;
+
 }

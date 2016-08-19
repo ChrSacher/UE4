@@ -42,6 +42,60 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		bool recoilEnabled = true;
 };
+
+USTRUCT(Blueprintable)
+struct FDispersionPattern
+{
+	GENERATED_BODY()
+public:
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float standardDispersionX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float standardDispersionY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float maxDispersionX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float maxDispersionY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float perBulletDispersionX;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float perBulletDispersionY;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapon)
+		float finalDispersionX;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Weapon)
+		float finalDispersionY;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float spreadDecreaseXPerSecond;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		float spreadDecreaseYPerSecond;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Weapon)
+		float timePerDecrease = 0.1f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		bool decreaseSpreadWhenFireEnded = true;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		FTimerHandle decreaseSpreadTimer;
+};
+
+USTRUCT(Blueprintable)
+struct FAnimationPattern
+{
+	GENERATED_BODY()
+public:
+	
+};
 USTRUCT(Blueprintable)
 struct FWeaponAttachment
 {
@@ -58,7 +112,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		bool isAttached = false;
-
 
 
 };
@@ -96,6 +149,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		UWeaponAnim* animInstance;
+
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		int32 ammoCapacity = 30;
 
@@ -167,15 +221,32 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle equippingHandle;
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+		class USceneComponent* FP_MuzzleLocation;
 
+	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
+		class USceneComponent* FP_FiringDirection;
 	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool isUsable;
-
+		bool isUsable = true;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		bool bulletEjectable = true;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		bool hasFiringDirection = false;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedBulletIndex;
 
+
+
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		ACharacter* owningPlayer;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		FRecoilPattern recoil;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		FDispersionPattern dispersion;
+
+
+
+
 	void reloadMag(UBulletItem* mag);
 	FString getBulletString();
 
@@ -200,8 +271,11 @@ public:
 	void removeWeapon();
 	bool reload(UBulletItem* bullet);
 
-	bool Fire(FVector SpawnLocation, FRotator SpawnRotation);
+	bool Fire();
 	void endFire();
 	UBulletItem* getLoadedMag();
+
+	void decreaseSpread();
+	void increaseSpread();
 };
 

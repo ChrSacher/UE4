@@ -9,7 +9,6 @@ enum class ItemCategory : uint8
 	WEAPON,
 	AMMUNITION,
 	ARTIFACT,
-	NIGHTVISION,
 	ARMOR ,
 	ITEM ,
 	CONSUMABLE ,

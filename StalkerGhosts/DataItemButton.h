@@ -4,8 +4,9 @@
 
 #include "Components/Button.h"
 #include "DataItemButton.generated.h"
-
+#include "ItemEnums.h"
 class UItemBase;
+enum ItemCategory;
 /**
  * 
  */
@@ -23,7 +24,7 @@ public:
 	UDataItemButtonDelegate hover;
 	UDataItemButtonDelegate unhover;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = User)
-		uint8 UserNumber;
+		ItemCategory UserNumber;
 	//this is litteraly going against Design decision but it works
 	bool CategoryIdentifier;
 	UFUNCTION(BlueprintCallable, Category = "Event")

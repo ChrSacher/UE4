@@ -15,12 +15,17 @@ ABullet::ABullet()
 	CollisionComp->InitBoxExtent(FVector(10,10,10));
 	CollisionComp->BodyInstance.SetCollisionProfileName("Projectile");
 	CollisionComp->OnComponentHit.AddDynamic(this, &ABullet::OnHit);		// set up a notification for when this component hits something blocking
-
+	suppresionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("suppresionComp"));
+	suppresionBox->InitBoxExtent(FVector(10, 10, 10));
+	suppresionBox->BodyInstance.SetCollisionProfileName("OverlapAll");
+	physicsMaterialCollection = CreateDefaultSubobject<UPhysicsMaterialCollectionData>(TEXT("PhysicsMaterialCollection"));
+	suppresionBox->OnComponentBeginOverlap.AddDynamic(this, &ABullet::OnOverlapBegin);
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BulletComp"));
 	mesh->SetupAttachment(CollisionComp);// Players can't walk on it
+	suppresionBox->SetupAttachment(mesh);
 	CollisionComp->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	CollisionComp->CanCharacterStepUpOn = ECB_No;
-
+	
 	// Set as root component
 	RootComponent = CollisionComp;
 
@@ -59,7 +64,12 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 		da.hit = Hit;
 		da.type = damageType;
 		OtherActor->TakeDamage(damage, da, controllerOver, this);
-		if (OtherComp->IsSimulatingPhysics())	OtherComp->AddImpulseAtLocation(GetVelocity(), GetActorLocation());
+		if (OtherComp->IsSimulatingPhysics())	OtherComp->AddImpulseAtLocation(GetVelocity(), Hit.ImpactPoint);
+		if (Hit.PhysMaterial.IsValid())
+		{
+			USoundBase* sound = physicsMaterialCollection->getPhysicsSound(Hit.PhysMaterial.Get()->SurfaceType);
+			if (sound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, Hit.ImpactPoint, 0.5f);
+		}
 		Destroy();
 	}
 }
@@ -83,4 +93,14 @@ void ABulletEjectActor::eject(FVector direction, UStaticMesh* newMesh)
 	ProjectileMovement->bShouldBounce = false;
 
 	InitialLifeSpan = 0.6f;
+}
+
+void ABullet::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if ((OtherActor != NULL) && (OtherActor != this) && (OtherComp != NULL) && (OverlappedActors.Find(OtherActor) != INDEX_NONE))
+	{
+		FSuppresionDamageEvent ev;
+		OtherActor->TakeDamage(0, ev, controllerOver, this);
+		OverlappedActors.Add(OtherActor);
+	}
 }

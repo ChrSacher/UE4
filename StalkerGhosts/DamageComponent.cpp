@@ -21,6 +21,13 @@ UDamageComponent::UDamageComponent()
 		x.modifierValue = 1.0f;
 		damageValues.Add(x);
 	}
+	for (uint8 i = 0; i < (uint8)DamageBodyPart::NUM; i++)
+	{
+		FBoneBodyPartStruct x;
+		x.type = (DamageBodyPart)i;
+		boneBodyParts.Add(x);
+	}
+	
 }
 
 
