@@ -89,13 +89,7 @@ public:
 		FTimerHandle decreaseSpreadTimer;
 };
 
-USTRUCT(Blueprintable)
-struct FAnimationPattern
-{
-	GENERATED_BODY()
-public:
-	
-};
+
 USTRUCT(Blueprintable)
 struct FWeaponAttachment
 {
@@ -113,6 +107,30 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		bool isAttached = false;
 
+
+};
+
+USTRUCT(Blueprintable)
+struct FAnimationPattern
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* FireAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* equipAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* ReloadAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* weaponReloadAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		class UAnimMontage* IdlingAnimation;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+		UWeaponAnim* animInstance;
 
 };
 UENUM(BlueprintType)
@@ -147,8 +165,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		TArray< FWeaponAttachment> attachedMeshes;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
-		UWeaponAnim* animInstance;
+	
 
 	UPROPERTY(EditAnywhere, Category = Magazine)
 		int32 ammoCapacity = 30;
@@ -194,20 +211,9 @@ public:
 		FString weaponID = "";
 	/** AnimMontage to play each time we fire */
 
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* FireAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* equipAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* ReloadAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* weaponReloadAnimation;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		class UAnimMontage* IdlingAnimation;
+		FAnimationPattern animations;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		TSubclassOf<ABulletEjectActor> ejectionTemplate;
 
@@ -232,6 +238,8 @@ public:
 		bool bulletEjectable = true;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		bool hasFiringDirection = false;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		float burstAmmount = 3; 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedBulletIndex;
 

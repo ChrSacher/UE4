@@ -45,7 +45,10 @@ ABullet::ABullet()
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	ProjectileMovement->InitialSpeed = velocity;
+	ProjectileMovement->MaxSpeed = velocity;
+	ProjectileMovement->bRotationFollowsVelocity = true;
+	ProjectileMovement->bShouldBounce = false;
 }
 
 // Called every frame
@@ -65,14 +68,89 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 		da.type = damageType;
 		OtherActor->TakeDamage(damage, da, controllerOver, this);
 		if (OtherComp->IsSimulatingPhysics())	OtherComp->AddImpulseAtLocation(GetVelocity(), Hit.ImpactPoint);
-		if (Hit.PhysMaterial.IsValid())
+
+
+
+
+
+		//physics stuff
+		FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
+		FCollisionResponseParams params2 = FCollisionResponseParams();
+		FHitResult hitResult;
+		const FName TraceTag("MyTraceTag");
+		GetWorld()->DebugDrawTraceTag = TraceTag;
+		params.TraceTag = TraceTag;
+		params.bTraceComplex = true;
+		params.bTraceAsyncScene = true;
+		params.bReturnPhysicalMaterial = true;
+		FVector distance = (Hit.ImpactPoint - GetActorLocation());
+		bool traced = GetWorld()->LineTraceSingleByChannel(hitResult, Hit.ImpactPoint - distance, distance + Hit.ImpactPoint, ECollisionChannel::ECC_Visibility, params, params2);
+		if (traced)
 		{
-			USoundBase* sound = physicsMaterialCollection->getPhysicsSound(Hit.PhysMaterial.Get()->SurfaceType);
-			if (sound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, Hit.ImpactPoint, 0.5f);
+			if (hitResult.PhysMaterial.IsValid())
+			{
+				USoundBase* sound = physicsMaterialCollection->getPhysicsSound(hitResult.PhysMaterial.Get()->SurfaceType);
+				if (sound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, hitResult.ImpactPoint, 0.5f);
+				FPhysicsMaterialPenetration& pen = physicsMaterialCollection->getPhysicsPenetrationData(hitResult.PhysMaterial.Get()->SurfaceType);
+				if (pen.allowPenetration)
+				{
+					FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
+					FCollisionResponseParams params2 = FCollisionResponseParams();
+					TArray<FHitResult> result;
+					const FName TraceTag("MyTraceTag");
+					GetWorld()->DebugDrawTraceTag = TraceTag;
+					params.TraceTag = TraceTag;
+					params.bTraceComplex = true;
+					params.bTraceAsyncScene = true;
+					params.bReturnPhysicalMaterial = true;
+					bool traced = GetWorld()->LineTraceMultiByChannel(result, GetActorForwardVector() * 100 + GetActorLocation(), hitResult.ImpactPoint, ECollisionChannel::ECC_Visibility, params, params2);
+					if (traced)
+					{
+						for (int32 i = 0; i < result.Num(); i++)
+						{
+							if (result[i].Actor == OtherActor)
+							{
+								float velocityLoss = pen.velocityLossPerCM * FVector::Dist(result[i].ImpactPoint, hitResult.ImpactPoint);
+								float newVelocity = ProjectileMovement->Velocity.Size() - velocityLoss;
+								if (newVelocity <= 20)
+								{
+									//did not penetrate the object
+
+								}
+								else
+								{
+									
+									FRotator rot = GetActorRotation();
+									rot.Pitch += FMath::RandRange(-pen.maxSpreadY, pen.maxSpreadY);
+									rot.Yaw += FMath::RandRange(-pen.maxSpreadX, pen.maxSpreadX);
+									SetActorLocation(result[i].ImpactPoint + (result[i].ImpactPoint - Hit.ImpactPoint ));
+									ProjectileMovement->UpdatedComponent = CollisionComp;
+									ProjectileMovement->Velocity.Normalize();
+									ProjectileMovement->Velocity = ProjectileMovement->Velocity * (newVelocity);
+									ProjectileMovement->InitialSpeed = newVelocity;
+									return;
+								}
+
+							}
+						}
+					}
+				}
+			}
 		}
+		
 		Destroy();
 	}
 }
+
+
+
+
+
+
+
+
+
+
 
 ABulletEjectActor::ABulletEjectActor()
 {

@@ -17,6 +17,27 @@ public:
 		TArray<USoundBase*> sounds;
 };
 
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FPhysicsMaterialPenetration
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TEnumAsByte<EPhysicalSurface> surfaceType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float velocityLossPerCM = 10;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float maxSpreadX = 1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float maxSpreadY = 1;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		bool allowPenetration = true;
+
+};
+
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UPhysicsMaterialCollectionData : public UActorComponent
 {
@@ -36,7 +57,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		TArray<FPhysicsMaterialSounds> PhysicsMaterialSounds;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		TArray<FPhysicsMaterialPenetration> penetrationData;
+	//COULD BE OPTIMIZED INTO A MAP
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		USoundBase* getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index = -1);
 	
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		FPhysicsMaterialPenetration& getPhysicsPenetrationData(TEnumAsByte<EPhysicalSurface> type);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		FPhysicsMaterialPenetration defaultPenetrationData;
 };

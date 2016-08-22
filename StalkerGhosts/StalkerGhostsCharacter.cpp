@@ -224,13 +224,13 @@ void AStalkerGhostsCharacter::weaponFired()
 		AddControllerYawInput(FMath::RandRange(rec.xOffsetMin, rec.xOffsetMax));
 	}
 
-	if (weapon->FireAnimation != NULL)
+	if (weapon->animations.FireAnimation != NULL)
 	{
 		// Get the animation object for the arms mesh
 		UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
 		if (AnimInstance != NULL)
 		{
-			AnimInstance->Montage_Play(weapon->FireAnimation, 1.f);
+			AnimInstance->Montage_Play(weapon->animations.FireAnimation, 1.f);
 		}
 	}
 }
@@ -287,7 +287,7 @@ void AStalkerGhostsCharacter::changeWeapon(AWeapon* newwep)
 	//UAnimInstance* AnimInstance = Mesh1P->GetAnimInstance();
 	if (characterAnim != NULL)
 	{
-		if (weapon->equipAnimation) characterAnim->Montage_Play(weapon->equipAnimation, 1.f);
+		if (weapon->animations.equipAnimation) characterAnim->Montage_Play(weapon->animations.equipAnimation, 1.f);
 		
 	}
 	syncEquipment();
@@ -365,12 +365,12 @@ void AStalkerGhostsCharacter::playReload()
 	stopAimingDownSight();
 	weapon->startReload();
 	//found mag and reload is possible
-	if (weapon->ReloadAnimation != NULL)
+	if (weapon->animations.ReloadAnimation != NULL)
 	{
 		// Get the animation object for the arms mesh
 		if (characterAnim != NULL)
 		{
-			characterAnim->Montage_Play(weapon->ReloadAnimation);
+			characterAnim->Montage_Play(weapon->animations.ReloadAnimation);
 		}
 	}
 }
@@ -598,7 +598,7 @@ void AStalkerGhostsCharacter::onInteract()
 	}
 }
 
-void AStalkerGhostsCharacter::doDamage(float suggestedDamage,DamageBodyPart BodyPart,EDamageType type)
+bool AStalkerGhostsCharacter::doDamage(float suggestedDamage,DamageBodyPart BodyPart,EDamageType type)
 {
 	currentAttributes->getAttrib(AttributeType::HEALTH)->addRaw(-suggestedDamage);
 	// armor calc here and stuff
@@ -609,7 +609,9 @@ void AStalkerGhostsCharacter::doDamage(float suggestedDamage,DamageBodyPart Body
 		Mesh1P->WakeRigidBody();
 		RootComponent = Mesh1P;
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("OverlapAll"));
+		return true;
 	}
+	return false;
 }
 float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser)
 {
@@ -621,10 +623,15 @@ float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEven
 		FRadialDamageEvent*  x = (FRadialDamageEvent*)&DamageEvent;
 		if (w)
 		{
-			doDamage(damageComponent->calculateGrenadeDamage(w), DamageBodyPart::CHEST, w->type);
 			APlayerController* Controller = GetWorld()->GetFirstLocalPlayerFromController()->PlayerController;
-			if(w->explosionShake) Controller->ClientPlayCameraShake(w->explosionShake, 1.0f);
-			if(w->earRingingSound) UGameplayStatics::PlaySound2D(GetWorld(),w->earRingingSound);
+			if (w->explosionShake) Controller->ClientPlayCameraShake(w->explosionShake, 1.0f);
+			if (w->earRingingSound) UGameplayStatics::PlaySound2D(GetWorld(), w->earRingingSound);
+			if (doDamage(damageComponent->calculateGrenadeDamage(w), DamageBodyPart::CHEST, w->type))
+			{
+				FVector x(w->explosionForce);
+				Mesh1P->AddImpulseAtLocation(x, GetActorLocation());
+			}
+			
 		}
 		
 	}
@@ -655,7 +662,7 @@ float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEven
 
 void AStalkerGhostsCharacter::onGrenade()
 {
-	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,50),Mesh1P->GetForwardVector().ToOrientationRotator());
+	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,50),Mesh1P->GetForwardVector().Rotation());
 }
 
 void visSkeletalMesh(USkeletalMeshComponent* mesh, bool vis)

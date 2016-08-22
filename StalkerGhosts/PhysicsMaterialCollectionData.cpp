@@ -61,3 +61,15 @@ USoundBase* UPhysicsMaterialCollectionData::getPhysicsSound(TEnumAsByte<EPhysica
 	}
 	return NULL;
 }
+
+FPhysicsMaterialPenetration& UPhysicsMaterialCollectionData::getPhysicsPenetrationData(TEnumAsByte<EPhysicalSurface> type)
+{
+	for (int32 i = 0; i < penetrationData.Num(); i++)
+	{
+		if (type == penetrationData[i].surfaceType)
+		{
+			return penetrationData[i];
+		}
+	}
+	return defaultPenetrationData;
+}

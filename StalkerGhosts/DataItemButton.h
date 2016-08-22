@@ -3,10 +3,11 @@
 #pragma once
 
 #include "Components/Button.h"
-#include "DataItemButton.generated.h"
 #include "ItemEnums.h"
+#include "DataItemButton.generated.h"
+
 class UItemBase;
-enum ItemCategory;
+
 /**
  * 
  */

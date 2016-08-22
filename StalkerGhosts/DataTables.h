@@ -105,3 +105,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 		TSubclassOf<UItemBase> finalProduct;
 };
+
+class UItemBase;
+USTRUCT(Blueprintable)
+struct FPenetrationData: public FTableRowBase
+{
+	GENERATED_BODY()
+public:
+
+
+};

@@ -30,19 +30,22 @@ void UItemScrollBoxWidget::OnItemDrop(UDragDropOperation* operation)
 	}
 
 	UItemWidget* x = Cast<UItemWidget>(operation->Payload);
-	if (!x->ItemButton->UserPointer) return;
+	
 	if (x)
 	{
+		if (!x->ItemButton->UserPointer) return;
 		x->ItemButton->UserPointer->itemParent->moveItem(x, x->ItemButton->UserPointer, this);
 	}
 	UEquippedItemWidget* y = Cast<UEquippedItemWidget>(operation->Payload);
 	if (y)
 	{
+		if (!y->ItemButton->UserPointer) return;
 		y->ItemButton->UserPointer->itemParent->unEquip(y, y->ItemButton->UserPointer,this);
 	}
 	UWeaponAttachmentWidget* z = Cast<UWeaponAttachmentWidget>(operation->Payload);
 	if (z)
 	{
+		if (!z->ItemButton->UserPointer) return;
 		z->ItemButton->UserPointer->itemParent->detachWeaponAttachment(z, z->ItemButton->UserPointer, this);
 	}
 

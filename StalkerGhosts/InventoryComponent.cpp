@@ -436,7 +436,8 @@ void UInventoryComponent::moveItem(UItemWidget* slot, UItemBase* base, UItemScro
 {
 	if (!base) return;
 	bool t = true;
-	if (base->itemParent != this) itemMoved.ExecuteIfBound(base, base->itemParent, this, t); //check if listener allows
+	if ((sender->inventoryParent == base->itemParent))  return;
+	itemMoved.ExecuteIfBound(base, base->itemParent, this, t); //check if listener allows
 	if (!t) return;
 	base->itemParent->removeItem(base);
 	sender->inventoryParent->addItem(base);

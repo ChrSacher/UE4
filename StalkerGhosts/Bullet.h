@@ -85,3 +85,21 @@ public:
 		class UProjectileMovementComponent* ProjectileMovement;
 	
 };
+
+UCLASS(config = Game)
+class STALKERGHOSTS_API AShotgunBullet :public ABullet
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		float submunitionAmmount = 12.0f;
+
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		float maxSpreadX = 1.0f;
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		float maxSpreadY = 1.0f;
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		float minSpreadX = 1.0f;
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		float minSpreadY = 1.0f;
+};
