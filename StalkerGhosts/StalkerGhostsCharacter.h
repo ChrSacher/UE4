@@ -156,6 +156,12 @@ public:
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const & DamageEvent, class AController * EventInstigator, AActor * DamageCauser) override;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void footStep(Movement animationStance);
+
+	/** Called on landing after falling has completed, to perform actions based on the Hit result. Triggers the OnLanded event. */
+	virtual void Landed(const FHitResult& Hit);
+	virtual void Falling();
+
+	void checkMovement();
 protected:
 	
 	/** Fires a projectile. */
@@ -225,6 +231,7 @@ protected:
 		void Sprint();
 
 	void regainStamina();
+	void drainStamina();
 	void OnWalk();
 	void OffWalk();
 	/** Handles moving forward/backward */

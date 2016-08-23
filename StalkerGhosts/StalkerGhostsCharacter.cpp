@@ -120,7 +120,7 @@ void AStalkerGhostsCharacter::SetupPlayerInputComponent(class UInputComponent* I
 
 	InputComponent->BindAction("Sprint", IE_Pressed, this, &AStalkerGhostsCharacter::OnSprint);
 	InputComponent->BindAction("Sprint", IE_Released, this, &AStalkerGhostsCharacter::OffSprint);
-
+	
 	InputComponent->BindAction("Crouch", IE_Pressed, this, &AStalkerGhostsCharacter::OnCrouch);
 	InputComponent->BindAction("Crouch", IE_Released, this, &AStalkerGhostsCharacter::OffCrouch);
 
@@ -194,6 +194,7 @@ void AStalkerGhostsCharacter::changeStance(Movement newStance)
 {
 	
 	prevStance = stance;
+	characterAnim->stance = newStance;
 	stance = newStance;
 }
 void AStalkerGhostsCharacter::Fire()
@@ -402,11 +403,27 @@ bool AStalkerGhostsCharacter::checkMag(TArray<UItemBase*> Items)
 	return ammountCounter > 0;
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void AStalkerGhostsCharacter::Jump()
 {
 	characterAnim->isJumping = true;
 	bPressedJump = true;
 	JumpKeyHoldTime = 0.0f;
+	checkMovement();
 	//characterAnim->jumping = true;
 }
 
@@ -421,80 +438,80 @@ void AStalkerGhostsCharacter::StopJumping()
 void AStalkerGhostsCharacter::Sprint()
 {
 	
-	switch (stance)
-	{
-		case Movement::SPRINTING:
-		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::SPRINTSPEED)->getFinal();
-			currentAttributes->getAttrib(AttributeType::STAMINA)->addRaw(currentAttributes->getAttrib(AttributeType::SPRINTCOST)->getFinal());
-			if (currentAttributes->getAttrib(AttributeType::STAMINA)->getFinal() <= 0)
-			{
-				currentAttributes->getAttrib(AttributeType::STAMINA)->setRaw(0);
-				changeStance(Movement::JOGGING);
-				
-			}
-		}break;
-		case Movement::WALKING:
-		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
-		}break;
-		case Movement::JOGGING:
-		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
-			GetWorld()->GetTimerManager().ClearTimer(speedHandle);
-				return;
-		}break;
-		case Movement::CROUCHING:
-		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = (currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal() - currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal()) / 4 + currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
-		}break;
-		case Movement::PRONING:
-		{
-			GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
-		}break;
-	}
+	characterAnim->isSprinting = true;
+	checkMovement();
 	
 }
 void AStalkerGhostsCharacter::OnSprint()
 {
-	
-	//if (stance == Movement::CROUCHING || stance == Movement::PRONING) return;
-	changeStance(Movement::SPRINTING);
-	GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &AStalkerGhostsCharacter::Sprint, 0.1f, true);
-	
+	characterAnim->isSprinting = true;
+	checkMovement();
 }
 void AStalkerGhostsCharacter::OffSprint()
 {
-	if (stance == Movement::SPRINTING) changeStance(Movement::JOGGING);
-	GetWorld()->GetTimerManager().SetTimer(staminaHandle, this, &AStalkerGhostsCharacter::regainStamina, 0.1f, true);
+	characterAnim->isSprinting = false;
+	checkMovement();
 }
 
 void AStalkerGhostsCharacter::OnWalk()
 {
-	//if (stance == Movement::CROUCHING || stance == Movement::PRONING) return; 
-	changeStance(Movement::WALKING);
-	GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &AStalkerGhostsCharacter::Sprint, 0.1f, true);
-	
+	characterAnim->isWalking = true;
+	checkMovement();
 	
 }
 void AStalkerGhostsCharacter::OffWalk()
 {
-	if(stance == Movement::WALKING) changeStance(Movement::JOGGING);
-	GetWorld()->GetTimerManager().SetTimer(staminaHandle, this, &AStalkerGhostsCharacter::regainStamina, 0.1f, true);
+	characterAnim->isWalking = false;
+	checkMovement();
 }
 void AStalkerGhostsCharacter::regainStamina()
 {
 	if (stance == Movement::SPRINTING ) return;
-	
+	currentAttributes->getAttrib(AttributeType::STAMINA)->addRaw(currentAttributes->getAttrib(AttributeType::STAMINAREGEN)->getFinal());
 	if (currentAttributes->getAttrib(AttributeType::STAMINA)->getFinal() >= currentAttributes->getAttrib(AttributeType::MAXSTAMINA)->getFinal())
 	{
 		currentAttributes->getAttrib(AttributeType::STAMINA)->setRaw(currentAttributes->getAttrib(AttributeType::MAXSTAMINA)->getFinal());
-		GetWorld()->GetTimerManager().ClearTimer(staminaHandle);
+		GetWorld()->GetTimerManager().ClearTimer(speedHandle);
 		return;
 	}
-	currentAttributes->getAttrib(AttributeType::STAMINA)->addRaw(currentAttributes->getAttrib(AttributeType::STAMINAREGEN)->getFinal());
 	
 	
+	
+	
+}
+void AStalkerGhostsCharacter::drainStamina()
+{
+	if (stance != Movement::SPRINTING) return;
+	currentAttributes->getAttrib(AttributeType::STAMINA)->addRaw(currentAttributes->getAttrib(AttributeType::SPRINTCOST)->getFinal());
+	if (currentAttributes->getAttrib(AttributeType::STAMINA)->getFinal() <= 0)
+	{
+		currentAttributes->getAttrib(AttributeType::STAMINA)->setRaw(0);
+		OffSprint();
+		GetWorld()->GetTimerManager().ClearTimer(staminaHandle);
+	}
+}
+void AStalkerGhostsCharacter::Landed(const FHitResult& Hit)
+{
+	characterAnim->isFalling = false;
+	checkMovement();
+	FVector x = GetVelocity();
+	if (x.Z < -1000)
+	{
+		FFallingDamageEvent ev;
+		ev.type = EDamageType::FALLING;
+		ev.hit = Hit;
+		float damage = (x.Z + 1000) * -0.05;
+
+		TakeDamage(damage, ev, GetController(), this);
+	}
+	
+}
+
+void AStalkerGhostsCharacter::Falling()
+{
+	characterAnim->isFalling = true;
+	checkMovement();
+	changeStance(Movement::FALLING);
 	
 }
 
@@ -505,26 +522,22 @@ void AStalkerGhostsCharacter::OnCrouch()
 	if (stance !=  Movement::CROUCHING)
 	{
 		Crouch();
-		changeStance(Movement::CROUCHING);
-		GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &AStalkerGhostsCharacter::Sprint, 0.1f, true);
+		characterAnim->isCrouching = true;
+		checkMovement();
 	}
 	else
 	{
 		
 		UnCrouch();
-		changeStance(Movement::JOGGING);
+		characterAnim->isCrouching = false;
+		checkMovement();
 		
 	}
-	//Crouch();
-	//characterAnim->crouched = true;
-	//changeStance(Movement::CROUCHING);
-	//GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &AStalkerGhostsCharacter::Sprint, 0.1f, true);
+	
 }
 void AStalkerGhostsCharacter::OffCrouch()
 {
-	//UnCrouch();
-	//characterAnim->crouched = false;
-	//if(stance == Movement::CROUCHING) changeStance(Movement::JOGGING);
+	
 }
 
 void AStalkerGhostsCharacter::OnProne()
@@ -532,15 +545,15 @@ void AStalkerGhostsCharacter::OnProne()
 	
 	if (stance != Movement::PRONING)
 	{
-		changeStance(Movement::PRONING);
-		GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &AStalkerGhostsCharacter::Sprint, 0.1f, true);
-		
+		characterAnim->isProne = true;
+		checkMovement();
 	} 
 	else
 	{
 		
 
-		if (stance == Movement::PRONING)changeStance(Movement::JOGGING); 
+		characterAnim->isProne = false;
+		checkMovement();
 	}
 }
 void AStalkerGhostsCharacter::OffProne()
@@ -549,6 +562,73 @@ void AStalkerGhostsCharacter::OffProne()
 	//characterAnim->prone = false;
 	//if (stance == Movement::PRONING)changeStance(Movement::JOGGING);
 }
+
+void AStalkerGhostsCharacter::checkMovement()
+{
+
+
+
+	if (characterAnim->isFalling)
+	{
+		changeStance(Movement::FALLING);
+	}
+	else if (characterAnim->isProne && !(Movement::PRONING == stance))
+	{
+		changeStance(Movement::PRONING);
+		GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::PRONESPEED)->getFinal();
+	}
+	else if(characterAnim->isCrouching && !(Movement::CROUCHING == stance))
+	{
+		changeStance(Movement::CROUCHING); 
+		GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::CROUCHSPEED)->getFinal();
+	}
+	else if (characterAnim->isWalking && !(Movement::WALKING == stance))
+	{
+		changeStance(Movement::WALKING);
+		GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::WALKSPEED)->getFinal();
+	}
+	else if (characterAnim->isSprinting && !(Movement::SPRINTING == stance))
+	{
+		changeStance(Movement::SPRINTING);
+		GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::SPRINTSPEED)->getFinal();
+		
+		GetWorld()->GetTimerManager().SetTimer(staminaHandle, this, &AStalkerGhostsCharacter::drainStamina, 1.0f, true);
+		characterAnim->isProne = false;
+		characterAnim->isCrouching = false;
+		return;
+	}
+	else
+	{
+		changeStance(Movement::JOGGING);
+		GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
+	}
+	characterAnim->isProne = false;
+	characterAnim->isCrouching = false;
+	GetWorld()->GetTimerManager().ClearTimer(speedHandle);
+	GetWorld()->GetTimerManager().SetTimer(speedHandle, this, &AStalkerGhostsCharacter::regainStamina, 1.0f, true);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void AStalkerGhostsCharacter::OnInventory()
 {
@@ -635,6 +715,12 @@ float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEven
 		}
 		
 	}
+	if (DamageEvent.IsOfType(FFallingDamageEvent::ClassID))
+	{
+		
+		FFallingDamageEvent*  causer = (FFallingDamageEvent*)&DamageEvent;
+		doDamage(damageComponent->damageAmmount(DamageBodyPart::ALL, DamageAmount), DamageBodyPart::ALL,causer->type);
+	}
 	if (DamageEvent.IsOfType(FMainDamageEvent::ClassID))
 	{
 		
@@ -662,7 +748,7 @@ float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEven
 
 void AStalkerGhostsCharacter::onGrenade()
 {
-	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,50),Mesh1P->GetForwardVector().Rotation());
+	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,50),GetActorForwardVector().Rotation());
 }
 
 void visSkeletalMesh(USkeletalMeshComponent* mesh, bool vis)
@@ -1062,7 +1148,7 @@ void  AStalkerGhostsCharacter::footStep(Movement animationStance)
 {
 	if (animationStance != stance) return;
 	FVector Loc = GetActorLocation();
-	FVector End = GetActorLocation() + FVector(0, 0, -100);
+	FVector End = GetActorLocation() + FVector(0, 0, -200);
 	FCollisionQueryParams params = FCollisionQueryParams(FName(TEXT("Trace")), true, this);
 	FCollisionResponseParams params2 = FCollisionResponseParams();
 	FHitResult result(ForceInit);
@@ -1075,10 +1161,15 @@ void  AStalkerGhostsCharacter::footStep(Movement animationStance)
 	bool traced = GetWorld()->LineTraceSingleByChannel(result, Loc, End, ECollisionChannel::ECC_Visibility, params, params2);
 	if (traced)
 	{
-		USoundBase* sound = physicsMaterialCollection->getPhysicsSound(result.PhysMaterial.Get()->SurfaceType);
-		if (sound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, result.ImpactPoint, 0.5f);
+		if (result.PhysMaterial.IsValid())
+		{
+			USoundBase* sound = physicsMaterialCollection->getPhysicsSound(result.PhysMaterial.Get()->SurfaceType);
+			if (sound) UGameplayStatics::PlaySoundAtLocation(GetWorld(), sound, result.ImpactPoint, 0.5f);
+		}
+		
 		//do AI stuff here
 		//spawn particle for footstepw
 	}
 
 }
+

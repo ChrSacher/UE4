@@ -15,6 +15,7 @@ enum class EDamageType : uint8
 	SLICE,
 	STAB,
 	RADIATION,
+	FALLING,
 	NUM 
 };
 

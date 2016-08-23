@@ -87,7 +87,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 			{
 				if (x.Key->name == Item->name)
 				{
-					uint8 ammountPossibleToAdd = x.Key->maxAmmount - x.Key->ammount;
+					int32 ammountPossibleToAdd = x.Key->maxAmmount - x.Key->ammount;
 					if (ammountPossibleToAdd  < Item->ammount )
 					{
 						x.Key->ammount += ammountPossibleToAdd;
@@ -508,10 +508,11 @@ void  UInventoryComponent::detachWeaponAttachment(UWeaponAttachmentWidget* slot,
 void  UInventoryComponent::openTransferWindow(UInventoryComponent* otherInventory)
 {
 	if (!mainInventory) loadUI();
+	showInventory();
 	mainInventory->otherBorder->SetVisibility(ESlateVisibility::Visible);
 	mainInventory->otherItemBoxWidget->inventoryParent = otherInventory;
 	otherInventoryForTransfering = otherInventory;
-	showInventory();
+	
 	
 	refresh();
 	GetWorld()->GetTimerManager().SetTimer(transferRangeTimer, this, &UInventoryComponent::checkRangeOnOtherInventory, 0.1f, true);

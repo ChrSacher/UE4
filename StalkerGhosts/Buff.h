@@ -22,6 +22,8 @@ enum class AttributeType :uint8 //this is used for BUFFS and stuff
 	SPRINTCOST,
 	JOGSPEED,
 	WALKSPEED,
+	CROUCHSPEED,
+	PRONESPEED,
 	STAMINA,
 	MAXSTAMINA,
 	STAMINACOST,

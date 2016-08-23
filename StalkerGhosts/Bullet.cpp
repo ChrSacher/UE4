@@ -124,10 +124,12 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 									rot.Pitch += FMath::RandRange(-pen.maxSpreadY, pen.maxSpreadY);
 									rot.Yaw += FMath::RandRange(-pen.maxSpreadX, pen.maxSpreadX);
 									SetActorLocation(result[i].ImpactPoint + (result[i].ImpactPoint - Hit.ImpactPoint ));
-									ProjectileMovement->UpdatedComponent = CollisionComp;
+									RootComponent = CollisionComp;
+									ProjectileMovement->SetUpdatedComponent(RootComponent);
 									ProjectileMovement->Velocity.Normalize();
 									ProjectileMovement->Velocity = ProjectileMovement->Velocity * (newVelocity);
 									ProjectileMovement->InitialSpeed = newVelocity;
+									ProjectileMovement->Activate();
 									return;
 								}
 

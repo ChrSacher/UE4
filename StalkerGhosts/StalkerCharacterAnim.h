@@ -13,7 +13,9 @@ enum class Movement : uint8
 	WALKING,
 	JOGGING, //normal stance
 	CROUCHING,
-	PRONING
+	FALLING,
+	PRONING,
+	NUM
 };
 
 UENUM(BlueprintType)
@@ -39,8 +41,6 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		float playerPitch;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
-		bool isJumping;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
 		UStalkerCharacterAnim* characterAnim;
@@ -52,6 +52,21 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		WeaponHolding wStance;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Animation)
 		AStalkerGhostsCharacter* pawn;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isCrouching = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isJogging = true;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isWalking = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isProne = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isSprinting = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isJumping = false;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = GInventory)
+		bool isFalling = false;
 };
