@@ -28,4 +28,12 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		FString getName();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UEditableTextBox* name;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UEditableTextBox* ammount;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UImage* image;
 };

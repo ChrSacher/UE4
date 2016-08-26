@@ -259,3 +259,16 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		TSubclassOf<AGrenade> gren;
 };
+
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FInventoryItemInitializer
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TSubclassOf<UItemBase> item;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float ammount;
+
+
+};

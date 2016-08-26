@@ -10,7 +10,10 @@ AItemBaseActor::AItemBaseActor()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 	mesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("Mesh"));
-	base = CreateDefaultSubobject<UItemBase>(TEXT("Item"));
+	text = CreateDefaultSubobject<UTextRenderComponent>(TEXT("Text"));
+	text->SetupAttachment(mesh);
+	textCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("textCollision"));
+	textCollision->SetupAttachment(mesh);
 	RootComponent = mesh;
 }
 
@@ -18,10 +21,30 @@ AItemBaseActor::AItemBaseActor()
 void AItemBaseActor::BeginPlay()
 {
 	Super::BeginPlay();
-	if (itemBaseTemplate) base = DuplicateObject<UItemBase>(Cast<UItemBase>(itemBaseTemplate->GetDefaultObject()), NULL);
-	if(base) if(mesh) if (base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
+	if (initItem.item)
+	{
+		base = DuplicateObject<UItemBase>(Cast<UItemBase>(initItem.item->GetDefaultObject()), NULL);
+		if (!base)
+		{
+			Destroy();
+			return;
+		}
+		base->ammount = initItem.ammount;
+		
+	}
+	else
+	{
+		GetWorld()->GetTimerManager().SetTimer(destroyHandle, this, &AItemBaseActor::destroythis, 1.0f,false);
+	}
+	if (base) if (mesh) if (base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
+	OnActorBeginOverlap.AddDynamic(this, &AItemBaseActor::onActorEnter);
+	OnActorEndOverlap.AddDynamic(this, &AItemBaseActor::onActorLeave);
+	text->SetHiddenInGame(true);
 }
-
+void AItemBaseActor::destroythis()
+{
+	Destroy();
+}
 // Called every frame
 void AItemBaseActor::Tick( float DeltaTime )
 {
@@ -39,11 +62,38 @@ void  AItemBaseActor::interact(AActor* interactor)
 
 void  AItemBaseActor::spawn(UItemBase* Base)
 {
+	
+	base = Base;
 	if (!base)
 	{
-		this->Destroy();
+		Destroy();
 		return;
 	}
-	base = Base;
-	if(base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
+	GetWorld()->GetTimerManager().ClearTimer(destroyHandle);
+	if (base->groundMesh) mesh->SetStaticMesh(base->groundMesh);
+}
+//this,overlapped
+void AItemBaseActor::onActorEnter(class AActor* bActor, class AActor* cActor)
+{
+	
+	AStalkerGhostsCharacter* x = Cast<AStalkerGhostsCharacter>(cActor);
+	if (!x) return;
+	APlayerController* y = Cast<APlayerController>(x->GetController());
+	if (y)
+	{
+		text->SetHiddenInGame(false);
+		text->SetText(FText::FromString(base->itemIdentifier));
+		activeActor = cActor;
+	}
+	return;
+}
+
+void  AItemBaseActor::onActorLeave(class AActor* bActor, class AActor* cActor)
+{
+	if (cActor == activeActor || !activeActor)
+	{
+		text->SetHiddenInGame(true);
+	}
+	activeActor = NULL;
+	return;
 }

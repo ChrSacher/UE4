@@ -6,6 +6,7 @@
 #include "InteractInterface.h"
 #include "ItemBase.h"
 #include "ItemBaseActor.generated.h"
+
 UCLASS()
 class STALKERGHOSTS_API AItemBaseActor : public AActor , public IInteractInterface
 {
@@ -25,15 +26,23 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UItemBase* base;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
-		TSubclassOf<UItemBase> itemBaseTemplate;
+		FInventoryItemInitializer initItem;
 
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Inventory)
-		bool init = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UStaticMeshComponent* mesh;
 
-	void spawn(UItemBase* Base);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UBoxComponent* textCollision;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UTextRenderComponent* text;
+		void spawn(UItemBase* Base);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void onActorEnter(class AActor* bActor, class AActor* cActor);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void onActorLeave(class AActor* bActor, class AActor* cActor);
 
+	void destroythis();
+	FTimerHandle destroyHandle;
+	AActor* activeActor;
 };

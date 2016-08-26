@@ -35,18 +35,6 @@ public:
 
 };
 
-USTRUCT(Blueprintable, BlueprintType)
-struct STALKERGHOSTS_API FInventoryItemInitializer
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TSubclassOf<UItemBase> item;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		float ammount;
-
-	
-};
 
 class AWeapon;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

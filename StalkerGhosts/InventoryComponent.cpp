@@ -40,6 +40,8 @@ void UInventoryComponent::BeginPlay()
 			addItem(x);
 		}
 	}
+	showInventory();
+	hideInventory();
 	// ...
 	
 }
@@ -55,13 +57,18 @@ void UInventoryComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 
 bool UInventoryComponent::addItemCreate(UItemBase* Item)
 {
+	if (!Item) return false;
 	items[Item->type].Add(Item, Item);
 	Item->itemParent = this;
 	currentWeight += Item->weight * Item->ammount;
 	if (Item->widget) Item->widget->RemoveFromParent();
 	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+	x->AddToViewport();
 	Item->widget = x;
-
+	x->name->SetText(FText::FromString( Item->name));
+	x->ammount->SetText(FText::FromString(FString::FromInt(Item->ammount)));
+	x->image->SetBrushFromTexture(Item->picture);
+	x->RemoveFromViewport(); //THIS IS A WORKAROUND FOR UE4 BUG WITH WIDGEWT CONSTRUCTION
 	//mainInventory->ItemBox->AddChild(x)->SetSize(FSlateChildSize());
 
 	return true;
@@ -281,6 +288,7 @@ void UInventoryComponent::loadItemWidget(UItemBase* item,UScrollBox* scrollBox)
 	}
 	
 	scrollBox->AddChild(item->widget);
+	item->widget->ammount->SetText(FText::FromString(FString::FromInt(item->ammount)));
 	item->widget->ItemButton->CategoryIdentifier = false;
 	item->widget->ItemButton->UserPointer = item;
 	item->widget->ItemButton->click.Unbind();

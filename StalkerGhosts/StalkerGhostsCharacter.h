@@ -14,6 +14,7 @@
 #include "InventoryInterface.h"
 #include "PhysicsMaterialCollectionData.h"
 #include "Weapon.h"
+#include "OptionsMenu.h"
 #include "StalkerGhostsCharacter.generated.h"
 
 class UInputComponent;
@@ -100,7 +101,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UMainHudWidget* HudWidget;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		UPauseMenu* pauseWidget;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		UCharacterAttributes* currentAttributes;
 
@@ -208,7 +210,7 @@ protected:
 	//inventory
 	void OnInventory();
 	void OffInventory();
-	
+	void OnMenu();
 	//quickslots
 	void OnQuickSlot1();
 	void OnQuickSlot2();

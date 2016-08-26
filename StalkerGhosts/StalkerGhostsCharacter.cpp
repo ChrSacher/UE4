@@ -51,6 +51,8 @@ AStalkerGhostsCharacter::AStalkerGhostsCharacter()
 	backPackMesh->SetupAttachment(Mesh1P);
 	helmetMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("helmetMesh"));
 	helmetMesh->SetupAttachment(Mesh1P);
+	glovesMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("glovesMesh"));
+	glovesMesh->SetupAttachment(Mesh1P);
 	// Create a gun mesh component
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("cameraBoom"));
 	CameraBoom->SetupAttachment(RootComponent);
@@ -96,11 +98,7 @@ void AStalkerGhostsCharacter::BeginPlay()
 	currentAttributes = DuplicateObject(currentAttributes, this);
 	currentAttributes->setup();
 	GetCharacterMovement()->MaxWalkSpeed = currentSpeed = currentAttributes->getAttrib(AttributeType::JOGSPEED)->getFinal();
-	if (armorMesh) armorMesh->SetMasterPoseComponent(Mesh1P);
-	if (pantsMesh) pantsMesh->SetMasterPoseComponent(Mesh1P);
-	if (bodyArmorMesh) bodyArmorMesh->SetMasterPoseComponent(Mesh1P);
-	if (backPackMesh)  backPackMesh->SetMasterPoseComponent(Mesh1P);
-	if (helmetMesh) helmetMesh->SetMasterPoseComponent(Mesh1P);
+	
 	equipment = currentInventory->equipment;
 	syncEquipment();
 	currentInventory->unEquipDelegate.BindUObject(this, &AStalkerGhostsCharacter::equipmentRemoved);
@@ -148,6 +146,7 @@ void AStalkerGhostsCharacter::SetupPlayerInputComponent(class UInputComponent* I
 	InputComponent->BindAction("Quick4", IE_Pressed, this, &AStalkerGhostsCharacter::OnQuickSlot4);
 
 	InputComponent->BindAction("NightVision", IE_Pressed, this, &AStalkerGhostsCharacter::OnNightVision);
+	InputComponent->BindAction("Menu", IE_Pressed, this, &AStalkerGhostsCharacter::OnMenu);
 
 	InputComponent->BindAction("AimDown", IE_Pressed, this, &AStalkerGhostsCharacter::aimDownSight);
 	InputComponent->BindAction("SwitchPerson", IE_Pressed, this, &AStalkerGhostsCharacter::switchPerson);
@@ -235,6 +234,13 @@ void AStalkerGhostsCharacter::weaponFired()
 		}
 	}
 }
+bool helperCheckSkeleton(USkeletalMeshComponent* toTest, USkeletalMeshComponent* toTestOther)
+{
+	if (!toTest || !toTestOther) return false;
+	if (!toTest->SkeletalMesh || !toTestOther->SkeletalMesh) return false;
+	if (!toTest->SkeletalMesh->Skeleton || !toTestOther->SkeletalMesh->Skeleton) return false;
+	return toTest->SkeletalMesh->Skeleton == toTestOther->SkeletalMesh->Skeleton;
+}
 void AStalkerGhostsCharacter::syncEquipment()
 {
 	if (weapon)
@@ -246,7 +252,21 @@ void AStalkerGhostsCharacter::syncEquipment()
 		
 		weapon->mesh->SetVisibility(true);
 	}
-	
+	if (helperCheckSkeleton(armorMesh,Mesh1P))
+		armorMesh->SetMasterPoseComponent(Mesh1P);
+
+	if (helperCheckSkeleton(pantsMesh, Mesh1P))
+		pantsMesh->SetMasterPoseComponent(Mesh1P);
+
+	if (helperCheckSkeleton(bodyArmorMesh, Mesh1P))
+			bodyArmorMesh->SetMasterPoseComponent(Mesh1P);
+
+	if (helperCheckSkeleton(backPackMesh, Mesh1P))
+			backPackMesh->SetMasterPoseComponent(Mesh1P);
+	if (helperCheckSkeleton(glovesMesh, Mesh1P))
+		glovesMesh->SetMasterPoseComponent(Mesh1P);
+	if (helperCheckSkeleton(helmetMesh, Mesh1P))
+		helmetMesh->SetMasterPoseComponent(Mesh1P);
 	
 }
 void AStalkerGhostsCharacter::aimDownSight()
@@ -450,7 +470,7 @@ void AStalkerGhostsCharacter::OnSprint()
 void AStalkerGhostsCharacter::OffSprint()
 {
 	characterAnim->isSprinting = false;
-	checkMovement();
+	if(stance == Movement::SPRINTING) checkMovement();
 }
 
 void AStalkerGhostsCharacter::OnWalk()
@@ -462,7 +482,7 @@ void AStalkerGhostsCharacter::OnWalk()
 void AStalkerGhostsCharacter::OffWalk()
 {
 	characterAnim->isWalking = false;
-	checkMovement();
+	if (stance == Movement::WALKING) checkMovement();
 }
 void AStalkerGhostsCharacter::regainStamina()
 {
@@ -510,7 +530,7 @@ void AStalkerGhostsCharacter::Landed(const FHitResult& Hit)
 void AStalkerGhostsCharacter::Falling()
 {
 	characterAnim->isFalling = true;
-	checkMovement();
+	if (stance == Movement::FALLING )checkMovement();
 	changeStance(Movement::FALLING);
 	
 }
@@ -530,7 +550,7 @@ void AStalkerGhostsCharacter::OnCrouch()
 		
 		UnCrouch();
 		characterAnim->isCrouching = false;
-		checkMovement();
+		if (stance == Movement::CROUCHING) checkMovement();
 		
 	}
 	
@@ -553,7 +573,7 @@ void AStalkerGhostsCharacter::OnProne()
 		
 
 		characterAnim->isProne = false;
-		checkMovement();
+		if (stance == Movement::PRONING)checkMovement();
 	}
 }
 void AStalkerGhostsCharacter::OffProne()
@@ -646,6 +666,20 @@ void AStalkerGhostsCharacter::OnInventory()
 	}
 	
 }
+
+void AStalkerGhostsCharacter::OnMenu()
+{
+
+	if (!(pauseWidget->GetVisibility() == ESlateVisibility::Visible))
+	{
+		pauseWidget->SetVisibility(ESlateVisibility::Visible);
+	}
+	else
+	{
+		pauseWidget->SetVisibility(ESlateVisibility::Hidden);
+	}
+
+}
 void AStalkerGhostsCharacter::OffInventory()
 {
 
@@ -689,6 +723,9 @@ bool AStalkerGhostsCharacter::doDamage(float suggestedDamage,DamageBodyPart Body
 		Mesh1P->WakeRigidBody();
 		RootComponent = Mesh1P;
 		GetCapsuleComponent()->SetCollisionProfileName(TEXT("OverlapAll"));
+		FollowCamera->Activate();
+		FirstPersonCameraComponent->Deactivate();
+		bUseControllerRotationYaw = false;
 		return true;
 	}
 	return false;
@@ -748,7 +785,7 @@ float AStalkerGhostsCharacter::TakeDamage(float DamageAmount, struct FDamageEven
 
 void AStalkerGhostsCharacter::onGrenade()
 {
-	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,50),GetActorForwardVector().Rotation());
+	if (currentGrenade) currentGrenade->throwGrenade(GetActorLocation() + FVector(0,0,100),GetActorForwardVector().Rotation());
 }
 
 void visSkeletalMesh(USkeletalMeshComponent* mesh, bool vis)

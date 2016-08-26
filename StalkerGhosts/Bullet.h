@@ -53,11 +53,14 @@ public:
 		class UBoxComponent* suppresionBox;
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		UPhysicsMaterialCollectionData* physicsMaterialCollection;
-
+	UPROPERTY(EditAnywhere, Category = Bullet)
+		FTimerHandle penetrationTimer;
 	/** Projectile movement component */
 
 
+	void startPenetration(float time);
 
+	void endPenetration();
 	/** called when projectile hits something */
 	UFUNCTION()
 		void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);

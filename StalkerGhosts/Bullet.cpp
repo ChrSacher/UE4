@@ -32,8 +32,8 @@ ABullet::ABullet()
 	// Use a ProjectileMovementComponent to govern this projectile's movement
 	ProjectileMovement = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileComp"));
 	ProjectileMovement->UpdatedComponent = CollisionComp;
-	ProjectileMovement->InitialSpeed = velocity;
-	ProjectileMovement->MaxSpeed = velocity;
+	ProjectileMovement->InitialSpeed = 0;
+	ProjectileMovement->MaxSpeed = 0;
 	ProjectileMovement->bRotationFollowsVelocity = true;
 	ProjectileMovement->bShouldBounce = false;
 
@@ -45,10 +45,7 @@ ABullet::ABullet()
 void ABullet::BeginPlay()
 {
 	Super::BeginPlay();
-	ProjectileMovement->InitialSpeed = velocity;
-	ProjectileMovement->MaxSpeed = velocity;
-	ProjectileMovement->bRotationFollowsVelocity = true;
-	ProjectileMovement->bShouldBounce = false;
+	ProjectileMovement->Velocity = GetActorForwardVector() * velocity;
 }
 
 // Called every frame
@@ -110,9 +107,10 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 						{
 							if (result[i].Actor == OtherActor)
 							{
-								float velocityLoss = pen.velocityLossPerCM * FVector::Dist(result[i].ImpactPoint, hitResult.ImpactPoint);
-								float newVelocity = ProjectileMovement->Velocity.Size() - velocityLoss;
-								if (newVelocity <= 20)
+								float distance = FVector::Dist(result[i].ImpactPoint, hitResult.ImpactPoint);
+								float velocityLoss = pen.velocityLossPerCM * distance;
+								velocity = ProjectileMovement->Velocity.Size() - velocityLoss;
+								if (velocity <= 20)
 								{
 									//did not penetrate the object
 
@@ -124,12 +122,7 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 									rot.Pitch += FMath::RandRange(-pen.maxSpreadY, pen.maxSpreadY);
 									rot.Yaw += FMath::RandRange(-pen.maxSpreadX, pen.maxSpreadX);
 									SetActorLocation(result[i].ImpactPoint + (result[i].ImpactPoint - Hit.ImpactPoint ));
-									RootComponent = CollisionComp;
-									ProjectileMovement->SetUpdatedComponent(RootComponent);
-									ProjectileMovement->Velocity.Normalize();
-									ProjectileMovement->Velocity = ProjectileMovement->Velocity * (newVelocity);
-									ProjectileMovement->InitialSpeed = newVelocity;
-									ProjectileMovement->Activate();
+									startPenetration(distance / velocity);
 									return;
 								}
 
@@ -145,7 +138,20 @@ void ABullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitive
 }
 
 
+void ABullet::startPenetration(float time)
+{
+	GetWorld()->GetTimerManager().SetTimer(penetrationTimer, this, &ABullet::endPenetration, time, false);
+	SetActorHiddenInGame(true);
+}
 
+void ABullet::endPenetration()
+{
+	SetActorHiddenInGame(false);
+	RootComponent = CollisionComp;
+	ProjectileMovement->Velocity = GetActorForwardVector() * velocity;
+	ProjectileMovement->SetUpdatedComponent(CollisionComp);
+	ProjectileMovement->SetActive(true);
+}
 
 
 
