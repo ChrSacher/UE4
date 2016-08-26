@@ -664,7 +664,6 @@ void AStalkerGhostsCharacter::OnInventory()
 	{
 		currentInventory->hideInventory();
 	}
-	
 }
 
 void AStalkerGhostsCharacter::OnMenu()

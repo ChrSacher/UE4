@@ -12,14 +12,12 @@ UENUM(BlueprintType)
 enum class SettingsLevel : uint8
 {
 	OFF,
-	VERYLOW,
 	LOW,
 	MEDIUM,
 	HIGH,
-	VERYHIGH,
-	ULTRA,
 	EPIC,
-	NONE
+	
+	NONE,
 };
 
 UENUM(BlueprintType)
@@ -59,6 +57,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UEditableTextBox* nameBox;
+
+	
+	virtual void updateVisuals() {}
 };
 UCLASS()
 class STALKERGHOSTS_API UButtonSetting : public UOptionsSetting
@@ -95,7 +96,52 @@ public:
 		void decrease();
 	UFUNCTION(BlueprintCallable, Category = "Event")
 	SettingsLevel getCurrentSetting();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setCurrentSetting(SettingsLevel level);
+	void updateVisuals() override;
 	
+};
+
+UCLASS()
+class STALKERGHOSTS_API UStringButtonSetting : public UOptionsSetting
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TArray<FString> displaySettings;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TArray<FString> underlyingSettings;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		int32 settingsIndex;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		int32 maximumSettings;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UButton* increaseButton;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UButton* decreaseButton;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UEditableTextBox* textBox;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		FString itendifier;
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void initialize(UOptionsMenu* parent) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void increase();
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void decrease();
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		FString getCurrentSetting();
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		FString getCurrentDisplay();
+
 };
 
 UCLASS()
@@ -145,7 +191,11 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TArray<USliderSetting*> sliderWidgets;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		TArray<UStringButtonSetting*> stringButtonWidgets;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UButton* returnButton;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UWorld* world;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void initialize();
 	UFUNCTION(BlueprintCallable, Category = "Event")
