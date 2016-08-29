@@ -27,14 +27,22 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		SlotInformation slotEnum = SlotInformation::NON;
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		UTexture2D* getTexture();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UImage* image;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UInventoryComponent* inventoryParent;
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void OnItemDrop(UDragDropOperation* operation);
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void loadVisuals();
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void forceConstruct();
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UEquippedItemWidget*  isDragDetected();
 };
 
 UCLASS()
@@ -53,13 +61,21 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		WeaponAttachmentSlot weaponAttachmentSlot = WeaponAttachmentSlot::GRIP;
 
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		UTexture2D* getTexture();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UImage* attachmentImage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UInventoryComponent* inventoryParent;
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void OnItemDrop(UDragDropOperation* operation);
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void loadVisuals();
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void forceConstruct();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UWeaponAttachmentWidget*  isDragDetected();
 
 };

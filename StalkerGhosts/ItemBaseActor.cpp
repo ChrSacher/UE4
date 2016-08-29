@@ -30,7 +30,7 @@ void AItemBaseActor::BeginPlay()
 			return;
 		}
 		base->ammount = initItem.ammount;
-		
+		base->initialize(GetWorld());
 	}
 	else
 	{

@@ -121,17 +121,17 @@ FString AWeapon::getBulletString()
 
 void AWeapon::playSound(FVector place)
 {
-	if (weaponSound != NULL)
+	if (sounds.weaponSound != NULL)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, weaponSound, place);
+		UGameplayStatics::PlaySoundAtLocation(this, sounds.weaponSound, place);
 	}
 }
 
 void AWeapon::playEmptySound(FVector place)
 {
-	if (emptySound != NULL)
+	if (sounds.emptySound != NULL)
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, emptySound, place);
+		UGameplayStatics::PlaySoundAtLocation(this, sounds.emptySound, place);
 	}
 }
 void AWeapon::startReload()
@@ -170,7 +170,24 @@ UBulletItem* AWeapon::getLoadedMag()
 {
 	return currentlyLoadedBullet;
 };
-
+void AWeapon::startFire()
+{
+	
+	if (!GetWorld()->GetTimerManager().IsTimerActive(fireHandle))
+	{
+		
+		if (Fire()) GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AWeapon::FireTimer, 60 / fireRate, true);
+	}
+		
+}	
+void AWeapon::FireTimer()
+{
+	if (!Fire())
+	{
+		if (dispersion.decreaseSpreadWhenFireEnded) GetWorld()->GetTimerManager().SetTimer(dispersion.decreaseSpreadTimer, this, &AWeapon::decreaseSpread, dispersion.timePerDecrease, true);
+		GetWorld()->GetTimerManager().ClearTimer(fireHandle);
+	}
+}
 bool AWeapon::Fire()
 {
 	FVector SpawnLocation = GetActorLocation();
@@ -181,83 +198,138 @@ bool AWeapon::Fire()
 		playEmptySound(SpawnLocation);
 		return false;
 	}
-	canEndFire = false;
-	mustEndFire = true;
 	bool empty = currentlyLoadedBullet->ammount <= 0;
-
-
 	if (empty)
 	{
-		mustEndFire = true;
+		
 		playEmptySound(SpawnLocation);
 		return false;
 	}
-	else //if thjere is no bullets in the mag play the 
-	{
-		//check for dispersion
-		if (dispersion.decreaseSpreadWhenFireEnded)
-		{
-			GetWorld()->GetTimerManager().ClearTimer(dispersion.decreaseSpreadTimer);
-		}
-		else
-		{
-			if (!GetWorld()->GetTimerManager().IsTimerActive(dispersion.decreaseSpreadTimer))
-				GetWorld()->GetTimerManager().SetTimer(dispersion.decreaseSpreadTimer, this, &AWeapon::decreaseSpread, dispersion.timePerDecrease, true);
-		}
-
-		//spawn Bullet
-		FVector dir = FP_MuzzleLocation->GetComponentLocation() - (FP_FiringDirection->GetComponentLocation());
-		dir.Normalize();
-		FRotator rot = dir.Rotation();
-		if (!hasFiringDirection) rot = GetActorForwardVector().Rotation();
-		rot.Pitch += FMath::RandRange(-dispersion.finalDispersionY, dispersion.finalDispersionY);
-		rot.Yaw += FMath::RandRange(-dispersion.finalDispersionX, dispersion.finalDispersionX);
 		
-		increaseSpread();
-		playSound(SpawnLocation);
 		AShotgunBullet* checkIfShotgun = Cast<AShotgunBullet>(currentlyLoadedBullet->bullet->GetDefaultObject());
 		ABullet* firedBullet = NULL;
 		if (checkIfShotgun)
 		{
-			for (int32 i = 0; i < checkIfShotgun->submunitionAmmount; i++)
-			{
-				FRotator rotation = rot;
-				rotation.Pitch = rot.Pitch +  FMath::RandRange(checkIfShotgun->minSpreadX, checkIfShotgun->maxSpreadX);
-				rotation.Yaw =  rot.Yaw +  FMath::RandRange(checkIfShotgun->minSpreadY, checkIfShotgun->maxSpreadY);
-				AShotgunBullet* x = GetWorld()->SpawnActor<AShotgunBullet>(currentlyLoadedBullet->bullet, FP_MuzzleLocation->GetComponentLocation(), rotation);
-				if (!x)
-				{
-					return false;
-				}
-				if (Cast<ACharacter>(GetOwner()))
-				{
-					x->owningPlayer = owningPlayer;
-					if (owningPlayer) x->controllerOver = owningPlayer->GetController();
-				}
-				firedBullet = x;
-			}
+			firedBullet = fireShotgun();
 			
 		}
 		else
 		{
-			ABullet* x = GetWorld()->SpawnActor<ABullet>(currentlyLoadedBullet->bullet, FP_MuzzleLocation->GetComponentLocation(), rot);
-			if (!x)
-			{
-				return false;
-			}
-			if (Cast<ACharacter>(GetOwner()))
-			{
-				x->owningPlayer = owningPlayer;
-				if (owningPlayer) x->controllerOver = owningPlayer->GetController();
-			}
-			firedBullet = x;
+			firedBullet = fireBullet();
 		}
 		if (!firedBullet) return false;
 		//eject a bullter
 		currentlyLoadedBullet->ammount -= 1;
 		firedBullets += 1;
 		weaponFire.ExecuteIfBound();
+		ejectBullet(firedBullet);
+	
+
+		needsToEndFire = false;
+	//check Firemodes
+	if (getFireMode() == WeaponFireMode::SINGLE)
+	{
 		
+		if (firedBullets >= 1 || wantsToEndFire)
+		{
+			needsToEndFire = true;
+		}
+		
+	}
+
+	if (getFireMode() == WeaponFireMode::BURST)
+	{
+		
+		if (firedBullets >= burstAmmount)
+		{
+			needsToEndFire = true;
+		}
+	}
+	if (getFireMode() == WeaponFireMode::AUTO)
+	{
+		
+		if (wantsToEndFire)
+		{
+			needsToEndFire = true;
+		}
+	}
+	if (needsToEndFire)
+	{
+		firedBullets = 0;
+		wantsToEndFire = false; 
+		return false;
+	}
+	return true;
+}
+void AWeapon::startDispersion()
+{
+	//check for dispersion
+	if (dispersion.decreaseSpreadWhenFireEnded)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(dispersion.decreaseSpreadTimer);
+	}
+	else
+	{
+		if (!GetWorld()->GetTimerManager().IsTimerActive(dispersion.decreaseSpreadTimer))
+			GetWorld()->GetTimerManager().SetTimer(dispersion.decreaseSpreadTimer, this, &AWeapon::decreaseSpread, dispersion.timePerDecrease, true);
+	}
+}
+ABullet* AWeapon::fireBullet()
+{
+	//spawn Bullet
+	FVector dir = FP_MuzzleLocation->GetComponentLocation() - (FP_FiringDirection->GetComponentLocation());
+	dir.Normalize();
+	FRotator rot = dir.Rotation();
+	if (!hasFiringDirection) rot = GetActorForwardVector().Rotation();
+	rot.Pitch += FMath::RandRange(-dispersion.finalDispersionY, dispersion.finalDispersionY);
+	rot.Yaw += FMath::RandRange(-dispersion.finalDispersionX, dispersion.finalDispersionX);
+	increaseSpread();
+	playSound(FP_MuzzleLocation->GetComponentLocation());
+	ABullet* x = GetWorld()->SpawnActor<ABullet>(currentlyLoadedBullet->bullet, FP_MuzzleLocation->GetComponentLocation(), rot);
+	if (!x)
+	{
+		return false;
+	}
+	if (Cast<ACharacter>(GetOwner()))
+	{
+		x->owningPlayer = owningPlayer;
+		if (owningPlayer) x->controllerOver = owningPlayer->GetController();
+	}
+	return x;
+}
+ABullet* AWeapon::fireShotgun()
+{
+	AShotgunBullet* checkIfShotgun = Cast<AShotgunBullet>(currentlyLoadedBullet->bullet->GetDefaultObject());
+	for (int32 i = 0; i < checkIfShotgun->submunitionAmmount; i++)
+	{
+		FVector dir = FP_MuzzleLocation->GetComponentLocation() - (FP_FiringDirection->GetComponentLocation());
+		dir.Normalize();
+		FRotator rotation = dir.Rotation();
+		rotation.Pitch = rotation.Pitch + FMath::RandRange(checkIfShotgun->minSpreadX, checkIfShotgun->maxSpreadX);
+		rotation.Yaw = rotation.Yaw + FMath::RandRange(checkIfShotgun->minSpreadY, checkIfShotgun->maxSpreadY);
+		AShotgunBullet* x = GetWorld()->SpawnActor<AShotgunBullet>(currentlyLoadedBullet->bullet, FP_MuzzleLocation->GetComponentLocation(), rotation);
+		if (!x)
+		{
+			return NULL;
+		}
+		if (Cast<ACharacter>(GetOwner()))
+		{
+			x->owningPlayer = owningPlayer;
+			if (owningPlayer) x->controllerOver = owningPlayer->GetController();
+		}
+		return x;
+	}
+	return NULL;
+}
+void AWeapon::endFire()
+{
+	wantsToEndFire = true;
+	
+}
+
+void AWeapon::ejectBullet(ABullet* firedBullet)
+{
+	
 		if (ejectionTemplate && firedBullet->bulletEjectenabled && bulletEjectable)
 		{
 			ABulletEjectActor* eject = GetWorld()->SpawnActor<ABulletEjectActor>(ejectionTemplate, ejectionDirection->GetComponentLocation(),FRotator());
@@ -271,49 +343,7 @@ bool AWeapon::Fire()
 			}
 			
 		}
-	}
-
-
-	//check Firemodes
-	if (getFireMode() == WeaponFireMode::SINGLE)
-	{
-		
-		if (firedBullets >= 1)
-		{
-			mustEndFire = true;	
-			canEndFire = true;
-		}
-		
-	}
-
-	if (getFireMode() == WeaponFireMode::BURST)
-	{
-		mustEndFire = false;
-		if (firedBullets >= burstAmmount)
-		{
-			mustEndFire = true;
-			canEndFire = true;
-		}
-	}
-	if (getFireMode() == WeaponFireMode::AUTO)
-	{
-		mustEndFire = false;
-		if (firedBullets >= 0)
-		{
-			
-			canEndFire = true;
-		}
-	}
-	return true;
 }
-
-void AWeapon::endFire()
-{
-	firedBullets = 0;
-	if(dispersion.decreaseSpreadWhenFireEnded) GetWorld()->GetTimerManager().SetTimer(dispersion.decreaseSpreadTimer, this, &AWeapon::decreaseSpread, dispersion.timePerDecrease, true);
-}
-
-
 
 int32  AWeapon::getAmmoCount()
 {

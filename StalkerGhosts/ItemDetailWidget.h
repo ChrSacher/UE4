@@ -4,38 +4,49 @@
 
 #include "Blueprint/UserWidget.h"
 #include "Weapon.h"
-#include "ItemBase.h"
+
 #include "ItemDetailWidget.generated.h"
 
+class UItemBase;
+class UWeaponItem;
 /**
  * 
  */
 UCLASS()
-class STALKERGHOSTS_API UItemDetailWidget : public UUserWidget
+class STALKERGHOSTS_API UItemDetailBaseWidget : public UUserWidget
+{
+	GENERATED_BODY()
+
+public:
+		virtual void load(UItemBase* base) {}
+
+		UFUNCTION(BlueprintImplementableEvent)
+			void forceConstruct();
+};
+
+
+UCLASS()
+class STALKERGHOSTS_API UItemDetailWidget : public UItemDetailBaseWidget
 {
 	GENERATED_BODY()
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-			UTextBlock* itemNameText;
+			UEditableTextBox* itemNameText;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-			UTextBlock* itemFlavourText;
+			UMultiLineEditableTextBox* itemFlavourText;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-			UTextBlock* weightText;
+			UEditableTextBox* weightText;
 		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-			UTexture2D* picture;
-		void load(UItemBase* base)
-		{
-			itemNameText->SetText(FText::FromString(base->name));
-			itemFlavourText->SetText(FText::FromString(base->name));
-			weightText->SetText(FText::FromString(FString::SanitizeFloat(base->weight)));
-			picture = base->picture;
-		};
+			UEditableTextBox* ammountText;
+		UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+			UImage* picture;
+		virtual void load(UItemBase* base);
 	
 };
 
 UCLASS()
-class STALKERGHOSTS_API UWeaponDetailWidget : public UUserWidget
+class STALKERGHOSTS_API UWeaponDetailWidget : public UItemDetailBaseWidget
 {
 	GENERATED_BODY()
 
@@ -47,12 +58,6 @@ public:	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UTextBlock* weightText;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UTexture2D* picture;
-	void load(UWeaponItem* wep)
-	{
-		itemNameText->SetText(FText::FromString(wep->name));
-		itemFlavourText->SetText(FText::FromString(wep->name));
-		weightText->SetText(FText::FromString(FString::SanitizeFloat(wep->weight)));
-		picture = wep->picture;
-	};
+	void load(UItemBase* wep);
 
 };

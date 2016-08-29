@@ -32,6 +32,8 @@ public:
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		float velocity = 7000.0f; //in cm/s
 	UPROPERTY(EditAnywhere, Category = Bullet)
+		float penetrationVelocity = 7000.0f; //in cm/s
+	UPROPERTY(EditAnywhere, Category = Bullet)
 		EDamageType damageType;
 	UPROPERTY(EditAnywhere, Category = Bullet)
 		UStaticMeshComponent* mesh;

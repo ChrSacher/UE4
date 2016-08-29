@@ -219,8 +219,10 @@ void UOptionsMenu::settingsChanged(UOptionsSetting* sender)
 {
 	if (!sender) return;
 	UButtonSetting* buttonSender = Cast<UButtonSetting>(sender);
-	switch(buttonSender->type)
+	if (buttonSender)
 	{
+		switch (buttonSender->type)
+		{
 
 		case ButtonSettingsType::PRESET:
 		{
@@ -229,7 +231,7 @@ void UOptionsMenu::settingsChanged(UOptionsSetting* sender)
 				buttonWidgets[i]->setCurrentSetting(buttonSender->getCurrentSetting());
 			};
 			GEngine->GameUserSettings->SetOverallScalabilityLevel(int32(buttonSender->getCurrentSetting()));
-			
+
 		}break;
 		case ButtonSettingsType::AA:
 		{
@@ -277,7 +279,32 @@ void UOptionsMenu::settingsChanged(UOptionsSetting* sender)
 		{
 			//duno
 		}break;
-	};
+		};
+	}
+
+	UAudioSliderSetting* audioSender = Cast<UAudioSliderSetting>(sender);
+	if (audioSender)
+	{
+		if(audioSender->soundClass) audioSender->soundClass->Properties.Volume = audioSender->getCurrentSetting();
+	}
+	else
+	{
+		USliderSetting* sliderSender = Cast<USliderSetting>(sender);
+		if (sliderSender)
+		{
+			switch (sliderSender->type)
+			{
+				case SliderSettingsType::RESOLUTION:
+				{
+					GEngine->GameUserSettings->SetResolutionScaleValueEx(sliderSender->getCurrentSetting() / 100);
+				}; break;
+				case SliderSettingsType::CUSTOM:
+				{
+
+				}; break;
+			}
+		}
+	}
 	GEngine->GameUserSettings->ApplySettings(true);
 }
 

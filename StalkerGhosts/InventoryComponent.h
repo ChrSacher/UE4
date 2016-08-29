@@ -92,10 +92,13 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		FTimerHandle transferRangeTimer;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		FTimerHandle itemDetailsTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UDataTable* standardItemTable;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UItemDetailWidget* itemDetails;
+		UItemDetailBaseWidget* itemDetails;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		TSubclassOf<class UItemDetailWidget> itemDetailTemplate;
@@ -111,7 +114,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UInventoryComponent* otherInventoryForTransfering;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UDataItemButton* hoveredButton;
 
 	//inventoryfuncs
 	UFUNCTION(BlueprintCallable, Category = "Event")
@@ -158,9 +162,10 @@ public:
 	void onCategoryClicked(UDataItemButton* sender);
 	void onOtherCategoryClicked(UDataItemButton* sender);
 	void onItemButtonClicked(UDataItemButton* sender);
+
 	void onItemButtonHovered(UDataItemButton* sender);
 	void onItemButtonLeftHovered(UDataItemButton* sender);
-
+	void onItemButtonHoveredTimer();
 	void closeTransferWindow();
 	void openTransferWindow(UInventoryComponent* otherInventory);
 	//Slot function

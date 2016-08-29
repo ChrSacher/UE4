@@ -6,24 +6,10 @@
 #include "PhysicsMaterialCollectionData.generated.h"
 
 USTRUCT(Blueprintable, BlueprintType)
-struct STALKERGHOSTS_API FPhysicsMaterialSounds
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TEnumAsByte<EPhysicalSurface> surfaceType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TArray<USoundBase*> sounds;
-};
-
-USTRUCT(Blueprintable, BlueprintType)
 struct STALKERGHOSTS_API FPhysicsMaterialPenetration
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
-		TEnumAsByte<EPhysicalSurface> surfaceType;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
 		float velocityLossPerCM = 10;
@@ -37,6 +23,58 @@ public:
 		bool allowPenetration = true;
 
 };
+
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FPhysicsMaterialDecal
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<UMaterial*> decals;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		float lifeTime = 5.0f; //should be kept low
+
+};
+
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FPhysicsMaterialSound
+{
+	GENERATED_BODY()
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TArray<USoundBase*> sounds;
+
+};
+
+USTRUCT(Blueprintable, BlueprintType)
+struct STALKERGHOSTS_API FPhysicsMaterialCollection
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		TEnumAsByte<EPhysicalSurface> surfaceType;
+
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		FPhysicsMaterialPenetration penetrationData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		FPhysicsMaterialDecal decals;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Damage)
+		FPhysicsMaterialSound sounds;
+
+
+
+
+};
+
+
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class STALKERGHOSTS_API UPhysicsMaterialCollectionData : public UActorComponent
@@ -55,18 +93,22 @@ public:
 
 	//phyisics material 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		TArray<FPhysicsMaterialSounds> PhysicsMaterialSounds;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		TArray<FPhysicsMaterialPenetration> penetrationData;
+		TArray<FPhysicsMaterialCollection> PhysicsMaterial;
+	
 	//COULD BE OPTIMIZED INTO A MAP
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		FPhysicsMaterialCollection defaultMaterial;
+
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		USoundBase* getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index = -1);
-	
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UMaterial* getPhysicsDecal(TEnumAsByte<EPhysicalSurface> type, int32 index = -1);
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		FPhysicsMaterialCollection&  getCollection(TEnumAsByte<EPhysicalSurface> type);
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		FPhysicsMaterialPenetration& getPhysicsPenetrationData(TEnumAsByte<EPhysicalSurface> type);
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		FPhysicsMaterialPenetration defaultPenetrationData;
 };

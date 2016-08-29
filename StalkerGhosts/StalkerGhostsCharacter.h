@@ -210,6 +210,8 @@ protected:
 	//inventory
 	void OnInventory();
 	void OffInventory();
+
+	void OnInventoryDetails();
 	void OnMenu();
 	//quickslots
 	void OnQuickSlot1();

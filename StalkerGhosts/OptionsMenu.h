@@ -38,7 +38,8 @@ enum class ButtonSettingsType : uint8
 UENUM(BlueprintType)
 enum class SliderSettingsType : uint8
 {
-	RESOLUTION
+	RESOLUTION,
+	CUSTOM
 };
 class  UOptionsMenu;
 
@@ -167,6 +168,16 @@ public:
 		float getCurrentSetting();
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void initialize(UOptionsMenu* parent) override;
+};
+
+UCLASS()
+class STALKERGHOSTS_API UAudioSliderSetting : public USliderSetting
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		USoundClass* soundClass;
+
 };
 /**
  * 

@@ -12,6 +12,7 @@ class AStalkerGhostsCharacter;
 struct FItemLookUpTable;
 class UBuff;
 class UInventoryComponent;
+class UItemDetailBaseWidget;
 UCLASS(Blueprintable, BlueprintType)
 class UItemBase : public UObject
 {
@@ -51,6 +52,8 @@ public:
 		UItemWidget* widget;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
 		UInventoryComponent* itemParent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Item)
+		TSubclassOf<UItemDetailBaseWidget>  detailsWidget;
 	float getWeight();
 
 

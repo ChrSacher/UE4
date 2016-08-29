@@ -27,6 +27,8 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		FString getName();
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void loadVisuals();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UEditableTextBox* name;
@@ -36,4 +38,10 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
 		UImage* image;
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		UItemWidget* isDragDetected();
+
+	UFUNCTION(BlueprintImplementableEvent)
+		void forceConstruct();
 };

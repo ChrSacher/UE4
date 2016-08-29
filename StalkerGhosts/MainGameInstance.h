@@ -10,10 +10,19 @@
  * 
  */
 UCLASS()
-class STALKERGHOSTS_API UMainGameInstance : public UGameInstance
+class STALKERGHOSTS_API UStalkerMainGameInstance : public UGameInstance
 {
 	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Inventory)
+		UUserWidget* mainGameWidget;
 
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	void addWidgetToMain(UUserWidget* widget)
+	{
+		if (!widget) return;
+		Cast<UCanvasPanel>(mainGameWidget->GetRootWidget())->AddChild(widget);
 
-		
+	}
+
 };

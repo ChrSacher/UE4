@@ -10,7 +10,9 @@
 #include "Runtime/UMG/Public/IUMGModule.h"
 #include "Runtime/UMG/Public/Blueprint/UserWidget.h"
 #include "Runtime/UMG/Public/Blueprint/WidgetLayoutLibrary.h"
+#include "MainGameInstance.h"
 #include "InventoryInterface.h"
+#include "ItemDetailWidget.h"
 UInventoryComponent::UInventoryComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -63,12 +65,13 @@ bool UInventoryComponent::addItemCreate(UItemBase* Item)
 	currentWeight += Item->weight * Item->ammount;
 	if (Item->widget) Item->widget->RemoveFromParent();
 	UItemWidget* x = CreateWidget<UItemWidget>(GetWorld(), itemTemplate);
+
 	x->AddToViewport();
+	x->ItemButton->UserPointer = Item;
+	x->loadVisuals();
+	x->RemoveFromViewport();
 	Item->widget = x;
-	x->name->SetText(FText::FromString( Item->name));
-	x->ammount->SetText(FText::FromString(FString::FromInt(Item->ammount)));
-	x->image->SetBrushFromTexture(Item->picture);
-	x->RemoveFromViewport(); //THIS IS A WORKAROUND FOR UE4 BUG WITH WIDGEWT CONSTRUCTION
+	 //THIS IS A WORKAROUND FOR UE4 BUG WITH WIDGEWT CONSTRUCTION
 	//mainInventory->ItemBox->AddChild(x)->SetSize(FSlateChildSize());
 
 	return true;
@@ -105,6 +108,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 						x.Key->ammount += Item->ammount;
 						Item->ammount = 0;
 					}
+					if(x.Key->widget) x.Key->widget->loadVisuals();
 				}
 				x.Key->itemParent = this;
 			}
@@ -114,6 +118,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 			}
 		
 	}
+	if (Item->widget) Item->widget->loadVisuals();
 	Item->itemParent = this;
 	calculateWeight();
 	refresh();
@@ -164,6 +169,7 @@ bool UInventoryComponent::removeItem(UItemBase* Item, int32 ammount)
 
 void UInventoryComponent::dropItem(UItemBase* Item)
 {
+	if (!Item) return;
 	items[Item->type].Remove(Item);
 	if(Item->ammount > 0) GetWorld()->SpawnActor<AItemBaseActor>(itemBaseTemplate, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation())->spawn(Item);
 	Item->widget->RemoveFromParent();
@@ -253,11 +259,14 @@ void UInventoryComponent::loadUI()
 			{
 				return;
 			}		
+			
 			mainInventory->AddToViewport();
 		}
 	}
-	loadCategories();
 	
+	//UStalkerMainGameInstance* gameInstance = Cast<UStalkerMainGameInstance>(GetOwner()->GetWorld()->GetGameInstance());
+	//if(gameInstance) gameInstance->addWidgetToMain(mainInventory);
+	loadCategories();
 	if (itemDetailTemplate)
 	{
 		itemDetails = CreateWidget<UItemDetailWidget>(GetWorld(), itemDetailTemplate);
@@ -288,7 +297,7 @@ void UInventoryComponent::loadItemWidget(UItemBase* item,UScrollBox* scrollBox)
 	}
 	
 	scrollBox->AddChild(item->widget);
-	item->widget->ammount->SetText(FText::FromString(FString::FromInt(item->ammount)));
+	item->widget->loadVisuals();
 	item->widget->ItemButton->CategoryIdentifier = false;
 	item->widget->ItemButton->UserPointer = item;
 	item->widget->ItemButton->click.Unbind();
@@ -395,25 +404,42 @@ void UInventoryComponent::onItemButtonClicked(UDataItemButton* sender)
 
 void UInventoryComponent::onItemButtonHovered(UDataItemButton* sender)
 {
-	
-	itemDetails->SetVisibility(ESlateVisibility::Visible);
-	sender->AddChild(itemDetails);
-	UCanvasPanelSlot* canvasSlot = UWidgetLayoutLibrary::SlotAsCanvasSlot(sender->GetParent());
-	if (canvasSlot)
-	{
-		canvasSlot->GetPosition();
-	}
-	return;
-	//canvasSlot->GetPosition();
-//	itemDetails->SetPositionInViewport(sender->RenderTransform.Translation);
-	//details menu
+	GetWorld()->GetTimerManager().SetTimer(itemDetailsTimer, this, &UInventoryComponent::onItemButtonHoveredTimer, 0.1f, true);
+	hoveredButton = sender;
 }
-
+void UInventoryComponent::onItemButtonHoveredTimer()
+{
+	if (!hoveredButton) return;
+	if(hoveredButton->UserPointer) 
+		if(hoveredButton->UserPointer->detailsWidget)
+			itemDetails = CreateWidget<UItemDetailBaseWidget>(GetWorld(), hoveredButton->UserPointer->detailsWidget);
+	if (itemDetails)
+	{
+		ACharacter* x = Cast<ACharacter>(GetOwner());
+		if (x)
+		{
+			APlayerController* PlayerController = Cast<APlayerController>(x->GetController());
+			if (PlayerController)
+			{
+				float LocationX;
+				float LocationY;
+				PlayerController->GetMousePosition(LocationX, LocationY);
+				// Do a trace and see if there the position intersects something in the world  
+				FVector2D MousePosition(LocationX, LocationY);
+				itemDetails->AddToViewport();
+				itemDetails->load(hoveredButton->UserPointer);
+				UCanvasPanelSlot* x = Cast<UCanvasPanelSlot>(itemDetails->Slot);
+				if (x) x->SetPosition(MousePosition);
+			}
+		}
+	}
+}
 void UInventoryComponent::onItemButtonLeftHovered(UDataItemButton* sender)
 {
-	
-	sender->RemoveChild(itemDetails);
-	itemDetails->SetVisibility(ESlateVisibility::Hidden);
+	hoveredButton = NULL;
+	if (itemDetails) itemDetails->RemoveFromViewport();
+	itemDetails = NULL;
+	GetWorld()->GetTimerManager().ClearTimer(itemDetailsTimer);
 }
 
 void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
@@ -421,7 +447,7 @@ void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
 	UE_LOG(LogTemp, Warning, TEXT("EQUIP"));
 	if (slot->allowedType != base->type && slot->allowedType != ItemCategory::ALL) return;
 	bool t = true;
-	if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer,NULL);
+	if (slot->ItemButton->UserPointer) unEquip(slot, slot->ItemButton->UserPointer,mainInventory->ItemBoxWidget);
 	equipDelegate.Execute(base, slot->slotEnum,t); //checking if char can equip
 	if(!t) return;
 	t = true;
@@ -435,7 +461,7 @@ void UInventoryComponent::equip(UEquippedItemWidget* slot, UItemBase* base)
 		base->itemParent = this;
 
 	}
-
+	slot->loadVisuals();
 	equipment->equipItem(slot->slotEnum, base);
 	refresh();
 }
@@ -449,7 +475,7 @@ void UInventoryComponent::moveItem(UItemWidget* slot, UItemBase* base, UItemScro
 	if (!t) return;
 	base->itemParent->removeItem(base);
 	sender->inventoryParent->addItem(base);
-	
+	slot->loadVisuals();
 	refresh();
 }
 void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base, UItemScrollBoxWidget* sender)
@@ -462,6 +488,7 @@ void UInventoryComponent::unEquip(UEquippedItemWidget* slot, UItemBase* base, UI
 	if (!t) return;
 	sender->inventoryParent->addItem(base);
 	slot->ItemButton->UserPointer = NULL;
+	slot->loadVisuals();
 	equipment->unequipItem(slot->slotEnum);
 	refresh();
 }

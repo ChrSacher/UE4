@@ -167,26 +167,20 @@ void AStalkerGhostsCharacter::OnFire()
 {
 	
 	if(stance == Movement::JOGGING || stance ==  Movement::SPRINTING) changeStance(Movement::WALKING);
-	Fire();
+	if (weapon) weapon->startFire();
 	
+
+}
+void AStalkerGhostsCharacter::Fire()
+{
+	// try and fire a projectile
+
 
 }
 void AStalkerGhostsCharacter::OffFire()
 {
 	
-	if (weapon)
-	{
-		if (weapon->canEndFire)
-		{
-			weapon->endFire();
-			GetWorld()->GetTimerManager().ClearTimer(fireHandle);
-		}
-
-	}
-	else
-	{
-		GetWorld()->GetTimerManager().ClearTimer(fireHandle);
-	}
+	if (weapon) weapon->endFire();
 	
 }
 void AStalkerGhostsCharacter::changeStance(Movement newStance)
@@ -196,22 +190,7 @@ void AStalkerGhostsCharacter::changeStance(Movement newStance)
 	characterAnim->stance = newStance;
 	stance = newStance;
 }
-void AStalkerGhostsCharacter::Fire()
-{
-	// try and fire a projectile
-	UWorld* const World = GetWorld();
-	if (!weapon || !World)
-	{
-		OffFire();
-		return;
-	}
-	if (weapon->Fire())
-	{
-		GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AStalkerGhostsCharacter::Fire, 60 / weapon->fireRate, false);
-	}
-	if (weapon->mustEndFire) OffFire();
-	
-}
+
 void AStalkerGhostsCharacter::weaponFired()
 {
 	APlayerController* Controller = GetWorld()->GetFirstLocalPlayerFromController()->PlayerController;
@@ -665,7 +644,10 @@ void AStalkerGhostsCharacter::OnInventory()
 		currentInventory->hideInventory();
 	}
 }
+void  AStalkerGhostsCharacter::OnInventoryDetails()
+{
 
+}
 void AStalkerGhostsCharacter::OnMenu()
 {
 

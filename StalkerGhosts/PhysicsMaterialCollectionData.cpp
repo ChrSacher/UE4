@@ -36,40 +36,52 @@ void UPhysicsMaterialCollectionData::TickComponent( float DeltaTime, ELevelTick 
 
 USoundBase* UPhysicsMaterialCollectionData::getPhysicsSound(TEnumAsByte<EPhysicalSurface> type, int32 index)
 {
-	for (int32 i = 0; i < PhysicsMaterialSounds.Num(); i++)
+	for (int32 i = 0; i < PhysicsMaterial.Num(); i++)
 	{
-		if (type == PhysicsMaterialSounds[i].surfaceType)
+		if (PhysicsMaterial[i].surfaceType == type)
 		{
-			if (PhysicsMaterialSounds[i].sounds.Num() == 0) return NULL;
-			if (index <= -1)
-			{
-
-				return PhysicsMaterialSounds[i].sounds[FMath::RandRange(0, PhysicsMaterialSounds[i].sounds.Num() - 1)];
-			}
-			else
-			{
-				if (index < PhysicsMaterialSounds[i].sounds.Num())
-				{
-					return PhysicsMaterialSounds[i].sounds[index];
-				}
-				else
-				{
-					return PhysicsMaterialSounds[i].sounds.Last();
-				}
-			}
+			if (PhysicsMaterial[i].sounds.sounds.Num() <= 0) break;
+			else return PhysicsMaterial[i].sounds.sounds[FMath::RandRange(0, PhysicsMaterial[i].sounds.sounds.Num() - 1)];
 		}
 	}
-	return NULL;
+	if (defaultMaterial.sounds.sounds.Num() <= 0) return NULL;
+	else return  defaultMaterial.sounds.sounds[FMath::RandRange(0, defaultMaterial.sounds.sounds.Num() - 1)];
 }
 
 FPhysicsMaterialPenetration& UPhysicsMaterialCollectionData::getPhysicsPenetrationData(TEnumAsByte<EPhysicalSurface> type)
 {
-	for (int32 i = 0; i < penetrationData.Num(); i++)
+	for (int32 i = 0; i < PhysicsMaterial.Num(); i++)
 	{
-		if (type == penetrationData[i].surfaceType)
+		if (PhysicsMaterial[i].surfaceType == type)
 		{
-			return penetrationData[i];
+			return PhysicsMaterial[i].penetrationData;
 		}
 	}
-	return defaultPenetrationData;
+	return  defaultMaterial.penetrationData;
+}
+
+UMaterial* UPhysicsMaterialCollectionData::getPhysicsDecal(TEnumAsByte<EPhysicalSurface> type, int32 index)
+{
+	for (int32 i = 0; i < PhysicsMaterial.Num(); i++)
+	{
+		if (PhysicsMaterial[i].surfaceType == type)
+		{
+			if (PhysicsMaterial[i].decals.decals.Num() <= 0) break;
+			else return PhysicsMaterial[i].decals.decals[FMath::RandRange(0, PhysicsMaterial[i].decals.decals.Num() - 1)];
+		}
+	}
+	if (defaultMaterial.decals.decals.Num() <= 0) return NULL;
+	else return  defaultMaterial.decals.decals[FMath::RandRange(0, defaultMaterial.decals.decals.Num() - 1)];
+}
+
+FPhysicsMaterialCollection&  UPhysicsMaterialCollectionData::getCollection(TEnumAsByte<EPhysicalSurface> type)
+{
+	for (int32 i = 0; i < PhysicsMaterial.Num(); i++)
+	{
+		if (PhysicsMaterial[i].surfaceType == type)
+		{
+			return PhysicsMaterial[i];
+		}
+	}
+	return defaultMaterial;
 }

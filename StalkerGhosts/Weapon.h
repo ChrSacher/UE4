@@ -133,6 +133,20 @@ public:
 		UWeaponAnim* animInstance;
 
 };
+
+USTRUCT(Blueprintable)
+struct FSoundPattern
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		USoundBase*  weaponSound;
+
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		USoundBase*  emptySound;
+
+};
+
 UENUM(BlueprintType)
 enum class WeaponFireMode : uint8
 {
@@ -185,10 +199,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		float equipTime = 2.0f;
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool mustEndFire = false;
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		bool canEndFire = true;
+	
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedFireMode = 0;
 
@@ -201,19 +212,14 @@ public:
 	UPROPERTY(VisibleAnywhere, Category = Weapon)
 		int32 firedBullets = 0;
 
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		USoundBase*  weaponSound;
-
-	UPROPERTY(EditAnywhere, Category = Weapon)
-		USoundBase*  emptySound;
+	
 
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		FString weaponID = "";
 	/** AnimMontage to play each time we fire */
 
 	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
-		FAnimationPattern animations;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
 		TSubclassOf<ABulletEjectActor> ejectionTemplate;
 
@@ -224,7 +230,8 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle reloadHandle;
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
+		FTimerHandle fireHandle;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = GInventory)
 		FTimerHandle equippingHandle;
 	UPROPERTY(VisibleDefaultsOnly, Category = Mesh)
@@ -234,12 +241,21 @@ public:
 		class USceneComponent* FP_FiringDirection;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		bool isUsable = true;
+
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		bool bulletEjectable = true;
+
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		bool hasFiringDirection = false;
+
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		bool wantsToEndFire = false;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		bool needsToEndFire = false;
+
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		float burstAmmount = 3; 
+
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		int32 selectedBulletIndex;
 
@@ -251,8 +267,10 @@ public:
 		FRecoilPattern recoil;
 	UPROPERTY(EditAnywhere, Category = Weapon)
 		FDispersionPattern dispersion;
-
-
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		FSoundPattern sounds;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Gameplay)
+		FAnimationPattern animations;
 
 
 	void reloadMag(UBulletItem* mag);
@@ -279,7 +297,13 @@ public:
 	void removeWeapon();
 	bool reload(UBulletItem* bullet);
 
+	void ejectBullet(ABullet* firedBullet);
+	ABullet* fireBullet();
+	ABullet* fireShotgun();
+	void startFire();
+	void startDispersion();
 	bool Fire();
+	void FireTimer();
 	void endFire();
 	UBulletItem* getLoadedMag();
 
