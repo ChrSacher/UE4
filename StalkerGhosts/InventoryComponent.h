@@ -34,7 +34,14 @@ public:
 
 
 };
-
+USTRUCT()
+struct FItemMap
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY()
+		TMap<UItemBase*, UItemBase*> map;
+};
 
 class AWeapon;
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -47,8 +54,10 @@ public:
 	UInventoryComponent();
 
 	DECLARE_DELEGATE_ThreeParams(EquipDelegate, UItemBase*, SlotInformation,bool&);
-		EquipDelegate equipDelegate;
-		EquipDelegate unEquipDelegate;
+	
+	EquipDelegate equipDelegate;
+	
+	EquipDelegate unEquipDelegate;
 
 
 	DECLARE_DELEGATE_FourParams(itemMovedDelegate, UItemBase*, UInventoryComponent*, UInventoryComponent*, bool&);
@@ -65,8 +74,8 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = Inventory)
 		float currentWeight = 0;
-	
-	TMap<ItemCategory, TMap<UItemBase*,UItemBase*>> items;
+	UPROPERTY(EditAnywhere, Category = Inventory)
+	TMap<ItemCategory, FItemMap > items;
 
 	UItemBase* lookForFirstItem(FString &name);
 

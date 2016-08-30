@@ -20,7 +20,7 @@ UInventoryComponent::UInventoryComponent()
 	bWantsBeginPlay = true;
 	PrimaryComponentTick.bCanEverTick = false;
 	for (uint8 i = 0; i < uint8(ItemCategory::NUM);i++)
-		items.Add(static_cast<ItemCategory>(i),TMap<UItemBase*, UItemBase*>());
+		items.Add(static_cast<ItemCategory>(i),FItemMap());
 
 	equipment = CreateDefaultSubobject<UCharacterEquipment>(TEXT("equipment"));
 }
@@ -60,7 +60,7 @@ void UInventoryComponent::TickComponent( float DeltaTime, ELevelTick TickType, F
 bool UInventoryComponent::addItemCreate(UItemBase* Item)
 {
 	if (!Item) return false;
-	items[Item->type].Add(Item, Item);
+	items[Item->type].map.Add(Item, Item);
 	Item->itemParent = this;
 	currentWeight += Item->weight * Item->ammount;
 	if (Item->widget) Item->widget->RemoveFromParent();
@@ -81,7 +81,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 	if (!Item) return true;
 	
 	if (items.Find(Item->type) == NULL) return false;
-	if (items[Item->type].Find(Item) != NULL)
+	if (items[Item->type].map.Find(Item) != NULL)
 	{
 		return true;
 	}
@@ -93,7 +93,7 @@ bool UInventoryComponent::addItem(UItemBase* Item,bool forceNew)
 	{
 		
 		
-			for (auto& x : items[Item->type])
+			for (auto& x : items[Item->type].map)
 			{
 				if (x.Key->name == Item->name)
 				{
@@ -145,7 +145,7 @@ bool UInventoryComponent::removeItem(UItemBase* Item, int32 ammount)
 	if (!Item) return false;
 	if (ammount > 0)
 	{
-		UItemBase* place = items[Item->type][Item];
+		UItemBase* place = items[Item->type].map[Item];
 		if (place)
 		{
 
@@ -160,7 +160,7 @@ bool UInventoryComponent::removeItem(UItemBase* Item, int32 ammount)
 			return false;
 		}
 	}
-	items[Item->type].Remove(Item);
+	items[Item->type].map.Remove(Item);
 	refresh();
 	calculateWeight();
 	return true;
@@ -170,7 +170,7 @@ bool UInventoryComponent::removeItem(UItemBase* Item, int32 ammount)
 void UInventoryComponent::dropItem(UItemBase* Item)
 {
 	if (!Item) return;
-	items[Item->type].Remove(Item);
+	items[Item->type].map.Remove(Item);
 	if(Item->ammount > 0) GetWorld()->SpawnActor<AItemBaseActor>(itemBaseTemplate, GetOwner()->GetActorLocation(), GetOwner()->GetActorRotation())->spawn(Item);
 	Item->widget->RemoveFromParent();
 	calculateWeight();
@@ -206,7 +206,7 @@ UItemBase* UInventoryComponent::lookForFirstItem(FString &name)
 {
 	for (auto& x : items)
 	{
-		for (auto& y : x.Value)
+		for (auto& y : x.Value.map)
 		{
 			if (y.Value->itemIdentifier == name) return y.Value;
 		}
@@ -218,7 +218,7 @@ TArray<UItemBase*> UInventoryComponent::lookForItems(FString name)
 	TArray<UItemBase*> vec;
 	for (auto& x : items)
 	{
-		for (auto& y : x.Value)
+		for (auto& y : x.Value.map)
 		{
 			if (y.Key->itemIdentifier == name) vec.Add(y.Value);
 		}
@@ -314,7 +314,7 @@ void UInventoryComponent::refresh()
 	{
 		if (s.Key == currentCategory || currentCategory == ItemCategory::ALL)
 		{
-			for (auto& w : s.Value)
+			for (auto& w : s.Value.map)
 			{
 
 				loadItemWidget(w.Key, mainInventory->ItemBox);
@@ -331,7 +331,7 @@ void UInventoryComponent::refresh()
 		{
 			if (s.Key == otherCurrentCategory || otherCurrentCategory == ItemCategory::ALL)
 			{
-				for (auto& w : s.Value)
+				for (auto& w : s.Value.map)
 				{
 
 					loadItemWidget(w.Key, mainInventory->otherItemBox);
@@ -415,7 +415,7 @@ void UInventoryComponent::onItemButtonHoveredTimer()
 			itemDetails = CreateWidget<UItemDetailBaseWidget>(GetWorld(), hoveredButton->UserPointer->detailsWidget);
 	if (itemDetails)
 	{
-		ACharacter* x = Cast<ACharacter>(GetOwner());
+		/*ACharacter* x = Cast<ACharacter>(GetOwner());
 		if (x)
 		{
 			APlayerController* PlayerController = Cast<APlayerController>(x->GetController());
@@ -426,18 +426,26 @@ void UInventoryComponent::onItemButtonHoveredTimer()
 				PlayerController->GetMousePosition(LocationX, LocationY);
 				// Do a trace and see if there the position intersects something in the world  
 				FVector2D MousePosition(LocationX, LocationY);
-				itemDetails->AddToViewport();
-				itemDetails->load(hoveredButton->UserPointer);
+				
+				Cast<UStalkerMainGameInstance>(GetOwner()->GetGameInstance())->addWidgetToMain(itemDetails);
 				UCanvasPanelSlot* x = Cast<UCanvasPanelSlot>(itemDetails->Slot);
 				if (x) x->SetPosition(MousePosition);
 			}
-		}
+		}*/
+		//itemDetails->AddToViewport();
+		itemDetails->load(hoveredButton->UserPointer);
+		hoveredButton->SetToolTip(itemDetails);
+		
 	}
 }
 void UInventoryComponent::onItemButtonLeftHovered(UDataItemButton* sender)
 {
 	hoveredButton = NULL;
-	if (itemDetails) itemDetails->RemoveFromViewport();
+	if (itemDetails)
+	{
+		itemDetails->RemoveFromParent();
+		itemDetails->RemoveFromViewport();
+	}
 	itemDetails = NULL;
 	GetWorld()->GetTimerManager().ClearTimer(itemDetailsTimer);
 }
@@ -562,7 +570,7 @@ void UInventoryComponent::closeTransferWindow()
 bool  UInventoryComponent::isItemInInvenotry(UItemBase* Item)
 {
 	if (items.Find(Item->type) == NULL) return true;
-	if (items[Item->type].Find(Item) != NULL) return true;
+	if (items[Item->type].map.Find(Item) != NULL) return true;
 	return false;
 }
 void UInventoryComponent::calculateWeight()
@@ -570,7 +578,7 @@ void UInventoryComponent::calculateWeight()
 	currentWeight = 0;
 	for (auto& x : items)
 	{
-		for (auto& y : x.Value)
+		for (auto& y : x.Value.map)
 		{
 			currentWeight += y.Key->getWeight();
 		}

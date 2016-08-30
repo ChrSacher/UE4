@@ -175,7 +175,7 @@ void AWeapon::startFire()
 	
 	if (!GetWorld()->GetTimerManager().IsTimerActive(fireHandle))
 	{
-		
+		wantsToEndFire = false;
 		if (Fire()) GetWorld()->GetTimerManager().SetTimer(fireHandle, this, &AWeapon::FireTimer, 60 / fireRate, true);
 	}
 		
@@ -248,7 +248,7 @@ bool AWeapon::Fire()
 	if (getFireMode() == WeaponFireMode::AUTO)
 	{
 		
-		if (wantsToEndFire)
+		if (firedBullets > 0 &&  wantsToEndFire)
 		{
 			needsToEndFire = true;
 		}

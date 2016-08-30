@@ -8,99 +8,52 @@
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnReturnClicked);
 
-UENUM(BlueprintType)
-enum class SettingsLevel : uint8
-{
-	OFF,
-	LOW,
-	MEDIUM,
-	HIGH,
-	EPIC,
-	
-	NONE,
-};
 
-UENUM(BlueprintType)
-enum class ButtonSettingsType : uint8
-{
-	PRESET,
-	AA,
-	POSTPROCESSING,
-	SHADOWS,
-	TEXTURES,
-	EFFECTS,
-	DETAILMODE,
-	MATERIALQUALITY,
-	FOLIAGE,
-	CUSTOM
-};
 
-UENUM(BlueprintType)
-enum class SliderSettingsType : uint8
-{
-	RESOLUTION,
-	CUSTOM
-};
-class  UOptionsMenu;
 
 UCLASS()
 class STALKERGHOSTS_API UOptionsSetting : public UUserWidget
 {
 public:
 	GENERATED_BODY()
-		virtual void initialize(UOptionsMenu* parent) {};
+		virtual void initialize(UOptionsMenu* newParent) {};
+	void initializeExplanation();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UButton* explanationButton;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		FString name;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UOptionsMenu* optionParent;
-
+		FString consoleCommand;
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UEditableTextBox* nameBox;
-
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UOptionsMenu* optionParent;
+	virtual void updateSettings() {}
 	virtual void updateVisuals() {}
+	virtual FString getCurrentExplanation() { return ""; }
+	virtual void reinitialize() {};
+	void onHovered();
+	void onLeftHovered();
+	UFUNCTION(BlueprintImplementableEvent)
+		void settingsChanged();
+	UFUNCTION(BlueprintImplementableEvent)
+		void onStartup();
 };
-UCLASS()
-class STALKERGHOSTS_API UButtonSetting : public UOptionsSetting
+USTRUCT(Blueprintable)
+struct FStringButtonSettings
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<SettingsLevel> aviableSettings;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		FString displayedSetting;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 settingsIndex;
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		int32 underlyingSetting;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UButton* increaseButton;
-
-	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UButton* decreaseButton;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		UEditableTextBox* textBox;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		ButtonSettingsType type;
-
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		void initialize(UOptionsMenu* parent) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		void increase();
-
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		void decrease();
-	UFUNCTION(BlueprintCallable, Category = "Event")
-	SettingsLevel getCurrentSetting();
-	UFUNCTION(BlueprintCallable, Category = "Event")
-		void setCurrentSetting(SettingsLevel level);
-	void updateVisuals() override;
-	
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		FString optionExplanation;
 };
 
 UCLASS()
@@ -109,13 +62,9 @@ class STALKERGHOSTS_API UStringButtonSetting : public UOptionsSetting
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<FString> displaySettings;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<FString> underlyingSettings;
+		TArray<FStringButtonSettings> aviableSettings;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		int32 settingsIndex;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		int32 maximumSettings;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UButton* increaseButton;
 
@@ -129,7 +78,7 @@ public:
 		FString itendifier;
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		void initialize(UOptionsMenu* parent) override;
+		void initialize(UOptionsMenu* newParent) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void increase();
@@ -138,11 +87,17 @@ public:
 		void decrease();
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		FString getCurrentSetting();
+		FStringButtonSettings getCurrentSetting();
 
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		FString getCurrentDisplay();
 
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	void setCurrentSetting(int32 level);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+	void updateSettings() override;
+	void reinitialize() ;
+	FString getCurrentExplanation() override;
 };
 
 UCLASS()
@@ -154,10 +109,13 @@ public:
 		float minimum = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		float maximum = 200;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-	SliderSettingsType type;
+
+	UPROPERTY(EditAnywhere, Category = Weapon)
+		FString optionExplanation;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void valueChanged(float value);
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setValue(float value);
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void textChanged(const FText& text, ETextCommit::Type commitType);
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
@@ -167,7 +125,10 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		float getCurrentSetting();
 	UFUNCTION(BlueprintCallable, Category = "Event")
-		void initialize(UOptionsMenu* parent) override;
+		void initialize(UOptionsMenu* newParent) override;
+	void updateSettings() override;
+	void reinitialize();
+	FString getCurrentExplanation() override;
 };
 
 UCLASS()
@@ -198,15 +159,13 @@ class STALKERGHOSTS_API UOptionsMenu : public UUserWidget
 	GENERATED_BODY()
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<UButtonSetting*> buttonWidgets;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<USliderSetting*> sliderWidgets;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
-		TArray<UStringButtonSetting*> stringButtonWidgets;
+		TArray<UOptionsSetting*> optionWidgets;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UButton* returnButton;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
 		UWorld* world;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = UI)
+		UMultiLineEditableTextBox* box;
 	UFUNCTION(BlueprintCallable, Category = "Event")
 		void initialize();
 	UFUNCTION(BlueprintCallable, Category = "Event")
@@ -215,4 +174,7 @@ public:
 		void closeButtonPressed();
 	UPROPERTY(BlueprintAssignable, Category = "Button|Event")
 		FOnReturnClicked OnClicked;
+
+	UFUNCTION(BlueprintCallable, Category = "Event")
+		void setExplainationText(FString explanationSetting);
 };

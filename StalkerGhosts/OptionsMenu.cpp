@@ -4,163 +4,111 @@
 #include "StalkerGhostsCharacter.h"
 #include "OptionsMenu.h"
 
-
-FString SLtoString(SettingsLevel type)
+void UOptionsSetting::initializeExplanation()
 {
-	switch (type)
-	{
-		case 	SettingsLevel::LOW:
-		{
-			return "Low";
-		}; break;
-		case SettingsLevel::MEDIUM:
-		{
-			return "Medium";
-		}; break;
-		case 	SettingsLevel::HIGH:
-		{
-			return "High";
-		}; break;
-		case 	SettingsLevel::EPIC:
-		{
-			return "Epic";
-		}; break;
-		case 	SettingsLevel::OFF:
-		{
-			return "Off";
-		}; break;
-		case 	SettingsLevel::NONE:
-		{
-			return "NONE";
-		}; break;
-	}
-	return "ERROR";
+	if (!explanationButton) return;
+	explanationButton->OnHovered.AddDynamic(this, &UOptionsSetting::onHovered);
+	explanationButton->OnUnhovered.AddDynamic(this, &UOptionsSetting::onLeftHovered);
 }
-void UButtonSetting::initialize(UOptionsMenu* parent)
+void UOptionsSetting::onHovered()
 {
-	if (aviableSettings.Num() > 0)
-	{
-		increaseButton->OnClicked.AddDynamic(this, &UButtonSetting::increase);
-		decreaseButton->OnClicked.AddDynamic(this, &UButtonSetting::decrease);
-		settingsIndex = FMath::Clamp<int32>(settingsIndex, 0, aviableSettings.Num() - 1);
-	}
-	nameBox->SetText(FText::FromString(name));
-	textBox->SetText(FText::FromString(SLtoString(getCurrentSetting())));
-	optionParent = parent;
 	
+		optionParent->setExplainationText(getCurrentExplanation());
 }
-
-void UButtonSetting::increase()
+void UOptionsSetting::onLeftHovered()
 {
-	if(aviableSettings.Num() == 0) return;
-	int32 lastSetting = settingsIndex;
-	settingsIndex += 1;
-	updateVisuals();
-	if(lastSetting != settingsIndex)optionParent->settingsChanged(this);
+	FString x = "";
+	optionParent->setExplainationText(x);
 }
-
-void UButtonSetting::decrease()
-{
-	if (aviableSettings.Num() == 0) return;
-	int32 lastSetting = settingsIndex;
-	settingsIndex -= 1;
-	updateVisuals();
-	if (lastSetting != settingsIndex) optionParent->settingsChanged(this);
-}
-SettingsLevel UButtonSetting::getCurrentSetting()
-{
-	if (aviableSettings.Num() > 0)
-	{
-		settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
-		return aviableSettings[settingsIndex];
-	}
-	return SettingsLevel::NONE;
-	
-}
-void  UButtonSetting::setCurrentSetting(SettingsLevel level)
-{
-	int32 x = aviableSettings.Find(level);
-	if (x != INDEX_NONE)
-	{
-		settingsIndex = x;
-	}
-	else
-	{
-		settingsIndex = aviableSettings.Num() - 1;
-	}
-	updateVisuals();
-}
-
-void UButtonSetting::updateVisuals()
-{
-	settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
-	textBox->SetText(FText::FromString(SLtoString(getCurrentSetting())));
-}
-
 
 
 
 void UStringButtonSetting::initialize(UOptionsMenu* parent)
 {
-	maximumSettings = FMath::Max(displaySettings.Num(), underlyingSettings.Num());
-	if (displaySettings.Num() > 0 && underlyingSettings.Num() > 0)
-	{
-		increaseButton->OnClicked.AddDynamic(this, &UStringButtonSetting::increase);
-		decreaseButton->OnClicked.AddDynamic(this, &UStringButtonSetting::decrease);
-		
-	}
-	settingsIndex = FMath::Clamp(settingsIndex, 0, maximumSettings - 1);
+	increaseButton->OnClicked.AddDynamic(this, &UStringButtonSetting::increase);
+	decreaseButton->OnClicked.AddDynamic(this, &UStringButtonSetting::decrease);
+	settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
 	nameBox->SetText(FText::FromString(name));
-	textBox->SetText(FText::FromString(getCurrentDisplay()));
+	reinitialize();
+	updateVisuals();
 	optionParent = parent;
-
+	onStartup();
 }
 
-
+void UStringButtonSetting::reinitialize()
+{
+	auto CVar = IConsoleManager::Get().FindConsoleVariable(*consoleCommand);
+	int32 Value = CVar->GetInt();
+	setCurrentSetting(Value);
+}
 void UStringButtonSetting::increase()
 {
-	if (maximumSettings == 0) return;
+	if (aviableSettings.Num() == 0) return;
 	int32 lastSetting = settingsIndex;
 	settingsIndex += 1;
-	settingsIndex = FMath::Clamp(settingsIndex, 0, maximumSettings - 1);
+	settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
 	textBox->SetText(FText::FromString((getCurrentDisplay())));
-	if (lastSetting != settingsIndex)optionParent->settingsChanged(this);
+	if (lastSetting != settingsIndex) updateSettings();
 }
 
 
 void UStringButtonSetting::decrease()
 {
-	if (maximumSettings == 0) return;
+	if (aviableSettings.Num() == 0) return;
 	int32 lastSetting = settingsIndex;
 	settingsIndex -= 1;
-	settingsIndex = FMath::Clamp(settingsIndex, 0, maximumSettings - 1);
+	settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
 	textBox->SetText(FText::FromString(getCurrentDisplay()));
-	if (lastSetting != settingsIndex)optionParent->settingsChanged(this);
+	if (lastSetting != settingsIndex)updateSettings();
 }
-FString  UStringButtonSetting::getCurrentSetting()
+FStringButtonSettings  UStringButtonSetting::getCurrentSetting()
 {
-	if (maximumSettings > 0)
+	if (aviableSettings.Num() > 0)
 	{
-		settingsIndex = FMath::Clamp(settingsIndex, 0, maximumSettings - 1);
+		settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
 
-		return underlyingSettings[settingsIndex];
+		return aviableSettings[settingsIndex];
 	}
-	return "ERROR";
+	return FStringButtonSettings();
 }
 
 FString  UStringButtonSetting::getCurrentDisplay()
 {
-	if (maximumSettings > 0)
+	if (aviableSettings.Num() > 0)
 	{
-		settingsIndex = FMath::Clamp(settingsIndex, 0, maximumSettings - 1);
+		settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
 
-		return displaySettings[settingsIndex];
+		return aviableSettings[settingsIndex].displayedSetting;
 	}
 	return "ERROR";
 	
 }
-
-
+void UStringButtonSetting::setCurrentSetting(int32 level)
+{
+	int32 lastSetting = settingsIndex;
+	for (int32 i = 0; i < aviableSettings.Num(); i++)
+	{
+		if (aviableSettings[i].underlyingSetting == level)
+		{
+			settingsIndex = i;
+			if (lastSetting != settingsIndex) updateSettings();
+			updateVisuals();
+			return;
+		}
+	}
+	settingsIndex = FMath::Clamp(settingsIndex, 0, aviableSettings.Num() - 1);
+	if (lastSetting != settingsIndex) updateSettings();
+	updateVisuals();
+}
+void  UStringButtonSetting::updateSettings()
+{
+	optionParent->settingsChanged(this);
+	settingsChanged();
+}
+FString UStringButtonSetting::getCurrentExplanation()
+{
+	return getCurrentSetting().optionExplanation;
+}
 
 float USliderSetting::getCurrentSetting()
 {
@@ -171,15 +119,22 @@ void USliderSetting::initialize(UOptionsMenu* parent)
 	optionParent = parent;
 	nameBox->SetText(FText::FromString(name));
 	slider->OnValueChanged.AddDynamic(this, &USliderSetting::valueChanged);
-	textBox->OnTextCommitted.RemoveDynamic(this, &USliderSetting::textChanged);
 	textBox->OnTextCommitted.AddDynamic(this, &USliderSetting::textChanged);
+	reinitialize();
+	onStartup();
 }
 void USliderSetting::valueChanged(float value)
 {
 	float x = value;
 	slider->SetValue(x);
 	textBox->SetText(FText::FromString(FString::FromInt(getCurrentSetting())));
-	optionParent->settingsChanged(this);
+	updateSettings();
+}
+
+void USliderSetting::setValue(float value)
+{
+	value = FMath::Clamp(value, minimum, maximum);
+	slider->SetValue(value / maximum);
 }
 void USliderSetting::textChanged(const FText& text, ETextCommit::Type commitType)
 {
@@ -192,96 +147,43 @@ void USliderSetting::textChanged(const FText& text, ETextCommit::Type commitType
 	}
 	float y = FCString::Atof(*w);
 	y = FMath::Clamp(y, minimum, maximum );
-	slider->SetValue(y / maximum );
+	slider->SetValue((y - minimum) / (maximum - minimum));
 	textBox->SetText(FText::FromString(FString::FromInt(y)));
-	optionParent->settingsChanged(this);
+	updateSettings();
+	
+}
+void USliderSetting::reinitialize()
+{
+	auto CVar = IConsoleManager::Get().FindConsoleVariable(*consoleCommand);
+	int32 Value = CVar->GetInt();
+	setValue(Value);
 }
 
+void  USliderSetting::updateSettings()
+{
+	optionParent->settingsChanged(this);
+	settingsChanged();
+}
 
+FString  USliderSetting::getCurrentExplanation()
+{
+	return optionExplanation;
+}
 void UOptionsMenu::initialize()
 {
-	for (int32 i = 0; i <buttonWidgets.Num(); i++)
+
+	for (int32 i = 0; i < optionWidgets.Num(); i++)
 	{
-		if (buttonWidgets[i]) buttonWidgets[i]->initialize(this);
-	}
-	for (int32 i = 0; i < sliderWidgets.Num(); i++)
-	{
-		if (sliderWidgets[i]) sliderWidgets[i]->initialize(this);
-	}
-	for (int32 i = 0; i < stringButtonWidgets.Num(); i++)
-	{
-		if (stringButtonWidgets[i]) stringButtonWidgets[i]->initialize(this);
+		if (optionWidgets[i])optionWidgets[i]->initialize(this);
 	}
 	
 	returnButton->OnClicked.AddDynamic(this, &UOptionsMenu::closeButtonPressed);
 }
+
+
 void UOptionsMenu::settingsChanged(UOptionsSetting* sender)
 {
 	if (!sender) return;
-	UButtonSetting* buttonSender = Cast<UButtonSetting>(sender);
-	if (buttonSender)
-	{
-		switch (buttonSender->type)
-		{
-
-		case ButtonSettingsType::PRESET:
-		{
-			for (int32 i = 0; i < buttonWidgets.Num(); i++)
-			{
-				buttonWidgets[i]->setCurrentSetting(buttonSender->getCurrentSetting());
-			};
-			GEngine->GameUserSettings->SetOverallScalabilityLevel(int32(buttonSender->getCurrentSetting()));
-
-		}break;
-		case ButtonSettingsType::AA:
-		{
-			GEngine->GameUserSettings->SetAntiAliasingQuality(int32(buttonSender->getCurrentSetting()));
-		}break;
-		case ButtonSettingsType::POSTPROCESSING:
-		{
-			GEngine->GameUserSettings->SetPostProcessingQuality(int32(buttonSender->getCurrentSetting()));
-		}break;
-		case ButtonSettingsType::SHADOWS:
-		{
-			GEngine->GameUserSettings->SetShadowQuality(int32(buttonSender->getCurrentSetting()));
-		}break;
-		case ButtonSettingsType::TEXTURES:
-		{
-			GEngine->GameUserSettings->SetTextureQuality(int32(buttonSender->getCurrentSetting()) - 1); //- 1 for switching scales
-		}break;
-		case ButtonSettingsType::EFFECTS:
-		{
-			GEngine->GameUserSettings->SetVisualEffectQuality(int32(buttonSender->getCurrentSetting()) - 1);//- 1 for switching scales
-		}break;
-		case ButtonSettingsType::DETAILMODE:
-		{
-			if (world)
-			{
-				FString Final = "r.DetailMode " + FString::FromInt(int32(buttonSender->getCurrentSetting()) - 1);
-
-				world->Exec(GetWorld(), *Final);
-			}
-		}break;
-		case ButtonSettingsType::MATERIALQUALITY:
-		{
-			if (world)
-			{
-				FString Final = "r.MaterialQualityLevel " + FString::FromInt(int32(buttonSender->getCurrentSetting()) - 1);
-
-				world->Exec(GetWorld(), *Final);
-			}
-		}break;
-		case ButtonSettingsType::FOLIAGE:
-		{
-			GEngine->GameUserSettings->SetFoliageQuality(int32(buttonSender->getCurrentSetting()) - 1);//- 1 for switching scales
-		}break;
-		case ButtonSettingsType::CUSTOM:
-		{
-			//duno
-		}break;
-		};
-	}
-
 	UAudioSliderSetting* audioSender = Cast<UAudioSliderSetting>(sender);
 	if (audioSender)
 	{
@@ -292,23 +194,38 @@ void UOptionsMenu::settingsChanged(UOptionsSetting* sender)
 		USliderSetting* sliderSender = Cast<USliderSetting>(sender);
 		if (sliderSender)
 		{
-			switch (sliderSender->type)
+			if (world)
 			{
-				case SliderSettingsType::RESOLUTION:
-				{
-					GEngine->GameUserSettings->SetResolutionScaleValueEx(sliderSender->getCurrentSetting() / 100);
-				}; break;
-				case SliderSettingsType::CUSTOM:
-				{
+				FString Final = sliderSender->consoleCommand + " " + FString::FromInt(sliderSender->getCurrentSetting());
 
-				}; break;
+				world->Exec(GetWorld(), *Final);
 			}
 		}
 	}
+	UStringButtonSetting* stringSender = Cast<UStringButtonSetting>(sender);
+	if(stringSender)
+	{
+		
+		if (world)
+		{
+			FString Final = stringSender->consoleCommand + " " + stringSender->getCurrentSetting().underlyingSetting;
+
+			world->Exec(GetWorld(), *Final);
+		}
+	}
+	
 	GEngine->GameUserSettings->ApplySettings(true);
+	for (int32 i = 0; i < optionWidgets.Num(); i++)
+	{
+		if (optionWidgets[i])optionWidgets[i]->reinitialize();
+	}
 }
 
 void UOptionsMenu::closeButtonPressed()
 {
 	OnClicked.Broadcast();
+}
+void UOptionsMenu::setExplainationText(FString explanationSetting)
+{
+	if (box) box->SetText(FText::FromString(explanationSetting));
 }
